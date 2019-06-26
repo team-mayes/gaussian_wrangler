@@ -102,3 +102,4 @@ ENV/
 .mypy_cache/
 
 nrel_tools/rdkit_attempts/
+.idea/
