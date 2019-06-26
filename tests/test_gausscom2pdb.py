@@ -16,6 +16,8 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
 SUB_DATA_DIR = os.path.join(DATA_DIR, 'gausscom2pdb')
 DEF_INI = os.path.join(SUB_DATA_DIR, 'gausscom2pdb.ini')
 
+NO_TPL_INI = os.path.join(SUB_DATA_DIR, 'gausscom2pdb_no_tpl.ini')
+
 BAD_ATOM_INI = os.path.join(SUB_DATA_DIR, 'gausscom2pdb_badatom.ini')
 # TYPO_INI = os.path.join(SUB_DATA_DIR, 'gauscom2pdb_typo.ini')
 # MISS_INI = os.path.join(SUB_DATA_DIR, 'gauscom2pdb_miss.ini')
@@ -37,6 +39,8 @@ BAD_ATOM_INI = os.path.join(SUB_DATA_DIR, 'gausscom2pdb_badatom.ini')
 # noinspection PyUnresolvedReferences
 PDB_OUT = os.path.join(SUB_DATA_DIR, 'pet_cp1_def2_end.pdb')
 GOOD_PDB_OUT = os.path.join(SUB_DATA_DIR, 'pet_cp1_def2_end_good.pdb')
+
+GOOD_NO_TPL_OUT = os.path.join(SUB_DATA_DIR, 'pet_cp1_def2_end_no_tpl_good.pdb')
 
 # # noinspection PyUnresolvedReferences
 # GLU_OUT = os.path.join(SUB_DATA_DIR, '0.625_20c_reorder_retype_548990.pdb')
@@ -114,6 +118,17 @@ class Testgauscom2pdb(unittest.TestCase):
         try:
             main(test_input)
             self.assertFalse(diff_lines(PDB_OUT, GOOD_PDB_OUT))
+        finally:
+            # silent_remove(PDB_TPL_OUT)
+            silent_remove(PDB_OUT, disable=DISABLE_REMOVE)
+
+    def testNoTplIni(self):
+        test_input = ["-c", NO_TPL_INI]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(PDB_OUT, GOOD_NO_TPL_OUT))
         finally:
             # silent_remove(PDB_TPL_OUT)
             silent_remove(PDB_OUT, disable=DISABLE_REMOVE)

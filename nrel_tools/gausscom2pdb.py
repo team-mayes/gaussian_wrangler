@@ -61,8 +61,9 @@ DEF_CFG_VALS = {GAUSSCOM_FILES_FILE: 'gausscom_list.txt',
                 OUT_BASE_DIR: None,
                 MAKE_DICT_BOOL: False,
                 GAUSSCOM_FILE: None,
+                PDB_TPL_FILE: None,
                 }
-REQ_KEYS = {PDB_TPL_FILE: str,
+REQ_KEYS = {
             }
 
 # For pdb template file processing
@@ -138,16 +139,21 @@ def process_gausscom_files(cfg, pdb_tpl_content):
     # Don't want to change the original template data when preparing to print the new file:
 
     for gausscom_file in cfg[GAUSSCOM_FILES]:
+        if not cfg[PDB_TPL_FILE]:
+            pdb_tpl_content[HEAD_CONTENT] = ["TITLE     {}".format(gausscom_file)]
+            pdb_tpl_content[TAIL_CONTENT] = ["END"]
         process_gausscom_file(cfg, gausscom_file, pdb_tpl_content)
 
 
 def process_gausscom_file(cfg, gausscom_file, pdb_tpl_content):
     with open(gausscom_file) as d:
-        pdb_data_section = copy.deepcopy(pdb_tpl_content[ATOMS_CONTENT])
+        if cfg[PDB_TPL_FILE]:
+            pdb_data_section = copy.deepcopy(pdb_tpl_content[ATOMS_CONTENT])
+        else:
+            pdb_data_section = []
         section = SEC_HEAD
         atom_id = 0
         lines_after_header = 4  # blank line, description, blank line, charge & multiplicity
-        atom_types = []
 
         for line in d:
             line = line.strip()
@@ -166,26 +172,31 @@ def process_gausscom_file(cfg, gausscom_file, pdb_tpl_content):
                     continue
                 split_line = line.split()
 
-                # check atom type
                 atom_type = split_line[0]
-                pdb_atom_type = pdb_data_section[atom_id][8].split(' ')[-1]
-                if atom_type != pdb_atom_type:
-                    warning("Atom types do not match for atom number {}; pdb atom type is {} while gausscom type is "
-                            "{}".format(atom_id, pdb_atom_type, atom_type))
-                # Keep as string; json save as string and this helps compare
-                atom_types.append(atom_type)
+                # if working from a template, check atom type
+                if cfg[PDB_TPL_FILE]:
+                    pdb_atom_type = pdb_data_section[atom_id][8].split(' ')[-1]
+                    if atom_type != pdb_atom_type:
+                        warning("Atom types do not match for atom number {}; pdb atom type is {} while gausscom type "
+                                "is {}".format(atom_id, pdb_atom_type, atom_type))
+                else:
+                    pdb_data_section.append(atom_id)
+                    pdb_data_section[atom_id] = ['HETATM', '{:5d}'.format(atom_id+1), '  {:4}'.format(atom_type),
+                                                 'UNL  ', 1, 0.0, 0.0, 0.0, '  1.00  0.00           '+atom_type]
                 pdb_data_section[atom_id][5:8] = map(float, split_line[1:4])
                 atom_id += 1
                 # Check after increment because the counter started at 0
-                if atom_id == pdb_tpl_content[NUM_ATOMS]:
-                    # Since the tail will come only from the template, nothing more is needed.
-                    break
+                if cfg[PDB_TPL_FILE]:
+                    if atom_id == pdb_tpl_content[NUM_ATOMS]:
+                        # Since the tail will come only from the template, nothing more is needed.
+                        break
 
     # Now that finished reading the file, first make sure didn't  exit before reaching the desired number of atoms
-    if atom_id != pdb_tpl_content[NUM_ATOMS]:
-        raise InvalidDataError('In gausscom file: {}\n'
-                               '  found {} atoms, but pdb expects {} atoms'.format(gausscom_file, atom_id,
-                                                                                   pdb_tpl_content[NUM_ATOMS]))
+    if cfg[PDB_TPL_FILE]:
+        if atom_id != pdb_tpl_content[NUM_ATOMS]:
+            raise InvalidDataError('In gausscom file: {}\n'
+                                   '  found {} atoms, but pdb expects {} atoms'.format(gausscom_file, atom_id,
+                                                                                       pdb_tpl_content[NUM_ATOMS]))
     f_name = create_out_fname(gausscom_file, ext='.pdb', base_dir=cfg[OUT_BASE_DIR])
     list_to_file(pdb_tpl_content[HEAD_CONTENT] + pdb_data_section + pdb_tpl_content[TAIL_CONTENT],
                  f_name, list_format=PDB_FORMAT)
@@ -201,7 +212,10 @@ def main(argv=None):
 
     # Read template and data files
     try:
-        pdb_tpl_content = process_pdb_tpl(cfg[PDB_TPL_FILE])
+        if cfg[PDB_TPL_FILE]:
+            pdb_tpl_content = process_pdb_tpl(cfg[PDB_TPL_FILE])
+        else:
+            pdb_tpl_content = {}
         process_gausscom_files(cfg, pdb_tpl_content)
     except IOError as e:
         warning("Problems reading file:", e)
