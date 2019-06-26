@@ -7,9 +7,6 @@ Find low energy conformers using RDKit
 # Safe to remove with Python 3-only code
 from __future__ import absolute_import
 
-# Add imports here
-from .rotamers import *
-
 # Handle versioneer
 from ._version import get_versions
 versions = get_versions()

@@ -166,8 +166,14 @@ def process_gausscom_file(cfg, gausscom_file, pdb_tpl_content):
                     continue
                 split_line = line.split()
 
+                # check atom type
+                atom_type = split_line[0]
+                pdb_atom_type = pdb_data_section[atom_id][8].split(' ')[-1]
+                if atom_type != pdb_atom_type:
+                    warning("Atom types do not match for atom number {}; pdb atom type is {} while gausscom type is "
+                            "{}".format(atom_id, pdb_atom_type, atom_type))
                 # Keep as string; json save as string and this helps compare
-                atom_types.append(split_line[0])
+                atom_types.append(atom_type)
                 pdb_data_section[atom_id][5:8] = map(float, split_line[1:4])
                 atom_id += 1
                 # Check after increment because the counter started at 0

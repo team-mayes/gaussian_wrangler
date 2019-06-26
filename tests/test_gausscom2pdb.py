@@ -15,6 +15,8 @@ MAIN_DIR = os.path.dirname(TEST_DIR)
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
 SUB_DATA_DIR = os.path.join(DATA_DIR, 'gausscom2pdb')
 DEF_INI = os.path.join(SUB_DATA_DIR, 'gausscom2pdb.ini')
+
+BAD_ATOM_INI = os.path.join(SUB_DATA_DIR, 'gausscom2pdb_badatom.ini')
 # TYPO_INI = os.path.join(SUB_DATA_DIR, 'gauscom2pdb_typo.ini')
 # MISS_INI = os.path.join(SUB_DATA_DIR, 'gauscom2pdb_miss.ini')
 # NO_FILES_INI = os.path.join(SUB_DATA_DIR, 'gauscom2pdb_no_files.ini')
@@ -115,6 +117,14 @@ class Testgauscom2pdb(unittest.TestCase):
         finally:
             # silent_remove(PDB_TPL_OUT)
             silent_remove(PDB_OUT, disable=DISABLE_REMOVE)
+
+    def testBadAtomIni(self):
+        test_input = ["-c", BAD_ATOM_INI]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("Atom types do not match" in output)
+        silent_remove(PDB_OUT, disable=DISABLE_REMOVE)
 
     # def testGlu(self):
     #     try:

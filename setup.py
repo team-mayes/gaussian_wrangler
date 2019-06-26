@@ -29,7 +29,7 @@ setup(
     package_data={'nrel_tools': ["data/*.dat"]
                   },
 
-    entry_points={'console_scripts': ['rotamers = nrel_tools.rotamers:main',
+    entry_points={'console_scripts': ['rotamers = nrel_tools.gausscom2pdb:main',
                                       ],
                   },     package_dir={'nrel_tools': 'nrel_tools'},
 

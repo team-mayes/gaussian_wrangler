@@ -104,3 +104,4 @@ ENV/
 nrel_tools/rdkit_attempts/
 .idea
 .idea/
+.idea/workspace.xml
