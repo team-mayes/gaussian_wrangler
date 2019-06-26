@@ -8,6 +8,8 @@ import versioneer
 
 DOCLINES = __doc__.split("\n")
 
+requirements = ['progressbar2']
+
 setup(
     # Self-descriptive entries which should always be present
     name='nrel_tools',
