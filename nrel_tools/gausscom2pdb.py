@@ -11,7 +11,8 @@ import re
 import sys
 import argparse
 from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file, process_pdb_tpl,
-                               HEAD_CONTENT, ATOMS_CONTENT, TAIL_CONTENT, PDB_FORMAT, NUM_ATOMS)
+                               HEAD_CONTENT, ATOMS_CONTENT, TAIL_CONTENT, PDB_FORMAT, NUM_ATOMS,
+                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA)
 
 try:
     # noinspection PyCompatibility
@@ -27,13 +28,6 @@ __author__ = 'hmayes'
 logger = logging.getLogger('gausscom2pdb')
 # logging.basicConfig(filename='gausscom2pdb.log', filemode='w', level=logging.DEBUG)
 logging.basicConfig(level=logging.INFO)
-
-# Error Codes
-# The good status code
-GOOD_RET = 0
-INPUT_ERROR = 1
-IO_ERROR = 2
-INVALID_DATA = 3
 
 # Constants #
 
