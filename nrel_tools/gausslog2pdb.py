@@ -36,23 +36,26 @@ MAIN_SEC = 'main'
 
 # Config keys
 PDB_TPL_FILE = 'pdb_tpl_file'
-GAUSSCOM_FILES_FILE = 'gausscom_list_file'
-GAUSSCOM_FILES = 'gausscom_files_list'
-GAUSSCOM_FILE = 'gausscom_file'
-
+GAUSSLOG_FILES_FILE = 'gausslog_list_file'
+GAUSSLOG_FILES = 'gausslog_files_list'
+GAUSSLOG_FILE = 'gausslog_file'
+ONLY_FINAL = 'only_final_coords'
 OUT_BASE_DIR = 'output_directory'
 
-GAU_HEADER_PAT = re.compile(r"#.*")
+GAU_COORD_PAT = re.compile(r"Center     Atomic      Atomic             Coordinates.*")
+GAU_SEP_PAT = re.compile(r"---------------------------------------------------------------------.*")
+GAU_E_PAT = re.compile(r"SCF Done:.*")
 
 # data file info
 
 # Defaults
-DEF_CFG_FILE = 'gausscom2pdb.ini'
+DEF_CFG_FILE = 'gausslog2pdb.ini'
 # Set notation
-DEF_CFG_VALS = {GAUSSCOM_FILES_FILE: 'gausscom_list.txt',
+DEF_CFG_VALS = {GAUSSLOG_FILES_FILE: 'gausslog_list.txt',
                 OUT_BASE_DIR: None,
-                GAUSSCOM_FILE: None,
+                GAUSSLOG_FILE: None,
                 PDB_TPL_FILE: None,
+                ONLY_FINAL: False,
                 }
 REQ_KEYS = {
             }
@@ -61,6 +64,13 @@ REQ_KEYS = {
 SEC_HEAD = 'head_section'
 SEC_ATOMS = 'atoms_section'
 SEC_TAIL = 'tail_section'
+
+# For converting atomic number to species
+ATOM_DICT = {1: 'H', 2: 'He', 3: 'Li', 4: 'Be', 5: 'B', 6: 'C', 7: 'N', 8: 'O', 9: 'F', 10: 'Ne',
+             11: 'Na', 12: 'Mg', 13: 'Al', 14: 'Si', 15: 'P', 16: 'S', 17: 'Cl', 18: 'Ar',
+             19: 'K', 20: 'Ca', 21: 'Sc', 22: 'Ti', 23: 'V', 24: 'Cr', 25: 'Mn', 26: 'Fe', 27: 'Co', 28: 'Ni', 29: 'Cu',
+             30: 'Zn', 31: 'Ga', 32: 'Ge', 33: 'As', 34: 'Se', 35: 'Br', 36: 'Kr',
+             }
 
 
 def read_cfg(f_loc, cfg_proc=process_cfg):
@@ -80,16 +90,16 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
     main_proc = cfg_proc(dict(config.items(MAIN_SEC)), DEF_CFG_VALS, REQ_KEYS)
 
     # To fix; have this as default!
-    main_proc[GAUSSCOM_FILES] = []
-    if os.path.isfile(main_proc[GAUSSCOM_FILES_FILE]):
-        with open(main_proc[GAUSSCOM_FILES_FILE]) as f:
+    main_proc[GAUSSLOG_FILES] = []
+    if os.path.isfile(main_proc[GAUSSLOG_FILES_FILE]):
+        with open(main_proc[GAUSSLOG_FILES_FILE]) as f:
             for data_file in f:
-                main_proc[GAUSSCOM_FILES].append(data_file.strip())
-    if main_proc[GAUSSCOM_FILE] is not None:
-        main_proc[GAUSSCOM_FILES].append(main_proc[GAUSSCOM_FILE])
-    if len(main_proc[GAUSSCOM_FILES]) == 0:
+                main_proc[GAUSSLOG_FILES].append(data_file.strip())
+    if main_proc[GAUSSLOG_FILE] is not None:
+        main_proc[GAUSSLOG_FILES].append(main_proc[GAUSSLOG_FILE])
+    if len(main_proc[GAUSSLOG_FILES]) == 0:
         raise InvalidDataError("No files to process: no '{}' specified and "
-                               "no list of files found for: {}".format(GAUSSCOM_FILE, main_proc[GAUSSCOM_FILES_FILE]))
+                               "no list of files found for: {}".format(GAUSSLOG_FILE, main_proc[GAUSSLOG_FILES_FILE]))
 
     return main_proc
 
@@ -129,14 +139,14 @@ def parse_cmdline(argv):
 def process_gausscom_files(cfg, pdb_tpl_content):
     # Don't want to change the original template data when preparing to print the new file:
 
-    for gausscom_file in cfg[GAUSSCOM_FILES]:
+    for gausslog_file in cfg[GAUSSLOG_FILES]:
         if not cfg[PDB_TPL_FILE]:
-            pdb_tpl_content[HEAD_CONTENT] = ["TITLE     {}".format(gausscom_file)]
+            pdb_tpl_content[HEAD_CONTENT] = ["TITLE     {}".format(gausslog_file)]
             pdb_tpl_content[TAIL_CONTENT] = ["END"]
-        process_gausscom_file(cfg, gausscom_file, pdb_tpl_content)
+        process_gausslog_file(cfg, gausslog_file, pdb_tpl_content)
 
 
-def process_gausscom_file(cfg, gausscom_file, pdb_tpl_content):
+def process_gausslog_file(cfg, gausscom_file, pdb_tpl_content):
     with open(gausscom_file) as d:
         if cfg[PDB_TPL_FILE]:
             pdb_data_section = copy.deepcopy(pdb_tpl_content[ATOMS_CONTENT])
@@ -144,26 +154,41 @@ def process_gausscom_file(cfg, gausscom_file, pdb_tpl_content):
             pdb_data_section = []
         section = SEC_HEAD
         atom_id = 0
-        lines_after_header = 4  # blank line, description, blank line, charge & multiplicity
+        lines_after_coord = 2  # blank line, description, blank line, charge & multiplicity
+        f_name = create_out_fname(gausscom_file, ext='.pdb', base_dir=cfg[OUT_BASE_DIR])
+        mode = 'w'
+        message = True
+        coord_match = False
+        first_pass = True
 
         for line in d:
             line = line.strip()
-            # not currently keeping anything from the header; just check num atoms
+            if len(line) == 0:
+                continue
+            # not currently keeping anything from the header
             if section == SEC_HEAD:
-                if GAU_HEADER_PAT.match(line):
+                if GAU_COORD_PAT.match(line):
+                    coord_match = True
                     continue
-                elif lines_after_header > 0:
-                    lines_after_header -= 1
-                    if lines_after_header == 0:
+                elif coord_match and lines_after_coord > 0:
+                    lines_after_coord -= 1
+                    if lines_after_coord == 0:
                         section = SEC_ATOMS
                     continue
 
             elif section == SEC_ATOMS:
-                if len(line) == 0:
+                if GAU_SEP_PAT.match(line):
+                    section = SEC_TAIL
                     continue
+
                 split_line = line.split()
 
-                atom_type = split_line[0]
+                try:
+                    atom_type = ATOM_DICT[int(split_line[1])]
+                except KeyError:
+                    raise InvalidDataError("Currently, this code only expects atom numbers up to 36 (Kr), and the "
+                                           "atomic number read was {}. Update the code to use this with your current "
+                                           "output.".format(split_line[1]))
                 # if working from a template, check atom type
                 if cfg[PDB_TPL_FILE]:
                     pdb_atom_type = pdb_data_section[atom_id][8].split(' ')[-1]
@@ -174,13 +199,29 @@ def process_gausscom_file(cfg, gausscom_file, pdb_tpl_content):
                     pdb_data_section.append(atom_id)
                     pdb_data_section[atom_id] = ['HETATM', '{:5d}'.format(atom_id+1), '  {:4}'.format(atom_type),
                                                  'UNL  ', 1, 0.0, 0.0, 0.0, '  1.00  0.00           '+atom_type]
-                pdb_data_section[atom_id][5:8] = map(float, split_line[1:4])
+                pdb_data_section[atom_id][5:8] = map(float, split_line[3:6])
                 atom_id += 1
-                # Check after increment because the counter started at 0
-                if cfg[PDB_TPL_FILE]:
-                    if atom_id == pdb_tpl_content[NUM_ATOMS]:
-                        # Since the tail will come only from the template, nothing more is needed.
-                        break
+            elif section == SEC_TAIL:
+                if GAU_E_PAT.match(line):
+                    if first_pass:
+                        first_pass = False
+                    else:
+                        del pdb_tpl_content[HEAD_CONTENT][-1]
+                    pdb_tpl_content[HEAD_CONTENT].append("REMARK    {}".format(line))
+                    section = SEC_HEAD
+                    coord_match = False
+                    atom_id = 0
+                    lines_after_coord = 2
+
+                    list_to_file(pdb_tpl_content[HEAD_CONTENT] + pdb_data_section + pdb_tpl_content[TAIL_CONTENT],
+                                 f_name, list_format=PDB_FORMAT, mode=mode, print_message=message)
+                    message = False
+                    if not cfg[ONLY_FINAL]:
+                        mode = 'a'
+                    if cfg[PDB_TPL_FILE]:
+                        pdb_data_section = copy.deepcopy(pdb_tpl_content[ATOMS_CONTENT])
+                    else:
+                        pdb_data_section = []
 
     # Now that finished reading the file, first make sure didn't  exit before reaching the desired number of atoms
     if cfg[PDB_TPL_FILE]:
@@ -188,9 +229,6 @@ def process_gausscom_file(cfg, gausscom_file, pdb_tpl_content):
             raise InvalidDataError('In gausscom file: {}\n'
                                    '  found {} atoms, but pdb expects {} atoms'.format(gausscom_file, atom_id,
                                                                                        pdb_tpl_content[NUM_ATOMS]))
-    f_name = create_out_fname(gausscom_file, ext='.pdb', base_dir=cfg[OUT_BASE_DIR])
-    list_to_file(pdb_tpl_content[HEAD_CONTENT] + pdb_data_section + pdb_tpl_content[TAIL_CONTENT],
-                 f_name, list_format=PDB_FORMAT)
 
 
 def main(argv=None):
