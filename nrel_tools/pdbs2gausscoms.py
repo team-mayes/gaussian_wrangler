@@ -35,6 +35,7 @@ MAIN_SEC = 'main'
 # Config keys
 GAU_TPL_FILE = 'gau_tpl_file'
 PDBS_FILE = 'pdb_list_file'
+REMOVE_H = 'remove_final_h'
 # PDB file info
 PDB_SECTION_LAST_CHAR = 'pdb_section_last_char'
 PDB_ATOM_NUM_LAST_CHAR = 'pdb_atom_num_last_char'
@@ -50,6 +51,7 @@ PDB_FORMAT = 'pdb_print_format'
 # Defaults
 DEF_CFG_FILE = 'pdb2gau.ini'
 DEF_CFG_VALS = {PDBS_FILE: 'pdb_list.txt',
+                REMOVE_H: False,
                 PDB_SECTION_LAST_CHAR: 6,
                 PDB_ATOM_NUM_LAST_CHAR: 12,
                 PDB_ATOM_INFO_LAST_CHAR: 22,
@@ -145,6 +147,8 @@ def process_pdb_files(cfg, gau_tpl_content):
                         else:
                             mol_id = '_' + str(mol_num)
                         d_out = create_out_fname(pdb_file, suffix=mol_id, ext='.com')
+                        if cfg[REMOVE_H]:
+                            del pdb_atom_line[-1]
                         list_to_file(gau_tpl_content[HEAD_CONTENT] + pdb_atom_line + gau_tpl_content[TAIL_CONTENT],
                                      d_out)
                         pdb_atom_line = []

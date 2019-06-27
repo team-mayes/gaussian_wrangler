@@ -1,0 +1,1 @@
+tests/test_data/pdbs2gausscoms/pet_mono_f1hs.pdb
