@@ -23,6 +23,14 @@ GOOD_PDB_ALL_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_1_all_good.pdb')
 LAST_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_last.ini')
 GOOD_PDB_LAST_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_1_last_good.pdb')
 
+MULT_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_mult.ini')
+PDB2_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_2.pdb')
+GOOD_PDB2_LAST_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_2_last_good.pdb')
+
+COMB_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_comb.ini')
+PDB12_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_comb.pdb')
+GOOD_PDB12_LAST_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_comb_good.pdb')
+
 
 class Testgausslog2pdbNoOut(unittest.TestCase):
     # These all test failure cases
@@ -63,3 +71,28 @@ class Testgausslog2pdb(unittest.TestCase):
             self.assertFalse(diff_lines(PDB_OUT, GOOD_PDB_LAST_OUT))
         finally:
             silent_remove(PDB_OUT, disable=DISABLE_REMOVE)
+
+    def testMultIni(self):
+        test_input = ["-c", MULT_INI]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(PDB_OUT, GOOD_PDB_LAST_OUT))
+            self.assertFalse(diff_lines(PDB2_OUT, GOOD_PDB2_LAST_OUT))
+        finally:
+            silent_remove(PDB_OUT, disable=DISABLE_REMOVE)
+            silent_remove(PDB2_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testCombIni(self):
+        test_input = ["-c", COMB_INI]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(PDB12_OUT, GOOD_PDB12_LAST_OUT))
+        finally:
+            silent_remove(PDB12_OUT, disable=DISABLE_REMOVE)
+            pass
+

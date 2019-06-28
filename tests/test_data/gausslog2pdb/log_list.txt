@@ -1,0 +1,2 @@
+tests/test_data/gausslog2pdb/pet_mono_f1hs_1.log
+tests/test_data/gausslog2pdb/pet_mono_f1hs_2.log

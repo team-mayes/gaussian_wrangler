@@ -12,7 +12,7 @@ import sys
 import argparse
 from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file, process_pdb_tpl,
                                HEAD_CONTENT, ATOMS_CONTENT, TAIL_CONTENT, PDB_FORMAT, NUM_ATOMS,
-                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA)
+                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, silent_remove)
 
 try:
     # noinspection PyCompatibility
@@ -41,6 +41,8 @@ GAUSSLOG_FILES = 'gausslog_files_list'
 GAUSSLOG_FILE = 'gausslog_file'
 ONLY_FINAL = 'only_final_coords'
 OUT_BASE_DIR = 'output_directory'
+OUTFILE_NAME = 'output_file_name'
+COMBINE_LOGS = 'combine_logs'
 
 GAU_COORD_PAT = re.compile(r"Center     Atomic      Atomic             Coordinates.*")
 GAU_SEP_PAT = re.compile(r"---------------------------------------------------------------------.*")
@@ -56,6 +58,8 @@ DEF_CFG_VALS = {GAUSSLOG_FILES_FILE: 'gausslog_list.txt',
                 GAUSSLOG_FILE: None,
                 PDB_TPL_FILE: None,
                 ONLY_FINAL: False,
+                OUTFILE_NAME: None,
+                COMBINE_LOGS: False,
                 }
 REQ_KEYS = {
             }
@@ -100,7 +104,13 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
     if len(main_proc[GAUSSLOG_FILES]) == 0:
         raise InvalidDataError("No files to process: no '{}' specified and "
                                "no list of files found for: {}".format(GAUSSLOG_FILE, main_proc[GAUSSLOG_FILES_FILE]))
-
+    if main_proc[COMBINE_LOGS] and not main_proc[OUTFILE_NAME]:
+        raise InvalidDataError("When combining outputs from multiple log files into one pdb, specify the output "
+                               "file name")
+    if main_proc[COMBINE_LOGS] and not main_proc[ONLY_FINAL]:
+        warning("When combining outputs from multiple log files into one pdb, only the last coordinates of each "
+                "log file will be kept.")
+        main_proc[ONLY_FINAL] = True
     return main_proc
 
 
@@ -137,17 +147,24 @@ def parse_cmdline(argv):
 
 
 def process_gausscom_files(cfg, pdb_tpl_content):
-    # Don't want to change the original template data when preparing to print the new file:
-
+    if cfg[COMBINE_LOGS]:
+        f_name = create_out_fname(cfg[OUTFILE_NAME], ext='.pdb', base_dir=cfg[OUT_BASE_DIR])
+        silent_remove(f_name)
     for gausslog_file in cfg[GAUSSLOG_FILES]:
         if not cfg[PDB_TPL_FILE]:
             pdb_tpl_content[HEAD_CONTENT] = ["TITLE     {}".format(gausslog_file)]
             pdb_tpl_content[TAIL_CONTENT] = ["END"]
-        process_gausslog_file(cfg, gausslog_file, pdb_tpl_content)
+        if not cfg[COMBINE_LOGS]:
+            if cfg[OUTFILE_NAME]:
+                out_name = cfg[OUTFILE_NAME]
+            else:
+                out_name = gausslog_file
+            f_name = create_out_fname(out_name, ext='.pdb', base_dir=cfg[OUT_BASE_DIR])
+        process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name)
 
 
-def process_gausslog_file(cfg, gausscom_file, pdb_tpl_content):
-    with open(gausscom_file) as d:
+def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
+    with open(gausslog_file) as d:
         if cfg[PDB_TPL_FILE]:
             pdb_data_section = copy.deepcopy(pdb_tpl_content[ATOMS_CONTENT])
         else:
@@ -155,8 +172,10 @@ def process_gausslog_file(cfg, gausscom_file, pdb_tpl_content):
         section = SEC_HEAD
         atom_id = 0
         lines_after_coord = 2  # blank line, description, blank line, charge & multiplicity
-        f_name = create_out_fname(gausscom_file, ext='.pdb', base_dir=cfg[OUT_BASE_DIR])
-        mode = 'w'
+        if cfg[COMBINE_LOGS]:
+            mode = 'a'
+        else:
+            mode = 'w'
         message = True
         coord_match = False
         first_pass = True
@@ -213,21 +232,24 @@ def process_gausslog_file(cfg, gausscom_file, pdb_tpl_content):
                     atom_id = 0
                     lines_after_coord = 2
 
-                    list_to_file(pdb_tpl_content[HEAD_CONTENT] + pdb_data_section + pdb_tpl_content[TAIL_CONTENT],
-                                 f_name, list_format=PDB_FORMAT, mode=mode, print_message=message)
-                    message = False
                     if not cfg[ONLY_FINAL]:
+                        list_to_file(pdb_tpl_content[HEAD_CONTENT] + pdb_data_section + pdb_tpl_content[TAIL_CONTENT],
+                                     f_name, list_format=PDB_FORMAT, mode=mode, print_message=message)
+                        message = False
                         mode = 'a'
                     if cfg[PDB_TPL_FILE]:
                         pdb_data_section = copy.deepcopy(pdb_tpl_content[ATOMS_CONTENT])
                     else:
                         pdb_data_section = []
+    if cfg[ONLY_FINAL]:
+        list_to_file(pdb_tpl_content[HEAD_CONTENT] + pdb_data_section + pdb_tpl_content[TAIL_CONTENT],
+                     f_name, list_format=PDB_FORMAT, mode=mode, print_message=message)
 
     # Now that finished reading the file, first make sure didn't  exit before reaching the desired number of atoms
     if cfg[PDB_TPL_FILE]:
         if atom_id != pdb_tpl_content[NUM_ATOMS]:
             raise InvalidDataError('In gausscom file: {}\n'
-                                   '  found {} atoms, but pdb expects {} atoms'.format(gausscom_file, atom_id,
+                                   '  found {} atoms, but pdb expects {} atoms'.format(gausslog_file, atom_id,
                                                                                        pdb_tpl_content[NUM_ATOMS]))
 
 
