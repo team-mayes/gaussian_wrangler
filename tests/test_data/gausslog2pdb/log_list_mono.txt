@@ -1,0 +1,3 @@
+tests/test_data/gausslog2pdb/pet_mono_843_tzvp.log.1
+tests/test_data/gausslog2pdb/pet_mono_843_freq2tzvp.log.2
+tests/test_data/gausslog2pdb/pet_mono_843_tzvp.log.3

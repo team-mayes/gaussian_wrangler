@@ -165,10 +165,6 @@ def process_gausscom_files(cfg, pdb_tpl_content):
 
 def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
     with open(gausslog_file) as d:
-        if cfg[PDB_TPL_FILE]:
-            pdb_data_section = copy.deepcopy(pdb_tpl_content[ATOMS_CONTENT])
-        else:
-            pdb_data_section = []
         section = SEC_HEAD
         atom_id = 0
         lines_after_coord = 2  # blank line, description, blank line, charge & multiplicity
@@ -188,6 +184,10 @@ def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
             if section == SEC_HEAD:
                 if GAU_COORD_PAT.match(line):
                     coord_match = True
+                    if cfg[PDB_TPL_FILE]:
+                        pdb_data_section = copy.deepcopy(pdb_tpl_content[ATOMS_CONTENT])
+                    else:
+                        pdb_data_section = []
                     continue
                 elif coord_match and lines_after_coord > 0:
                     lines_after_coord -= 1
@@ -237,10 +237,7 @@ def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
                                      f_name, list_format=PDB_FORMAT, mode=mode, print_message=message)
                         message = False
                         mode = 'a'
-                    if cfg[PDB_TPL_FILE]:
-                        pdb_data_section = copy.deepcopy(pdb_tpl_content[ATOMS_CONTENT])
-                    else:
-                        pdb_data_section = []
+
     if cfg[ONLY_FINAL]:
         list_to_file(pdb_tpl_content[HEAD_CONTENT] + pdb_data_section + pdb_tpl_content[TAIL_CONTENT],
                      f_name, list_format=PDB_FORMAT, mode=mode, print_message=message)

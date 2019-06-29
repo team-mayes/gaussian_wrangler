@@ -31,6 +31,8 @@ COMB_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_comb.ini')
 PDB12_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_comb.pdb')
 GOOD_PDB12_LAST_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_comb_good.pdb')
 
+COMB2_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_comb_mono.ini')
+
 
 class Testgausslog2pdbNoOut(unittest.TestCase):
     # These all test failure cases
@@ -94,5 +96,16 @@ class Testgausslog2pdb(unittest.TestCase):
             self.assertFalse(diff_lines(PDB12_OUT, GOOD_PDB12_LAST_OUT))
         finally:
             silent_remove(PDB12_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testComb2Ini(self):
+        test_input = ["-c", COMB2_INI]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        try:
+            main(test_input)
+            # self.assertFalse(diff_lines(PDB_MONO_OUT, GOOD_PDB_MONO_LAST_OUT))
+        finally:
+            # silent_remove(PDB_MONO_OUT, disable=DISABLE_REMOVE)
             pass
 
