@@ -31,6 +31,9 @@ GOOD_REMOVE_H_OUT2 = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_2_good.com')
 REMOVE_H_OUT3 = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_3.com')
 GOOD_REMOVE_H_OUT3 = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_3_good.com')
 
+MULTI_FIRST_ONLY_INI = os.path.join(SUB_DATA_DIR, 'pdb2gau_multi.ini')
+GOOD_KEEP_H_OUT1 = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_1_withh_good.com')
+
 
 class Testpdbs2gausscomsNoOut(unittest.TestCase):
     # These all test failure cases
@@ -66,7 +69,7 @@ class Testpdbs2gausscoms(unittest.TestCase):
             silent_remove(GAU_OUT2, disable=DISABLE_REMOVE)
             silent_remove(GAU_OUT3, disable=DISABLE_REMOVE)
 
-    def testRemoveHIni(self):
+    def testRemoveH(self):
         test_input = ["-c", REMOVE_H_INI]
         if logger.isEnabledFor(logging.DEBUG):
             main(test_input)
@@ -80,3 +83,14 @@ class Testpdbs2gausscoms(unittest.TestCase):
             silent_remove(REMOVE_H_OUT2, disable=DISABLE_REMOVE)
             silent_remove(REMOVE_H_OUT3, disable=DISABLE_REMOVE)
 
+    def testFirstOnly(self):
+        test_input = ["-c", MULTI_FIRST_ONLY_INI]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(REMOVE_H_OUT1, GOOD_KEEP_H_OUT1))
+            self.assertFalse(diff_lines(GAU_OUT1, GOOD_GAU_OUT1))
+        finally:
+            silent_remove(REMOVE_H_OUT1, disable=DISABLE_REMOVE)
+            silent_remove(GAU_OUT1, disable=DISABLE_REMOVE)

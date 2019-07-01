@@ -36,6 +36,7 @@ MAIN_SEC = 'main'
 GAU_TPL_FILE = 'gau_tpl_file'
 PDBS_FILE = 'pdb_list_file'
 REMOVE_H = 'remove_final_h'
+FIRST_ONLY = 'first_only'
 # PDB file info
 PDB_SECTION_LAST_CHAR = 'pdb_section_last_char'
 PDB_ATOM_NUM_LAST_CHAR = 'pdb_atom_num_last_char'
@@ -52,6 +53,7 @@ PDB_FORMAT = 'pdb_print_format'
 DEF_CFG_FILE = 'pdb2gau.ini'
 DEF_CFG_VALS = {PDBS_FILE: 'pdb_list.txt',
                 REMOVE_H: False,
+                FIRST_ONLY: False,
                 PDB_SECTION_LAST_CHAR: 6,
                 PDB_ATOM_NUM_LAST_CHAR: 12,
                 PDB_ATOM_INFO_LAST_CHAR: 22,
@@ -130,28 +132,35 @@ def process_pdb_files(cfg, gau_tpl_content):
     with open(cfg[PDBS_FILE]) as f:
         for pdb_file in f.readlines():
             pdb_file = pdb_file.strip()
-            with open(pdb_file) as d:
-                mol_num = 0
+            if len(pdb_file) > 0:
+                process_pdb_file(cfg, gau_tpl_content, pdb_file)
+
+
+def process_pdb_file(cfg, gau_tpl_content, pdb_file):
+    with open(pdb_file) as d:
+        mol_num = 0
+        pdb_atom_line = []
+        for line in d.readlines():
+            pdb_section = line[:cfg[PDB_SECTION_LAST_CHAR]]
+            if pdb_section == 'MODEL ':
+                mol_num += 1
+            elif pdb_section == 'ATOM  ' or pdb_section == 'HETATM':
+                element = line[cfg[PDB_BEFORE_ELE_LAST_CHAR]:cfg[PDB_ELE_LAST_CHAR]].strip()
+                pdb_xyz = line[cfg[PDB_MOL_NUM_LAST_CHAR]:cfg[PDB_Z_LAST_CHAR]]
+                pdb_atom_line.append(["{:6}".format(element), pdb_xyz])
+            elif pdb_section == 'END\n':
+                if mol_num == 0:
+                    mol_id = ''
+                else:
+                    mol_id = '_' + str(mol_num)
+                d_out = create_out_fname(pdb_file, suffix=mol_id, ext='.com')
+                if cfg[REMOVE_H]:
+                    del pdb_atom_line[-1]
+                list_to_file(gau_tpl_content[HEAD_CONTENT] + pdb_atom_line + gau_tpl_content[TAIL_CONTENT],
+                             d_out)
+                if cfg[FIRST_ONLY]:
+                    return
                 pdb_atom_line = []
-                for line in d.readlines():
-                    pdb_section = line[:cfg[PDB_SECTION_LAST_CHAR]]
-                    if pdb_section == 'MODEL ':
-                        mol_num += 1
-                    elif pdb_section == 'ATOM  ' or pdb_section == 'HETATM':
-                        element = line[cfg[PDB_BEFORE_ELE_LAST_CHAR]:cfg[PDB_ELE_LAST_CHAR]].strip()
-                        pdb_xyz = line[cfg[PDB_MOL_NUM_LAST_CHAR]:cfg[PDB_Z_LAST_CHAR]]
-                        pdb_atom_line.append(["{:6}".format(element), pdb_xyz])
-                    elif pdb_section == 'END\n':
-                        if mol_num == 0:
-                            mol_id = ''
-                        else:
-                            mol_id = '_' + str(mol_num)
-                        d_out = create_out_fname(pdb_file, suffix=mol_id, ext='.com')
-                        if cfg[REMOVE_H]:
-                            del pdb_atom_line[-1]
-                        list_to_file(gau_tpl_content[HEAD_CONTENT] + pdb_atom_line + gau_tpl_content[TAIL_CONTENT],
-                                     d_out)
-                        pdb_atom_line = []
 
 
 def process_gau_tpl(cfg):
