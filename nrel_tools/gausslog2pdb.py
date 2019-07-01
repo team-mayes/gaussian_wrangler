@@ -6,12 +6,11 @@ Creates pdb data files from lammps data files, given a template pdb file.
 from __future__ import print_function
 import os
 import copy
-import logging
 import re
 import sys
 import argparse
 from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file, process_pdb_tpl,
-                               HEAD_CONTENT, ATOMS_CONTENT, TAIL_CONTENT, PDB_FORMAT, NUM_ATOMS,
+                               HEAD_CONTENT, ATOMS_CONTENT, TAIL_CONTENT, PDB_FORMAT, NUM_ATOMS, ATOM_NUM_DICT,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, silent_remove)
 
 try:
@@ -23,11 +22,6 @@ except ImportError:
 
 __author__ = 'hmayes'
 
-
-# Logging
-logger = logging.getLogger('gausscom2pdb')
-# logging.basicConfig(filename='gausscom2pdb.log', filemode='w', level=logging.DEBUG)
-logging.basicConfig(level=logging.INFO)
 
 # Constants #
 
@@ -64,17 +58,10 @@ DEF_CFG_VALS = {GAUSSLOG_FILES_FILE: 'gausslog_list.txt',
 REQ_KEYS = {
             }
 
-# For pdb template file processing
+# For log file processing
 SEC_HEAD = 'head_section'
 SEC_ATOMS = 'atoms_section'
 SEC_TAIL = 'tail_section'
-
-# For converting atomic number to species
-ATOM_DICT = {1: 'H', 2: 'He', 3: 'Li', 4: 'Be', 5: 'B', 6: 'C', 7: 'N', 8: 'O', 9: 'F', 10: 'Ne',
-             11: 'Na', 12: 'Mg', 13: 'Al', 14: 'Si', 15: 'P', 16: 'S', 17: 'Cl', 18: 'Ar',
-             19: 'K', 20: 'Ca', 21: 'Sc', 22: 'Ti', 23: 'V', 24: 'Cr', 25: 'Mn', 26: 'Fe', 27: 'Co', 28: 'Ni', 29: 'Cu',
-             30: 'Zn', 31: 'Ga', 32: 'Ge', 33: 'As', 34: 'Se', 35: 'Br', 36: 'Kr',
-             }
 
 
 def read_cfg(f_loc, cfg_proc=process_cfg):
@@ -203,7 +190,7 @@ def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
                 split_line = line.split()
 
                 try:
-                    atom_type = ATOM_DICT[int(split_line[1])]
+                    atom_type = ATOM_NUM_DICT[int(split_line[1])]
                 except KeyError:
                     raise InvalidDataError("Currently, this code only expects atom numbers up to 36 (Kr), and the "
                                            "atomic number read was {}. Update the code to use this with your current "

@@ -1,0 +1,2 @@
+tests/test_data/gausslog2com/pet_mono_843_tzvp.log
+tests/test_data/gausslog2com/pet_mono_901_tzvp.log
