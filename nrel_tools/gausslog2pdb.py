@@ -150,6 +150,17 @@ def process_gausscom_files(cfg, pdb_tpl_content):
         process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name)
 
 
+def check_and_print(cfg, atom_id, pdb_tpl_content, gausslog_file, pdb_data_section, f_name, mode, message):
+    # Check Num atoms and print
+    if cfg[PDB_TPL_FILE]:
+        if atom_id != pdb_tpl_content[NUM_ATOMS]:
+            raise InvalidDataError('In gausscom file: {}\nfound {} atoms, but pdb expects {} ' \
+                                   'atoms'.format(gausslog_file, atom_id,
+                                                  pdb_tpl_content[NUM_ATOMS]))
+    list_to_file(pdb_tpl_content[HEAD_CONTENT] + pdb_data_section + pdb_tpl_content[TAIL_CONTENT],
+                 f_name, list_format=PDB_FORMAT, mode=mode, print_message=message)
+
+
 def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
     with open(gausslog_file) as d:
         section = SEC_HEAD
@@ -214,27 +225,21 @@ def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
                     else:
                         del pdb_tpl_content[HEAD_CONTENT][-1]
                     pdb_tpl_content[HEAD_CONTENT].append("REMARK    {}".format(line))
+                    if not cfg[ONLY_FINAL]:
+                        check_and_print(cfg, atom_id, pdb_tpl_content, gausslog_file, pdb_data_section,
+                                        f_name, mode, message)
+                        message = False
+                        mode = 'a'
                     section = SEC_HEAD
                     coord_match = False
                     atom_id = 0
                     lines_after_coord = 2
 
-                    if not cfg[ONLY_FINAL]:
-                        list_to_file(pdb_tpl_content[HEAD_CONTENT] + pdb_data_section + pdb_tpl_content[TAIL_CONTENT],
-                                     f_name, list_format=PDB_FORMAT, mode=mode, print_message=message)
-                        message = False
-                        mode = 'a'
-
     if cfg[ONLY_FINAL]:
-        list_to_file(pdb_tpl_content[HEAD_CONTENT] + pdb_data_section + pdb_tpl_content[TAIL_CONTENT],
-                     f_name, list_format=PDB_FORMAT, mode=mode, print_message=message)
+        check_and_print(cfg, atom_id, pdb_tpl_content, gausslog_file, pdb_data_section,
+                        f_name, mode, message)
 
-    # Now that finished reading the file, first make sure didn't  exit before reaching the desired number of atoms
-    if cfg[PDB_TPL_FILE]:
-        if atom_id != pdb_tpl_content[NUM_ATOMS]:
-            raise InvalidDataError('In gausscom file: {}\n'
-                                   '  found {} atoms, but pdb expects {} atoms'.format(gausslog_file, atom_id,
-                                                                                       pdb_tpl_content[NUM_ATOMS]))
+
 
 
 def main(argv=None):

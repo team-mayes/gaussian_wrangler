@@ -32,6 +32,12 @@ PDB12_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_comb.pdb')
 GOOD_PDB12_LAST_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_comb_good.pdb')
 
 COMB2_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_comb_mono.ini')
+COMB_PDB_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_test_comb.pdb')
+GOOD_COMB_PDB_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_test_comb_good.pdb')
+
+MULT_PDB_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_mult_mol_in_pdb.ini')
+MULT_PDB_OUT = os.path.join(SUB_DATA_DIR, 'pet_trimer_confab_1_tzvp_opt.pdb')
+GOOD_MULT_PDB_OUT = os.path.join(SUB_DATA_DIR, 'pet_trimer_confab_1_tzvp_opt_good.pdb')
 
 
 class Testgausslog2pdbNoOut(unittest.TestCase):
@@ -104,8 +110,18 @@ class Testgausslog2pdb(unittest.TestCase):
             main(test_input)
         try:
             main(test_input)
-            # self.assertFalse(diff_lines(PDB_MONO_OUT, GOOD_PDB_MONO_LAST_OUT))
+            self.assertFalse(diff_lines(COMB_PDB_OUT, GOOD_COMB_PDB_OUT))
         finally:
-            # silent_remove(PDB_MONO_OUT, disable=DISABLE_REMOVE)
+            silent_remove(COMB_PDB_OUT, disable=DISABLE_REMOVE)
             pass
 
+    def testMultPDB(self):
+        test_input = ["-c", MULT_PDB_INI]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(MULT_PDB_OUT, GOOD_MULT_PDB_OUT))
+        finally:
+            silent_remove(MULT_PDB_OUT, disable=DISABLE_REMOVE)
+            pass

@@ -1292,7 +1292,9 @@ def process_pdb_tpl(tpl_loc):
                 line_struct = [line_head, atom_num, atom_type, res_type, mol_num, pdb_x, pdb_y, pdb_z, last_cols]
                 # noinspection PyTypeChecker
                 tpl_data[ATOMS_CONTENT].append(line_struct)
-
+            elif line_head == 'END':
+                tpl_data[TAIL_CONTENT].append(line)
+                break
             # tail_content to contain everything after the 'Atoms' section
             else:
                 # noinspection PyTypeChecker
