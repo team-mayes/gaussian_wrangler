@@ -37,6 +37,7 @@ ONLY_FINAL = 'only_final_coords'
 OUT_BASE_DIR = 'output_directory'
 OUTFILE_NAME = 'output_file_name'
 COMBINE_LOGS = 'combine_logs'
+ADD_NUM_TO_TYPE = 'add_nums_to_type'
 
 GAU_COORD_PAT = re.compile(r"Center     Atomic      Atomic             Coordinates.*")
 GAU_SEP_PAT = re.compile(r"---------------------------------------------------------------------.*")
@@ -54,6 +55,7 @@ DEF_CFG_VALS = {GAUSSLOG_FILES_FILE: 'gausslog_list.txt',
                 ONLY_FINAL: False,
                 OUTFILE_NAME: None,
                 COMBINE_LOGS: False,
+                ADD_NUM_TO_TYPE: False,
                 }
 REQ_KEYS = {
             }
@@ -205,21 +207,26 @@ def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
                 split_line = line.split()
 
                 try:
-                    atom_type = ATOM_NUM_DICT[int(split_line[1])]
+                    element_type = ATOM_NUM_DICT[int(split_line[1])]
                 except KeyError:
                     raise InvalidDataError("Currently, this code only expects atom numbers up to 36 (Kr), and the "
                                            "atomic number read was {}. Update the code to use this with your current "
                                            "output.".format(split_line[1]))
                 # if working from a template, check atom type
                 if cfg[PDB_TPL_FILE]:
-                    pdb_atom_type = pdb_data_section[atom_id][8].split(' ')[-1]
-                    if atom_type != pdb_atom_type:
-                        warning("Atom types do not match for atom number {}; pdb atom type is {} while gausscom type "
-                                "is {}".format(atom_id, pdb_atom_type, atom_type))
+                    pdb_element_type = pdb_data_section[atom_id][8].split(' ')[-1]
+                    if element_type != pdb_element_type:
+                        warning("Atom element types do not match for atom number {}; pdb atom type is {} while "
+                                "gausscom type is {}".format(atom_id, pdb_element_type, element_type))
                 else:
                     pdb_data_section.append(atom_id)
+                    atom_type = element_type
+                    if cfg[ADD_NUM_TO_TYPE]:
+                        # catch too long atom_type after adding number...
+                        max_atom_num_length = 3 - len(atom_type)
+                        atom_type += str(atom_id+1)[:max_atom_num_length]
                     pdb_data_section[atom_id] = ['HETATM', '{:5d}'.format(atom_id+1), '  {:4}'.format(atom_type),
-                                                 'UNL  ', 1, 0.0, 0.0, 0.0, '  1.00  0.00           '+atom_type]
+                                                 'UNL  ', 1, 0.0, 0.0, 0.0, '  1.00  0.00           '+element_type]
                 pdb_data_section[atom_id][5:8] = map(float, split_line[3:6])
                 atom_id += 1
             elif section == SEC_TAIL:
