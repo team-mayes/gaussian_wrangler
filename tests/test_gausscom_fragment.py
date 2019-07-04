@@ -16,6 +16,16 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
 SUB_DATA_DIR = os.path.join(DATA_DIR, 'gausscom_fragment')
 
 DEF_INI = os.path.join(SUB_DATA_DIR, 'gausscom_fragment.ini')
+F1_15_14_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_15_14_f1.com')
+F2_15_14_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_15_14_f2.com')
+CP_15_14_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_15_14_cp.com')
+GOOD_CP_15_14_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_cp_good.com')
+CP_14_15_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_14_15_cp.com')
+GOOD_CP_14_15_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_14_15_cp_good.com')
+F1_14_15_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_14_15_f1.com')
+GOOD_F1_14_15_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_14_15_f1_good.com')
+F2_14_15_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_14_15_f2.com')
+GOOD_F2_14_15_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_14_15_f2_good.com')
 
 LONELY_INI = os.path.join(SUB_DATA_DIR, 'gausscom_lonely_fragments.ini')
 CP_20_21_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_20_21_cp.com')
@@ -54,7 +64,26 @@ class TestGausscomFragNoOut(unittest.TestCase):
 
 class TestGausscomFrag(unittest.TestCase):
     # These test/demonstrate different options
-    def testCPTpl(self):
+    def testDefIni(self):
+        test_input = ["-c", DEF_INI]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(CP_15_14_OUT, GOOD_CP_15_14_OUT))
+            self.assertFalse(diff_lines(CP_14_15_OUT, GOOD_CP_14_15_OUT))
+            self.assertFalse(diff_lines(F1_14_15_OUT, GOOD_F1_14_15_OUT))
+            self.assertFalse(diff_lines(F2_14_15_OUT, GOOD_F2_14_15_OUT))
+            self.assertEqual(len(diff_lines(F1_15_14_OUT, GOOD_F2_14_15_OUT)), 2)
+            self.assertEqual(len(diff_lines(F2_15_14_OUT, GOOD_F1_14_15_OUT)), 2)
+        finally:
+            silent_remove(CP_15_14_OUT, disable=DISABLE_REMOVE)
+            silent_remove(CP_14_15_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F1_14_15_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F2_14_15_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F1_15_14_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F2_15_14_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testLonelyFragments(self):
         test_input = ["-c", LONELY_INI]
         try:
             main(test_input)
