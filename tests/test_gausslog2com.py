@@ -22,6 +22,10 @@ GOOD_COM1_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_843_tzvp_cp_good.com')
 COM2_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_901_tzvp_cp.com')
 GOOD_COM2_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_901_tzvp_cp_good.com')
 
+LOG_FILE = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp.log')
+COM3_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_cp.com')
+GOOD_COM3_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_cp_good.com')
+
 
 class Testgausslog2comNoOut(unittest.TestCase):
     # These all test failure cases
@@ -45,8 +49,6 @@ class Testgausslog2com(unittest.TestCase):
     # These test/demonstrate different options
     def testCPTpl(self):
         test_input = ["-t", COM_TPL, "-l", LOG_LIST]
-        if logger.isEnabledFor(logging.DEBUG):
-            main(test_input)
         try:
             main(test_input)
             self.assertFalse(diff_lines(COM1_OUT, GOOD_COM1_OUT))
@@ -54,4 +56,13 @@ class Testgausslog2com(unittest.TestCase):
         finally:
             silent_remove(COM1_OUT, disable=DISABLE_REMOVE)
             silent_remove(COM2_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testFileCPTpl(self):
+        test_input = ["-t", COM_TPL, "-f", LOG_FILE]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(COM3_OUT, GOOD_COM3_OUT))
+        finally:
+            silent_remove(COM3_OUT, disable=DISABLE_REMOVE)
             pass

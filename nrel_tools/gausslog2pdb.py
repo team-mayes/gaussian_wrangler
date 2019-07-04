@@ -98,6 +98,10 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
         warning("When combining outputs from multiple log files into one pdb, only the last coordinates of each "
                 "log file will be kept.")
         main_proc[ONLY_FINAL] = True
+
+    if not os.path.exists(main_proc[OUT_BASE_DIR]):
+        os.makedirs(main_proc[OUT_BASE_DIR])
+
     return main_proc
 
 
