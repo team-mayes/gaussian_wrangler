@@ -20,8 +20,19 @@ DEF_INI = os.path.join(SUB_DATA_DIR, 'gausscom_fragment.ini')
 LONELY_INI = os.path.join(SUB_DATA_DIR, 'gausscom_lonely_fragments.ini')
 CP_20_21_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_20_21_cp.com')
 GOOD_CP_20_21_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_20_21_cp_good.com')
+F2_20_21_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_20_21_f2.com')
+GOOD_F2_20_21_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_20_21_f2_good.com')
+
 CP_22_23_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_22_23_cp.com')
 GOOD_CP_22_23_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_22_23_cp_good.com')
+F2_22_23_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_22_23_f2.com')
+GOOD_F2_22_23_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_22_23_f2_good.com')
+
+CP_24_18_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_24_18_cp.com')
+GOOD_CP_24_18_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_24_18_cp_good.com')
+F2_24_18_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_24_18_f2.com')
+GOOD_F2_24_18_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_24_18_f2_good.com')
+
 
 class TestGausscomFragNoOut(unittest.TestCase):
     # These all test failure cases
@@ -49,7 +60,15 @@ class TestGausscomFrag(unittest.TestCase):
             main(test_input)
             self.assertFalse(diff_lines(CP_20_21_OUT, GOOD_CP_20_21_OUT))
             self.assertFalse(diff_lines(CP_22_23_OUT, GOOD_CP_22_23_OUT))
+            self.assertFalse(diff_lines(CP_24_18_OUT, GOOD_CP_24_18_OUT))
+            self.assertFalse(diff_lines(F2_20_21_OUT, GOOD_F2_20_21_OUT))
+            self.assertFalse(diff_lines(F2_22_23_OUT, GOOD_F2_22_23_OUT))
+            self.assertFalse(diff_lines(F2_24_18_OUT, GOOD_F2_24_18_OUT))
         finally:
             silent_remove(CP_20_21_OUT, disable=DISABLE_REMOVE)
             silent_remove(CP_22_23_OUT, disable=DISABLE_REMOVE)
+            silent_remove(CP_24_18_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F2_20_21_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F2_22_23_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F2_24_18_OUT, disable=DISABLE_REMOVE)
             pass
