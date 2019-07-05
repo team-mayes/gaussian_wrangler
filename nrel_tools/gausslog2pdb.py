@@ -6,11 +6,11 @@ Creates pdb files from Gaussian log files
 from __future__ import print_function
 import os
 import copy
-import re
 import sys
 import argparse
 from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file, process_pdb_file,
                                SEC_HEAD, SEC_ATOMS, SEC_TAIL, PDB_FORMAT, NUM_ATOMS, ATOM_NUM_DICT,
+                               GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, silent_remove)
 
 try:
@@ -37,11 +37,6 @@ OUT_BASE_DIR = 'output_directory'
 OUTFILE_NAME = 'output_file_name'
 COMBINE_LOGS = 'combine_logs'
 ADD_NUM_TO_TYPE = 'add_nums_to_type'
-
-# noinspection RegExpRepeatedSpace
-GAU_COORD_PAT = re.compile(r"Center     Atomic      Atomic             Coordinates.*")
-GAU_SEP_PAT = re.compile(r"---------------------------------------------------------------------.*")
-GAU_E_PAT = re.compile(r"SCF Done:.*")
 
 # data file info
 
@@ -101,8 +96,9 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
                 "log file will be kept.")
         main_proc[ONLY_FINAL] = True
 
-    if not os.path.exists(main_proc[OUT_BASE_DIR]):
-        os.makedirs(main_proc[OUT_BASE_DIR])
+    if main_proc[OUT_BASE_DIR]:
+        if not os.path.exists(main_proc[OUT_BASE_DIR]):
+            os.makedirs(main_proc[OUT_BASE_DIR])
 
     return main_proc
 

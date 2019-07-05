@@ -5,11 +5,11 @@ Creates pdb data files from lammps data files, given a template pdb file.
 
 from __future__ import print_function
 import os
-import re
 import sys
 import argparse
 from nrel_tools.common import (InvalidDataError, warning, create_out_fname, list_to_file, ATOM_NUM_DICT,
-                               NUM_ATOMS, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA)
+                               NUM_ATOMS, GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT,
+                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA)
 
 try:
     # noinspection PyCompatibility
@@ -29,10 +29,6 @@ DEF_LIST_FILE = 'log_list.txt'
 
 GAUSSLOG_FILES_FILE = 'gausslog_list_file'
 OUT_BASE_DIR = 'output_directory'
-
-GAU_COORD_PAT = re.compile(r"Center     Atomic      Atomic             Coordinates.*")
-GAU_SEP_PAT = re.compile(r"---------------------------------------------------------------------.*")
-GAU_E_PAT = re.compile(r"SCF Done:.*")
 
 # For log file processing
 SEC_HEAD = 'head_section'

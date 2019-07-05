@@ -64,6 +64,10 @@ SEC_TAIL = 'tail_section'
 ATOM_TYPE = 'atom_type'
 ATOM_COORDS = 'atom_coords'
 GAU_HEADER_PAT = re.compile(r"#.*")
+# noinspection RegExpRepeatedSpace
+GAU_COORD_PAT = re.compile(r"Center     Atomic      Atomic             Coordinates.*")
+GAU_SEP_PAT = re.compile(r"---------------------------------------------------------------------.*")
+GAU_E_PAT = re.compile(r"SCF Done:.*")
 
 # From template files
 NUM_ATOMS = 'num_atoms'
@@ -107,8 +111,6 @@ IO_ERROR = 2
 INVALID_DATA = 3
 
 PY2 = sys.version_info[0] == 2
-
-
 # PY3 = sys.version_info[0] == 3
 
 
@@ -328,15 +330,15 @@ def make_dir(tgt_dir):
         raise NotFoundError("Resource {} exists and is not a dir".format(tgt_dir))
 
 
-def file_to_str(fname):
+def file_to_str(f_name):
     """
     Reads and returns the contents of the given file.
 
-    @param fname: The location of the file to read.
+    @param f_name: The location of the file to read.
     @return: The contents of the given file.
     :raises: IOError if the file can't be opened for reading.
     """
-    with open(fname) as f:
+    with open(f_name) as f:
         return f.read()
 
 
@@ -351,18 +353,18 @@ def file_rows_to_list(c_file):
         return list(filter(None, row_list))
 
 
-def str_to_file(str_val, fname, mode='w', print_info=False):
+def str_to_file(str_val, f_name, mode='w', print_info=False):
     """
     Writes the string to the given file.
     @param str_val: The string to write.
-    @param fname: The location of the file to write
+    @param f_name: The location of the file to write
     @param mode: default mode is to overwrite file
     @param print_info: boolean to specify whether to print action to stdout
     """
-    with open(fname, mode) as f:
+    with open(f_name, mode) as f:
         f.write(str_val)
     if print_info:
-        print("Wrote file: {}".format(fname))
+        print("Wrote file: {}".format(f_name))
 
 
 def round_to_print(val):
@@ -1253,64 +1255,6 @@ def find_dump_section_state(line, sec_timestep=SEC_TIMESTEP, sec_num_atoms=SEC_N
         return sec_box_size
     elif atoms_pat.match(line):
         return sec_atoms
-
-
-# def process_pdb_tpl(tpl_loc):
-#     tpl_data = {NUM_ATOMS: 0, HEAD_CONTENT: [], ATOMS_CONTENT: [], TAIL_CONTENT: []}
-#
-#     atom_id = 0
-#
-#     with open(tpl_loc) as f:
-#         for line in f:
-#             line = line.strip()
-#             if len(line) == 0:
-#                 continue
-#             line_head = line[:PDB_LINE_TYPE_LAST_CHAR]
-#             # head_content to contain Everything before 'Atoms' section
-#             # also capture the number of atoms
-#             # match 5 letters so don't need to set up regex for the ones that have numbers following the letters
-#             # noinspection SpellCheckingInspection
-#             if line_head[:-1] in ['HEADE', 'TITLE', 'REMAR', 'CRYST', 'MODEL', 'COMPN',
-#                                   'NUMMD', 'ORIGX', 'SCALE', 'SOURC', 'AUTHO', 'CAVEA',
-#                                   'EXPDT', 'MDLTY', 'KEYWD', 'OBSLT', 'SPLIT', 'SPRSD',
-#                                   'REVDA', 'JRNL ', 'DBREF', 'SEQRE', 'HET  ', 'HETNA',
-#                                   'HETSY', 'FORMU', 'HELIX', 'SHEET', 'SSBON', 'LINK ',
-#                                   'CISPE', 'SITE ', ]:
-#                 # noinspection PyTypeChecker
-#                 tpl_data[HEAD_CONTENT].append(line)
-#
-#             # atoms_content to contain everything but the xyz
-#             elif line_head == 'ATOM  ' or line_head == 'HETATM':
-#                 # By renumbering, handles the case when a PDB template has ***** after atom_id 99999.
-#                 # For renumbering, making sure prints in the correct format, including num of characters:
-#                 atom_id += 1
-#                 if atom_id > 99999:
-#                     atom_num = format(atom_id, 'x')
-#                 else:
-#                     atom_num = '{:5d}'.format(atom_id)
-#                 # Alternately, use this:
-#                 # atom_num = line[cfg[PDB_LINE_TYPE_LAST_CHAR]:cfg[PDB_ATOM_NUM_LAST_CHAR]]
-#
-#                 atom_type = line[PDB_ATOM_NUM_LAST_CHAR:PDB_ATOM_TYPE_LAST_CHAR]
-#                 res_type = line[PDB_ATOM_TYPE_LAST_CHAR:PDB_RES_TYPE_LAST_CHAR]
-#                 mol_num = int(line[PDB_RES_TYPE_LAST_CHAR:PDB_MOL_NUM_LAST_CHAR])
-#                 pdb_x = float(line[PDB_MOL_NUM_LAST_CHAR:PDB_X_LAST_CHAR])
-#                 pdb_y = float(line[PDB_X_LAST_CHAR:PDB_Y_LAST_CHAR])
-#                 pdb_z = float(line[PDB_Y_LAST_CHAR:PDB_Z_LAST_CHAR])
-#                 last_cols = line[PDB_Z_LAST_CHAR:]
-#
-#                 line_struct = [line_head, atom_num, atom_type, res_type, mol_num, pdb_x, pdb_y, pdb_z, last_cols]
-#                 # noinspection PyTypeChecker
-#                 tpl_data[ATOMS_CONTENT].append(line_struct)
-#             elif line_head == 'END':
-#                 tpl_data[TAIL_CONTENT].append(line)
-#                 break
-#             # tail_content to contain everything after the 'Atoms' section
-#             else:
-#                 # noinspection PyTypeChecker
-#                 tpl_data[TAIL_CONTENT].append(line)
-#     tpl_data[NUM_ATOMS] = len(tpl_data[ATOMS_CONTENT])
-#     return tpl_data
 
 
 def process_pdb_file(pdb_file, atom_info_only=False):

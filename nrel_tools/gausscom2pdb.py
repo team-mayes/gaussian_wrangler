@@ -1,17 +1,15 @@
 #!/usr/bin/env python
 """
-Creates pdb data files from lammps data files, given a template pdb file.
+Creates pdb data files from Gaussian input files.
 """
 
 from __future__ import print_function
 import os
 import copy
-import logging
-import re
 import sys
 import argparse
 from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file, process_pdb_file,
-                               PDB_FORMAT, NUM_ATOMS,
+                               PDB_FORMAT, NUM_ATOMS, GAU_HEADER_PAT,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA)
 
 try:
@@ -23,11 +21,6 @@ except ImportError:
 
 __author__ = 'hmayes'
 
-
-# Logging
-logger = logging.getLogger('gausscom2pdb')
-# logging.basicConfig(filename='gausscom2pdb.log', filemode='w', level=logging.DEBUG)
-logging.basicConfig(level=logging.INFO)
 
 # Constants #
 
@@ -41,8 +34,6 @@ GAUSSCOM_FILES = 'gausscom_files_list'
 GAUSSCOM_FILE = 'gausscom_file'
 
 OUT_BASE_DIR = 'output_directory'
-
-GAU_HEADER_PAT = re.compile(r"#.*")
 
 # data file info
 

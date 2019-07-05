@@ -43,6 +43,12 @@ GOOD_CP_24_18_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_24_18_cp_good.co
 F2_24_18_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_24_18_f2.com')
 GOOD_F2_24_18_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_24_18_f2_good.com')
 
+DIMER_INI = os.path.join(SUB_DATA_DIR, 'gauss_frag_dimer.ini')
+CP_DI_18_24_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_24_cp.com')
+GOOD_CP_DI_18_24_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_24_cp_good.com')
+F2_DI_18_24_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_24_f2.com')
+GOOD_F2_DI_18_24_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_24_f2_good.com')
+
 
 class TestGausscomFragNoOut(unittest.TestCase):
     # These all test failure cases
@@ -100,4 +106,15 @@ class TestGausscomFrag(unittest.TestCase):
             silent_remove(F2_20_21_OUT, disable=DISABLE_REMOVE)
             silent_remove(F2_22_23_OUT, disable=DISABLE_REMOVE)
             silent_remove(F2_24_18_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testDubO(self):
+        test_input = ["-c", DIMER_INI]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(CP_DI_18_24_OUT, GOOD_CP_DI_18_24_OUT))
+            self.assertFalse(diff_lines(F2_DI_18_24_OUT, GOOD_F2_DI_18_24_OUT))
+        finally:
+            silent_remove(CP_DI_18_24_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F2_DI_18_24_OUT, disable=DISABLE_REMOVE)
             pass
