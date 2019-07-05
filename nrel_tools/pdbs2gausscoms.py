@@ -10,7 +10,10 @@ from __future__ import print_function
 import sys
 import argparse
 from nrel_tools.common import (list_to_file, InvalidDataError, create_out_fname, process_cfg, warning,
-                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA)
+                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
+                               PDB_LINE_TYPE_LAST_CHAR, PDB_MOL_NUM_LAST_CHAR, PDB_Z_LAST_CHAR,
+                               PDB_BEFORE_ELE_LAST_CHAR, PDB_ELE_LAST_CHAR,
+                               )
 try:
     # noinspection PyCompatibility
     from ConfigParser import ConfigParser
@@ -37,32 +40,12 @@ GAU_TPL_FILE = 'gau_tpl_file'
 PDBS_FILE = 'pdb_list_file'
 REMOVE_H = 'remove_final_h'
 FIRST_ONLY = 'first_only'
-# PDB file info
-PDB_SECTION_LAST_CHAR = 'pdb_section_last_char'
-PDB_ATOM_NUM_LAST_CHAR = 'pdb_atom_num_last_char'
-PDB_ATOM_INFO_LAST_CHAR = 'pdb_atom_info_last_char'
-PDB_MOL_NUM_LAST_CHAR = 'pdb_mol_num_last_char'
-PDB_X_LAST_CHAR = 'pdb_x_last_char'
-PDB_Y_LAST_CHAR = 'pdb_y_last_char'
-PDB_Z_LAST_CHAR = 'pdb_z_last_char'
-PDB_BEFORE_ELE_LAST_CHAR = 'pdb_before_element_last_char'
-PDB_ELE_LAST_CHAR = 'pdb_element_last_char'
-PDB_FORMAT = 'pdb_print_format'
 
 # Defaults
 DEF_CFG_FILE = 'pdb2gau.ini'
 DEF_CFG_VALS = {PDBS_FILE: 'pdb_list.txt',
                 REMOVE_H: False,
                 FIRST_ONLY: False,
-                PDB_SECTION_LAST_CHAR: 6,
-                PDB_ATOM_NUM_LAST_CHAR: 12,
-                PDB_ATOM_INFO_LAST_CHAR: 22,
-                PDB_MOL_NUM_LAST_CHAR: 28,
-                PDB_X_LAST_CHAR: 38,
-                PDB_Y_LAST_CHAR: 46,
-                PDB_Z_LAST_CHAR: 54,
-                PDB_BEFORE_ELE_LAST_CHAR: 76,
-                PDB_ELE_LAST_CHAR: 78,
                 }
 REQ_KEYS = {GAU_TPL_FILE: str,
             }
@@ -141,12 +124,12 @@ def process_pdb_file(cfg, gau_tpl_content, pdb_file):
         mol_num = 0
         pdb_atom_line = []
         for line in d.readlines():
-            pdb_section = line[:cfg[PDB_SECTION_LAST_CHAR]]
+            pdb_section = line[:PDB_LINE_TYPE_LAST_CHAR]
             if pdb_section == 'MODEL ':
                 mol_num += 1
             elif pdb_section == 'ATOM  ' or pdb_section == 'HETATM':
-                element = line[cfg[PDB_BEFORE_ELE_LAST_CHAR]:cfg[PDB_ELE_LAST_CHAR]].strip()
-                pdb_xyz = line[cfg[PDB_MOL_NUM_LAST_CHAR]:cfg[PDB_Z_LAST_CHAR]]
+                element = line[PDB_BEFORE_ELE_LAST_CHAR:PDB_ELE_LAST_CHAR].strip()
+                pdb_xyz = line[PDB_MOL_NUM_LAST_CHAR:PDB_Z_LAST_CHAR]
                 pdb_atom_line.append(["{:6}".format(element), pdb_xyz])
             elif pdb_section == 'END\n':
                 if mol_num == 0:

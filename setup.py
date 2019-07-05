@@ -33,6 +33,7 @@ setup(
                                       'pdbs2gausscoms = nrel_tools.pdbs2gausscoms:main',
                                       'gausslog2pdb = nrel_tools.gausslog2pdb:main',
                                       'gausslog2com = nrel_tools.gausslog2com:main',
+                                      'gauss_fragment = nrel_tools.gauss_fragment:main',
                                       ],
                   },     package_dir={'nrel_tools': 'nrel_tools'},
 

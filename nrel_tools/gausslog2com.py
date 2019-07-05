@@ -178,20 +178,19 @@ def main(argv=None):
     if ret != GOOD_RET or args is None:
         return ret
 
-    # Make sure there are log files to process
-    gausslog_files = []
-    if os.path.isfile(args.list):
-        with open(args.list) as f:
-            for data_file in f:
-                gausslog_files.append(data_file.strip())
-    if args.file is not None:
-        gausslog_files.append(args.file)
-    if len(gausslog_files) == 0:
-        raise InvalidDataError("No files to process: no single log file specified and "
-                               "no list of files found")
-
-    # Read template and data files
     try:
+        # Make sure there are log files to process
+        gausslog_files = []
+        if os.path.isfile(args.list):
+            with open(args.list) as f:
+                for data_file in f:
+                    gausslog_files.append(data_file.strip())
+        if args.file is not None:
+            gausslog_files.append(args.file)
+        if len(gausslog_files) == 0:
+            raise InvalidDataError("No files to process: no single log file specified and "
+                                   "no list of files found")
+            # Read template and data files
         com_tpl_content = process_gausscom_tpl(args.tpl)
         process_gausscom_files(gausslog_files, com_tpl_content)
     except IOError as e:

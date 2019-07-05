@@ -9,8 +9,10 @@ import os
 import sys
 import argparse
 import numpy as np
-from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file,
-                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA)
+from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file, NUM_ATOMS,
+                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
+                               ATOM_TYPE, ATOM_COORDS, process_gausscom_file,
+                               )
 
 try:
     # noinspection PyCompatibility
@@ -28,7 +30,7 @@ __author__ = 'hmayes'
 MAIN_SEC = 'main'
 
 # Config keys
-GAUSSCOM_FILE = 'gausscom_file'
+GAUSSCOM_FILE = 'input_com_or_pdb_file'
 OUT_BASE_DIR = 'output_directory'
 CUT_ATOMS = 'cut_atoms'
 GAUSS_COMMAND = 'gaussian_options_line'
@@ -52,12 +54,9 @@ REQ_KEYS = {CUT_ATOMS: str,
 
 # For file processing
 CUT_PAIR_LIST = 'cut_pair_list'
-GAU_HEADER_PAT = re.compile(r"#.*")
 SEC_HEAD = 'head_section'
 SEC_ATOMS = 'atoms_section'
 SEC_TAIL = 'tail_section'
-ATOM_TYPE = 'atom_type'
-ATOM_COORDS = 'atom_coords'
 FRAGMENT = 'fragment'
 MAX_BOND_DIST = 1.9  # same length units as in input and output file, here Angstroms
 
@@ -125,43 +124,6 @@ def parse_cmdline(argv):
         return args, INPUT_ERROR
 
     return args, GOOD_RET
-
-
-def process_gausscom_file(gausscom_file):
-    with open(gausscom_file) as d:
-        gausscom_content = {SEC_HEAD: [], SEC_ATOMS: {}, SEC_TAIL: []}
-        section = SEC_HEAD
-        atom_id = 1
-        lines_after_header = 4  # blank line, description, blank line, charge & multiplicity
-
-        for line in d:
-            line = line.strip()
-
-            if section == SEC_HEAD:
-                gausscom_content[SEC_HEAD].append(line)
-                if GAU_HEADER_PAT.match(line):
-                    continue
-                elif lines_after_header > 0:
-                    lines_after_header -= 1
-                    if lines_after_header == 0:
-                        section = SEC_ATOMS
-                    continue
-
-            elif section == SEC_ATOMS:
-                if len(line) == 0:
-                    section = SEC_TAIL
-                    gausscom_content[SEC_TAIL].append(line)
-                    continue
-                split_line = line.split()
-
-                atom_type = split_line[0]
-                atom_xyz = np.array(list(map(float, split_line[1:4])))
-                gausscom_content[SEC_ATOMS][atom_id] = {ATOM_TYPE: atom_type, ATOM_COORDS: atom_xyz}
-                atom_id += 1
-            elif section == SEC_TAIL:
-                gausscom_content[SEC_TAIL].append(line)
-
-    return gausscom_content
 
 
 def calc_dist(a, b):
@@ -313,17 +275,27 @@ def main(argv=None):
         return ret
 
     cfg = args.config
-    gausscom_file = cfg[GAUSSCOM_FILE]
+    gauss_file = cfg[GAUSSCOM_FILE]
+    file_name = os.path.basename(gauss_file)
+    ext = os.path.splitext(file_name)[1]
 
     # Read template and data files
     try:
-        gausscom_content = process_gausscom_file(gausscom_file)
+        if ext == '.com':
+            gausscom_content = process_gausscom_file(gauss_file)
+            atom_data = gausscom_content[SEC_ATOMS]
+        elif ext == '.pdb':
+            pdb_content = process_gausscom_file(gauss_file)
+            atom_data = pdb_content[SEC_ATOMS]
+        else:
+            raise InvalidDataError("This program expects to read a Gaussian input file with extension '.com' or a "
+                                   "pdb file with extension '.pdb', but input file is {}".format(gauss_file))
         # Before making files, check that atom numbers are valid
         for atom_pair in cfg[CUT_PAIR_LIST]:
-            validate_atom_num(atom_pair, gausscom_content[SEC_ATOMS], gausscom_file)
+            validate_atom_num(atom_pair, atom_data, gauss_file)
         for atom_pair in cfg[CUT_PAIR_LIST]:
-            frag1, frag2 = fragment_molecule(atom_pair, gausscom_content[SEC_ATOMS])
-            print_com_files(atom_pair, gausscom_content[SEC_ATOMS], gausscom_file, cfg, frag1, frag2)
+            frag1, frag2 = fragment_molecule(atom_pair, atom_data)
+            print_com_files(atom_pair, atom_data, gauss_file, cfg, frag1, frag2)
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR

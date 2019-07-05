@@ -1,6 +1,6 @@
 # m062x/Def2SVP nosymm scf=xqc opt freq
 
-radical calculation of fragment 2 from fragment pair [14, 15] and tests/test_data/gausscom_fragment/pet_mono_1_tzvp.com
+radical calculation of fragment 2 from fragment pair [14, 15] and tests/test_data/gauss_fragment/pet_mono_1_tzvp.com
 
 0 2
 O       3.601135    6.855796    0.997706

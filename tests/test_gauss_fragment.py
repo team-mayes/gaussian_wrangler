@@ -1,6 +1,6 @@
 import unittest
 import os
-from nrel_tools.gausscom_fragment import main
+from nrel_tools.gauss_fragment import main
 from nrel_tools.common import diff_lines, silent_remove, capture_stdout, capture_stderr
 import logging
 
@@ -13,7 +13,7 @@ __author__ = 'hmayes'
 TEST_DIR = os.path.dirname(__file__)
 MAIN_DIR = os.path.dirname(TEST_DIR)
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
-SUB_DATA_DIR = os.path.join(DATA_DIR, 'gausscom_fragment')
+SUB_DATA_DIR = os.path.join(DATA_DIR, 'gauss_fragment')
 
 DEF_INI = os.path.join(SUB_DATA_DIR, 'gausscom_fragment.ini')
 F1_15_14_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_15_14_f1.com')

@@ -25,7 +25,6 @@ import six
 import sys
 from contextlib import contextmanager
 
-
 # Constants #
 
 TPL_IO_ERR_MSG = "Couldn't read template at: '{}'"
@@ -50,7 +49,8 @@ SIG_DECIMALS = 12
 # For converting atomic number to species
 ATOM_NUM_DICT = {1: 'H', 2: 'He', 3: 'Li', 4: 'Be', 5: 'B', 6: 'C', 7: 'N', 8: 'O', 9: 'F', 10: 'Ne',
                  11: 'Na', 12: 'Mg', 13: 'Al', 14: 'Si', 15: 'P', 16: 'S', 17: 'Cl', 18: 'Ar',
-                 19: 'K', 20: 'Ca', 21: 'Sc', 22: 'Ti', 23: 'V', 24: 'Cr', 25: 'Mn', 26: 'Fe', 27: 'Co', 28: 'Ni', 29: 'Cu',
+                 19: 'K', 20: 'Ca', 21: 'Sc', 22: 'Ti', 23: 'V', 24: 'Cr', 25: 'Mn', 26: 'Fe', 27: 'Co', 28: 'Ni',
+                 29: 'Cu',
                  30: 'Zn', 31: 'Ga', 32: 'Ge', 33: 'As', 34: 'Se', 35: 'Br', 36: 'Kr',
                  }
 
@@ -59,6 +59,11 @@ SEC_TIMESTEP = 'timestep'
 SEC_NUM_ATOMS = 'dump_num_atoms'
 SEC_BOX_SIZE = 'dump_box_size'
 SEC_ATOMS = 'atoms_section'
+SEC_HEAD = 'head_section'
+SEC_TAIL = 'tail_section'
+ATOM_TYPE = 'atom_type'
+ATOM_COORDS = 'atom_coords'
+GAU_HEADER_PAT = re.compile(r"#.*")
 
 # From template files
 NUM_ATOMS = 'num_atoms'
@@ -91,6 +96,8 @@ PDB_MOL_NUM_LAST_CHAR = 28
 PDB_X_LAST_CHAR = 38
 PDB_Y_LAST_CHAR = 46
 PDB_Z_LAST_CHAR = 54
+PDB_BEFORE_ELE_LAST_CHAR = 76
+PDB_ELE_LAST_CHAR = 78
 
 # Error Codes
 # The good status code
@@ -100,6 +107,8 @@ IO_ERROR = 2
 INVALID_DATA = 3
 
 PY2 = sys.version_info[0] == 2
+
+
 # PY3 = sys.version_info[0] == 3
 
 
@@ -1130,9 +1139,9 @@ def diff_lines(floc1, floc2, delimiter=","):
         if line.startswith('-') or line.startswith('+'):
             diff_lines_list.append(line)
             if line.startswith('-'):
-                output_neg += line[2:]+'\n'
+                output_neg += line[2:] + '\n'
             elif line.startswith('+'):
-                output_plus += line[2:]+'\n'
+                output_plus += line[2:] + '\n'
 
     if len(diff_lines_list) == 0:
         return diff_lines_list
@@ -1153,6 +1162,7 @@ def diff_lines(floc1, floc2, delimiter=","):
         diff_neg_lines = output_neg.split('\n')
         for diff_list in [diff_plus_lines, diff_neg_lines]:
             for line_id in range(len(diff_list)):
+                # noinspection PyTypeChecker
                 diff_list[line_id] = [x.strip() for x in diff_list[line_id].split(delimiter)]
 
     if len(diff_plus_lines) == len(diff_neg_lines):
@@ -1245,12 +1255,72 @@ def find_dump_section_state(line, sec_timestep=SEC_TIMESTEP, sec_num_atoms=SEC_N
         return sec_atoms
 
 
-def process_pdb_tpl(tpl_loc):
-    tpl_data = {NUM_ATOMS: 0, HEAD_CONTENT: [], ATOMS_CONTENT: [], TAIL_CONTENT: []}
+# def process_pdb_tpl(tpl_loc):
+#     tpl_data = {NUM_ATOMS: 0, HEAD_CONTENT: [], ATOMS_CONTENT: [], TAIL_CONTENT: []}
+#
+#     atom_id = 0
+#
+#     with open(tpl_loc) as f:
+#         for line in f:
+#             line = line.strip()
+#             if len(line) == 0:
+#                 continue
+#             line_head = line[:PDB_LINE_TYPE_LAST_CHAR]
+#             # head_content to contain Everything before 'Atoms' section
+#             # also capture the number of atoms
+#             # match 5 letters so don't need to set up regex for the ones that have numbers following the letters
+#             # noinspection SpellCheckingInspection
+#             if line_head[:-1] in ['HEADE', 'TITLE', 'REMAR', 'CRYST', 'MODEL', 'COMPN',
+#                                   'NUMMD', 'ORIGX', 'SCALE', 'SOURC', 'AUTHO', 'CAVEA',
+#                                   'EXPDT', 'MDLTY', 'KEYWD', 'OBSLT', 'SPLIT', 'SPRSD',
+#                                   'REVDA', 'JRNL ', 'DBREF', 'SEQRE', 'HET  ', 'HETNA',
+#                                   'HETSY', 'FORMU', 'HELIX', 'SHEET', 'SSBON', 'LINK ',
+#                                   'CISPE', 'SITE ', ]:
+#                 # noinspection PyTypeChecker
+#                 tpl_data[HEAD_CONTENT].append(line)
+#
+#             # atoms_content to contain everything but the xyz
+#             elif line_head == 'ATOM  ' or line_head == 'HETATM':
+#                 # By renumbering, handles the case when a PDB template has ***** after atom_id 99999.
+#                 # For renumbering, making sure prints in the correct format, including num of characters:
+#                 atom_id += 1
+#                 if atom_id > 99999:
+#                     atom_num = format(atom_id, 'x')
+#                 else:
+#                     atom_num = '{:5d}'.format(atom_id)
+#                 # Alternately, use this:
+#                 # atom_num = line[cfg[PDB_LINE_TYPE_LAST_CHAR]:cfg[PDB_ATOM_NUM_LAST_CHAR]]
+#
+#                 atom_type = line[PDB_ATOM_NUM_LAST_CHAR:PDB_ATOM_TYPE_LAST_CHAR]
+#                 res_type = line[PDB_ATOM_TYPE_LAST_CHAR:PDB_RES_TYPE_LAST_CHAR]
+#                 mol_num = int(line[PDB_RES_TYPE_LAST_CHAR:PDB_MOL_NUM_LAST_CHAR])
+#                 pdb_x = float(line[PDB_MOL_NUM_LAST_CHAR:PDB_X_LAST_CHAR])
+#                 pdb_y = float(line[PDB_X_LAST_CHAR:PDB_Y_LAST_CHAR])
+#                 pdb_z = float(line[PDB_Y_LAST_CHAR:PDB_Z_LAST_CHAR])
+#                 last_cols = line[PDB_Z_LAST_CHAR:]
+#
+#                 line_struct = [line_head, atom_num, atom_type, res_type, mol_num, pdb_x, pdb_y, pdb_z, last_cols]
+#                 # noinspection PyTypeChecker
+#                 tpl_data[ATOMS_CONTENT].append(line_struct)
+#             elif line_head == 'END':
+#                 tpl_data[TAIL_CONTENT].append(line)
+#                 break
+#             # tail_content to contain everything after the 'Atoms' section
+#             else:
+#                 # noinspection PyTypeChecker
+#                 tpl_data[TAIL_CONTENT].append(line)
+#     tpl_data[NUM_ATOMS] = len(tpl_data[ATOMS_CONTENT])
+#     return tpl_data
 
+
+def process_pdb_file(pdb_file, atom_info_only=False):
+    if atom_info_only:
+        pdb_data = {NUM_ATOMS: 0, SEC_HEAD: [], SEC_ATOMS: {}, SEC_TAIL: []}
+    else:
+        pdb_data = {NUM_ATOMS: 0, SEC_HEAD: [], SEC_ATOMS: [], SEC_TAIL: []}
     atom_id = 0
 
-    with open(tpl_loc) as f:
+    with open(pdb_file) as f:
         for line in f:
             line = line.strip()
             if len(line) == 0:
@@ -1267,10 +1337,11 @@ def process_pdb_tpl(tpl_loc):
                                   'HETSY', 'FORMU', 'HELIX', 'SHEET', 'SSBON', 'LINK ',
                                   'CISPE', 'SITE ', ]:
                 # noinspection PyTypeChecker
-                tpl_data[HEAD_CONTENT].append(line)
+                pdb_data[SEC_HEAD].append(line)
 
             # atoms_content to contain everything but the xyz
             elif line_head == 'ATOM  ' or line_head == 'HETATM':
+
                 # By renumbering, handles the case when a PDB template has ***** after atom_id 99999.
                 # For renumbering, making sure prints in the correct format, including num of characters:
                 atom_id += 1
@@ -1288,19 +1359,61 @@ def process_pdb_tpl(tpl_loc):
                 pdb_y = float(line[PDB_X_LAST_CHAR:PDB_Y_LAST_CHAR])
                 pdb_z = float(line[PDB_Y_LAST_CHAR:PDB_Z_LAST_CHAR])
                 last_cols = line[PDB_Z_LAST_CHAR:]
+                element_type = line[PDB_BEFORE_ELE_LAST_CHAR:PDB_ELE_LAST_CHAR]
 
-                line_struct = [line_head, atom_num, atom_type, res_type, mol_num, pdb_x, pdb_y, pdb_z, last_cols]
-                # noinspection PyTypeChecker
-                tpl_data[ATOMS_CONTENT].append(line_struct)
+                if atom_info_only:
+                    atom_xyz = np.array([pdb_x, pdb_y, pdb_z])
+                    pdb_data[SEC_ATOMS][atom_id] = {ATOM_TYPE: element_type, ATOM_COORDS: atom_xyz}
+                else:
+                    line_struct = [line_head, atom_num, atom_type, res_type, mol_num, pdb_x, pdb_y, pdb_z, last_cols]
+                    # noinspection PyTypeChecker
+                    pdb_data[SEC_ATOMS].append(line_struct)
             elif line_head == 'END':
-                tpl_data[TAIL_CONTENT].append(line)
+                pdb_data[SEC_TAIL].append(line)
                 break
             # tail_content to contain everything after the 'Atoms' section
             else:
                 # noinspection PyTypeChecker
-                tpl_data[TAIL_CONTENT].append(line)
-    tpl_data[NUM_ATOMS] = len(tpl_data[ATOMS_CONTENT])
-    return tpl_data
+                pdb_data[SEC_TAIL].append(line)
+    pdb_data[NUM_ATOMS] = len(pdb_data[SEC_ATOMS])
+    return pdb_data
+
+
+def process_gausscom_file(gausscom_file):
+    with open(gausscom_file) as d:
+        gausscom_content = {SEC_HEAD: [], SEC_ATOMS: {}, SEC_TAIL: []}
+        section = SEC_HEAD
+        atom_id = 1
+        lines_after_header = 4  # blank line, description, blank line, charge & multiplicity
+
+        for line in d:
+            line = line.strip()
+
+            if section == SEC_HEAD:
+                gausscom_content[SEC_HEAD].append(line)
+                if GAU_HEADER_PAT.match(line):
+                    continue
+                elif lines_after_header > 0:
+                    lines_after_header -= 1
+                    if lines_after_header == 0:
+                        section = SEC_ATOMS
+                    continue
+
+            elif section == SEC_ATOMS:
+                if len(line) == 0:
+                    section = SEC_TAIL
+                    gausscom_content[SEC_TAIL].append(line)
+                    continue
+                split_line = line.split()
+
+                atom_type = split_line[0]
+                atom_xyz = np.array(list(map(float, split_line[1:4])))
+                gausscom_content[SEC_ATOMS][atom_id] = {ATOM_TYPE: atom_type, ATOM_COORDS: atom_xyz}
+                atom_id += 1
+            elif section == SEC_TAIL:
+                gausscom_content[SEC_TAIL].append(line)
+
+    return gausscom_content
 
 
 def longest_common_substring(s1, s2):

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Creates pdb data files from lammps data files, given a template pdb file.
+Creates pdb files from Gaussian log files
 """
 
 from __future__ import print_function
@@ -9,8 +9,8 @@ import copy
 import re
 import sys
 import argparse
-from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file, process_pdb_tpl,
-                               HEAD_CONTENT, ATOMS_CONTENT, TAIL_CONTENT, PDB_FORMAT, NUM_ATOMS, ATOM_NUM_DICT,
+from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file, process_pdb_file,
+                               SEC_HEAD, SEC_ATOMS, SEC_TAIL, PDB_FORMAT, NUM_ATOMS, ATOM_NUM_DICT,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, silent_remove)
 
 try:
@@ -21,7 +21,6 @@ except ImportError:
     from configparser import ConfigParser, MissingSectionHeaderError
 
 __author__ = 'hmayes'
-
 
 # Constants #
 
@@ -39,6 +38,7 @@ OUTFILE_NAME = 'output_file_name'
 COMBINE_LOGS = 'combine_logs'
 ADD_NUM_TO_TYPE = 'add_nums_to_type'
 
+# noinspection RegExpRepeatedSpace
 GAU_COORD_PAT = re.compile(r"Center     Atomic      Atomic             Coordinates.*")
 GAU_SEP_PAT = re.compile(r"---------------------------------------------------------------------.*")
 GAU_E_PAT = re.compile(r"SCF Done:.*")
@@ -58,7 +58,7 @@ DEF_CFG_VALS = {GAUSSLOG_FILES_FILE: 'gausslog_list.txt',
                 ADD_NUM_TO_TYPE: False,
                 }
 REQ_KEYS = {
-            }
+}
 
 # For log file processing
 SEC_HEAD = 'head_section'
@@ -140,13 +140,14 @@ def parse_cmdline(argv):
 
 
 def process_gausscom_files(cfg, pdb_tpl_content):
+    f_name = ''
     if cfg[COMBINE_LOGS]:
         f_name = create_out_fname(cfg[OUTFILE_NAME], ext='.pdb', base_dir=cfg[OUT_BASE_DIR])
         silent_remove(f_name)
     for gausslog_file in cfg[GAUSSLOG_FILES]:
         if not cfg[PDB_TPL_FILE]:
-            pdb_tpl_content[HEAD_CONTENT] = ["TITLE     {}".format(gausslog_file)]
-            pdb_tpl_content[TAIL_CONTENT] = ["END"]
+            pdb_tpl_content[SEC_HEAD] = ["TITLE     {}".format(gausslog_file)]
+            pdb_tpl_content[SEC_TAIL] = ["END"]
         if not cfg[COMBINE_LOGS]:
             if cfg[OUTFILE_NAME]:
                 out_name = cfg[OUTFILE_NAME]
@@ -160,10 +161,10 @@ def check_and_print(cfg, atom_id, pdb_tpl_content, gausslog_file, pdb_data_secti
     # Check Num atoms and print
     if cfg[PDB_TPL_FILE]:
         if atom_id != pdb_tpl_content[NUM_ATOMS]:
-            raise InvalidDataError('In gausscom file: {}\nfound {} atoms, but pdb expects {} ' \
+            raise InvalidDataError('In gausscom file: {}\nfound {} atoms, but pdb expects {} ' 
                                    'atoms'.format(gausslog_file, atom_id,
                                                   pdb_tpl_content[NUM_ATOMS]))
-    list_to_file(pdb_tpl_content[HEAD_CONTENT] + pdb_data_section + pdb_tpl_content[TAIL_CONTENT],
+    list_to_file(pdb_tpl_content[SEC_HEAD] + pdb_data_section + pdb_tpl_content[SEC_TAIL],
                  f_name, list_format=PDB_FORMAT, mode=mode, print_message=message)
 
 
@@ -189,7 +190,7 @@ def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
                 if GAU_COORD_PAT.match(line):
                     coord_match = True
                     if cfg[PDB_TPL_FILE]:
-                        pdb_data_section = copy.deepcopy(pdb_tpl_content[ATOMS_CONTENT])
+                        pdb_data_section = copy.deepcopy(pdb_tpl_content[SEC_ATOMS])
                     else:
                         pdb_data_section = []
                     continue
@@ -224,9 +225,9 @@ def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
                     if cfg[ADD_NUM_TO_TYPE]:
                         # catch too long atom_type after adding number...
                         max_atom_num_length = 3 - len(atom_type)
-                        atom_type += str(atom_id+1)[:max_atom_num_length]
-                    pdb_data_section[atom_id] = ['HETATM', '{:5d}'.format(atom_id+1), '  {:4}'.format(atom_type),
-                                                 'UNL  ', 1, 0.0, 0.0, 0.0, '  1.00  0.00           '+element_type]
+                        atom_type += str(atom_id + 1)[:max_atom_num_length]
+                    pdb_data_section[atom_id] = ['HETATM', '{:5d}'.format(atom_id + 1), '  {:4}'.format(atom_type),
+                                                 'UNL  ', 1, 0.0, 0.0, 0.0, '  1.00  0.00           ' + element_type]
                 pdb_data_section[atom_id][5:8] = map(float, split_line[3:6])
                 atom_id += 1
             elif section == SEC_TAIL:
@@ -234,8 +235,8 @@ def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
                     if first_pass:
                         first_pass = False
                     else:
-                        del pdb_tpl_content[HEAD_CONTENT][-1]
-                    pdb_tpl_content[HEAD_CONTENT].append("REMARK    {}".format(line))
+                        del pdb_tpl_content[SEC_HEAD][-1]
+                    pdb_tpl_content[SEC_HEAD].append("REMARK    {}".format(line))
                     if not cfg[ONLY_FINAL]:
                         check_and_print(cfg, atom_id, pdb_tpl_content, gausslog_file, pdb_data_section,
                                         f_name, mode, message)
@@ -251,8 +252,6 @@ def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
                         f_name, mode, message)
 
 
-
-
 def main(argv=None):
     # Read input
     args, ret = parse_cmdline(argv)
@@ -264,7 +263,7 @@ def main(argv=None):
     # Read template and data files
     try:
         if cfg[PDB_TPL_FILE]:
-            pdb_tpl_content = process_pdb_tpl(cfg[PDB_TPL_FILE])
+            pdb_tpl_content = process_pdb_file(cfg[PDB_TPL_FILE])
         else:
             pdb_tpl_content = {}
         process_gausscom_files(cfg, pdb_tpl_content)

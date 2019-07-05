@@ -10,8 +10,8 @@ import logging
 import re
 import sys
 import argparse
-from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file, process_pdb_tpl,
-                               HEAD_CONTENT, ATOMS_CONTENT, TAIL_CONTENT, PDB_FORMAT, NUM_ATOMS,
+from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file, process_pdb_file,
+                               PDB_FORMAT, NUM_ATOMS,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA)
 
 try:
@@ -131,15 +131,15 @@ def process_gausscom_files(cfg, pdb_tpl_content):
 
     for gausscom_file in cfg[GAUSSCOM_FILES]:
         if not cfg[PDB_TPL_FILE]:
-            pdb_tpl_content[HEAD_CONTENT] = ["TITLE     {}".format(gausscom_file)]
-            pdb_tpl_content[TAIL_CONTENT] = ["END"]
+            pdb_tpl_content[SEC_HEAD] = ["TITLE     {}".format(gausscom_file)]
+            pdb_tpl_content[SEC_TAIL] = ["END"]
         process_gausscom_file(cfg, gausscom_file, pdb_tpl_content)
 
 
 def process_gausscom_file(cfg, gausscom_file, pdb_tpl_content):
     with open(gausscom_file) as d:
         if cfg[PDB_TPL_FILE]:
-            pdb_data_section = copy.deepcopy(pdb_tpl_content[ATOMS_CONTENT])
+            pdb_data_section = copy.deepcopy(pdb_tpl_content[SEC_ATOMS])
         else:
             pdb_data_section = []
         section = SEC_HEAD
@@ -189,7 +189,7 @@ def process_gausscom_file(cfg, gausscom_file, pdb_tpl_content):
                                    '  found {} atoms, but pdb expects {} atoms'.format(gausscom_file, atom_id,
                                                                                        pdb_tpl_content[NUM_ATOMS]))
     f_name = create_out_fname(gausscom_file, ext='.pdb', base_dir=cfg[OUT_BASE_DIR])
-    list_to_file(pdb_tpl_content[HEAD_CONTENT] + pdb_data_section + pdb_tpl_content[TAIL_CONTENT],
+    list_to_file(pdb_tpl_content[SEC_HEAD] + pdb_data_section + pdb_tpl_content[SEC_TAIL],
                  f_name, list_format=PDB_FORMAT)
 
 
@@ -204,7 +204,7 @@ def main(argv=None):
     # Read template and data files
     try:
         if cfg[PDB_TPL_FILE]:
-            pdb_tpl_content = process_pdb_tpl(cfg[PDB_TPL_FILE])
+            pdb_tpl_content = process_pdb_file(cfg[PDB_TPL_FILE])
         else:
             pdb_tpl_content = {}
         process_gausscom_files(cfg, pdb_tpl_content)

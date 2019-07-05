@@ -1,6 +1,6 @@
 # m062x/Def2TZVP nosymm Counterpoise=2
 
-cp calculation from fragment pair [20, 21] and tests/test_data/gausscom_fragment/pet_mono_1_tzvp.com
+cp calculation from fragment pair [24, 18] and tests/test_data/gauss_fragment/pet_mono_1_tzvp.com
 
 0 1   0 2    0 2
 O(Fragment=2)       3.601135    6.855796    0.997706
@@ -23,10 +23,10 @@ C(Fragment=2)      -1.089069    3.628137    5.319983
 C(Fragment=2)      -1.922563    3.667843    6.557871
 O(Fragment=2)       1.668500    4.839164    1.375131
 C(Fragment=2)       0.074195    4.861819    3.618354
-H(Fragment=1)       0.377476    5.801031    3.178360
+H(Fragment=2)       0.377476    5.801031    3.178360
 C(Fragment=2)      -0.700049    4.842729    4.765139
 H(Fragment=2)      -1.014503    5.759298    5.245717
-O(Fragment=2)      -2.305290    4.681516    7.075682
+O(Fragment=1)      -2.305290    4.681516    7.075682
 C(Fragment=2)      -2.124176    2.513059    9.442456
 H(Fragment=2)      -2.750411    2.457350   10.333422
 H(Fragment=2)      -1.629639    3.489422    9.433711
