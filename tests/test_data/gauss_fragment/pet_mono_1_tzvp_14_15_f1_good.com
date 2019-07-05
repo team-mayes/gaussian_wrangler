@@ -1,4 +1,4 @@
-# m062x/Def2SVP nosymm scf=xqc opt freq
+# m062x/Def2TZVP nosymm scf=xqc opt freq
 
 radical calculation of fragment 1 from fragment pair [14, 15] and tests/test_data/gauss_fragment/pet_mono_1_tzvp.com
 

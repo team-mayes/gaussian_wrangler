@@ -154,11 +154,12 @@ def fragment_molecule(atom_pair, atoms_content):
         lonely_frag = False
         if atoms_content[atom][ATOM_TYPE] == 'O':
             for other_atom in atom_numbers:
-                if other_atom == atom:
+                lonely_frag = True
+                if other_atom == atom_pair[0] or other_atom ==atom_pair[1]:
                     continue
                 pair_dist = calc_dist(atoms_content[atom][ATOM_COORDS], atoms_content[other_atom][ATOM_COORDS])
                 if pair_dist < MAX_BOND_DIST:
-                    lonely_frag = True
+                    lonely_frag = False
                     break
         elif atoms_content[atom][ATOM_TYPE] in single_bond_atoms:
             lonely_frag = True

@@ -48,7 +48,12 @@ CP_DI_18_24_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_24_cp.com')
 GOOD_CP_DI_18_24_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_24_cp_good.com')
 F2_DI_18_24_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_24_f2.com')
 GOOD_F2_DI_18_24_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_24_f2_good.com')
-
+CP_DI_18_16_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_16_cp.com')
+GOOD_CP_DI_18_16_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_16_cp_good.com')
+F1_DI_18_16_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_16_f1.com')
+GOOD_F1_DI_18_16_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_16_f1_good.com')
+F2_DI_18_16_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_16_f2.com')
+GOOD_F2_DI_18_16_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_16_f2_good.com')
 
 class TestGausscomFragNoOut(unittest.TestCase):
     # These all test failure cases
@@ -114,7 +119,13 @@ class TestGausscomFrag(unittest.TestCase):
             main(test_input)
             self.assertFalse(diff_lines(CP_DI_18_24_OUT, GOOD_CP_DI_18_24_OUT))
             self.assertFalse(diff_lines(F2_DI_18_24_OUT, GOOD_F2_DI_18_24_OUT))
+            self.assertFalse(diff_lines(CP_DI_18_16_OUT, GOOD_CP_DI_18_16_OUT))
+            self.assertFalse(diff_lines(F1_DI_18_16_OUT, GOOD_F1_DI_18_16_OUT))
+            self.assertFalse(diff_lines(F2_DI_18_16_OUT, GOOD_F2_DI_18_16_OUT))
         finally:
             silent_remove(CP_DI_18_24_OUT, disable=DISABLE_REMOVE)
             silent_remove(F2_DI_18_24_OUT, disable=DISABLE_REMOVE)
+            silent_remove(CP_DI_18_16_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F1_DI_18_16_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F2_DI_18_16_OUT, disable=DISABLE_REMOVE)
             pass
