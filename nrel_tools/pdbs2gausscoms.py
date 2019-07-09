@@ -7,19 +7,22 @@ List of pdb files to convert; there may be multiple structures in one file; each
 """
 
 from __future__ import print_function
+
+import os
 import sys
 import argparse
 from nrel_tools.common import (list_to_file, InvalidDataError, create_out_fname, process_cfg, warning,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                PDB_LINE_TYPE_LAST_CHAR, PDB_MOL_NUM_LAST_CHAR, PDB_Z_LAST_CHAR,
                                PDB_BEFORE_ELE_LAST_CHAR, PDB_ELE_LAST_CHAR,
-                               )
+                               process_gausscom_file, PDB_ATOM_NUM_LAST_CHAR, PDB_ATOM_TYPE_LAST_CHAR)
 try:
     # noinspection PyCompatibility
-    from ConfigParser import ConfigParser
+    from ConfigParser import ConfigParser, MissingSectionHeaderError
 except ImportError:
     # noinspection PyCompatibility
-    from configparser import ConfigParser
+    from configparser import ConfigParser, MissingSectionHeaderError
+
 
 __author__ = 'hmayes'
 
@@ -38,12 +41,14 @@ MAIN_SEC = 'main'
 # Config keys
 GAU_TPL_FILE = 'gau_tpl_file'
 PDBS_FILE = 'pdb_list_file'
+PDB_FILE = 'pdb_file'
 REMOVE_H = 'remove_final_h'
 FIRST_ONLY = 'first_only'
 
 # Defaults
 DEF_CFG_FILE = 'pdb2gau.ini'
 DEF_CFG_VALS = {PDBS_FILE: 'pdb_list.txt',
+                PDB_FILE: None,
                 REMOVE_H: False,
                 FIRST_ONLY: False,
                 }
@@ -52,9 +57,6 @@ REQ_KEYS = {GAU_TPL_FILE: str,
 
 # From data template file
 NUM_ATOMS = 'num_atoms'
-HEAD_CONTENT = 'head_content'
-ATOMS_CONTENT = 'atoms_content'
-TAIL_CONTENT = 'tail_content'
 ATOM_TYPE_DICT = 'atom_type_dict'
 
 # For data template file processing
@@ -103,8 +105,10 @@ def parse_cmdline(argv):
         warning("Problems reading file:", e)
         parser.print_help()
         return args, IO_ERROR
-    except KeyError as e:
-        warning("Input data missing:", e)
+    except (KeyError, InvalidDataError, MissingSectionHeaderError, SystemExit) as e:
+        if hasattr(e, 'code') and e.code == 0:
+            return args, GOOD_RET
+        warning(e)
         parser.print_help()
         return args, INPUT_ERROR
 
@@ -112,11 +116,20 @@ def parse_cmdline(argv):
 
 
 def process_pdb_files(cfg, gau_tpl_content):
-    with open(cfg[PDBS_FILE]) as f:
-        for pdb_file in f.readlines():
-            pdb_file = pdb_file.strip()
-            if len(pdb_file) > 0:
-                process_pdb_file(cfg, gau_tpl_content, pdb_file)
+    pdb_files = []
+    if cfg[PDB_FILE]:
+        if os.path.isfile(cfg[PDB_FILE]):
+            pdb_files.append(cfg[PDB_FILE])
+    if os.path.isfile(cfg[PDBS_FILE]):
+        with open(cfg[PDBS_FILE]) as f:
+            for pdb_file in f.readlines():
+                pdb_file = pdb_file.strip()
+                if len(pdb_file) > 0:
+                    pdb_files.append(pdb_file)
+    if len(pdb_files) == 0:
+        raise InvalidDataError("No pdb files found to process.")
+    for pdb_file in pdb_files:
+        process_pdb_file(cfg, gau_tpl_content, pdb_file)
 
 
 def process_pdb_file(cfg, gau_tpl_content, pdb_file):
@@ -129,6 +142,8 @@ def process_pdb_file(cfg, gau_tpl_content, pdb_file):
                 mol_num += 1
             elif pdb_section == 'ATOM  ' or pdb_section == 'HETATM':
                 element = line[PDB_BEFORE_ELE_LAST_CHAR:PDB_ELE_LAST_CHAR].strip()
+                if element == '':
+                    element = line[PDB_ATOM_NUM_LAST_CHAR:PDB_ATOM_TYPE_LAST_CHAR].strip()
                 pdb_xyz = line[PDB_MOL_NUM_LAST_CHAR:PDB_Z_LAST_CHAR]
                 pdb_atom_line.append(["{:6}".format(element), pdb_xyz])
             elif pdb_section == 'END\n':
@@ -139,45 +154,23 @@ def process_pdb_file(cfg, gau_tpl_content, pdb_file):
                 d_out = create_out_fname(pdb_file, suffix=mol_id, ext='.com')
                 if cfg[REMOVE_H]:
                     del pdb_atom_line[-1]
-                list_to_file(gau_tpl_content[HEAD_CONTENT] + pdb_atom_line + gau_tpl_content[TAIL_CONTENT],
+                list_to_file(gau_tpl_content[SEC_HEAD] + pdb_atom_line + gau_tpl_content[SEC_TAIL],
                              d_out)
                 if cfg[FIRST_ONLY]:
                     return
                 pdb_atom_line = []
 
 
-def process_gau_tpl(cfg):
-    tpl_loc = cfg[GAU_TPL_FILE]
-    tpl_data = {HEAD_CONTENT: [], TAIL_CONTENT: []}
-    section = SEC_HEAD
-    # atoms_sec_pat = re.compile(r"atoms")
-
-    with open(tpl_loc) as f:
-        for line in f.readlines():
-            line = line.strip()
-            # atoms_match = atoms_sec_pat.match(line)
-            # if atoms_match:
-            if line == '${atoms}':
-                section = SEC_TAIL
-                continue
-            # head_content to contain Everything before 'Atoms' section
-            elif section == SEC_HEAD:
-                tpl_data[HEAD_CONTENT].append(line)
-            elif section == SEC_TAIL:
-                tpl_data[TAIL_CONTENT].append(line)
-    return tpl_data
-
-
 def main(argv=None):
     # Read input
     args, ret = parse_cmdline(argv)
-    if ret != GOOD_RET:
+    if ret != GOOD_RET or args is None:
         return ret
 
     # Read pdb files
     cfg = args.config
     try:
-        gau_tpl_content = process_gau_tpl(cfg)
+        gau_tpl_content = process_gausscom_file(cfg[GAU_TPL_FILE])
         process_pdb_files(cfg, gau_tpl_content)
     except IOError as e:
         warning("Problems reading file:", e)

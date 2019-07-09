@@ -34,8 +34,12 @@ GOOD_REMOVE_H_OUT3 = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_3_good.com')
 MULTI_FIRST_ONLY_INI = os.path.join(SUB_DATA_DIR, 'pdb2gau_multi.ini')
 GOOD_KEEP_H_OUT1 = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_1_withh_good.com')
 
+ALT_INI = os.path.join(SUB_DATA_DIR, 'pdb2gau_2.ini')
+ALT_OUT = os.path.join(SUB_DATA_DIR, 'pe_linear.com')
+GOOD_ALT_OUT = os.path.join(SUB_DATA_DIR, 'pe_linear_good.com')
 
-class Testpdbs2gausscomsNoOut(unittest.TestCase):
+
+class TestPdbs2GausscomsNoOut(unittest.TestCase):
     # These all test failure cases
     def testNoArgs(self):
         with capture_stderr(main, []) as output:
@@ -43,17 +47,17 @@ class Testpdbs2gausscomsNoOut(unittest.TestCase):
         with capture_stdout(main, []) as output:
             self.assertTrue("optional arguments" in output)
 
-    # def testHelp(self):
-    #     test_input = ['-h']
-    #     if logger.isEnabledFor(logging.DEBUG):
-    #         main(test_input)
-    #     with capture_stderr(main, test_input) as output:
-    #         self.assertFalse(output)
-    #     with capture_stdout(main, test_input) as output:
-    #         self.assertTrue("optional arguments" in output)
+    def testHelp(self):
+        test_input = ['-h']
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertFalse(output)
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue("optional arguments" in output)
 
 
-class Testpdbs2gausscoms(unittest.TestCase):
+class TestPdbs2Gausscoms(unittest.TestCase):
     # These test/demonstrate different options
     def testDefIni(self):
         test_input = ["-c", DEF_INI]
@@ -94,3 +98,14 @@ class Testpdbs2gausscoms(unittest.TestCase):
         finally:
             silent_remove(REMOVE_H_OUT1, disable=DISABLE_REMOVE)
             silent_remove(GAU_OUT1, disable=DISABLE_REMOVE)
+
+    def testAltIni(self):
+        test_input = ["-c", ALT_INI]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(ALT_OUT, GOOD_ALT_OUT))
+        finally:
+            silent_remove(ALT_OUT, disable=DISABLE_REMOVE)
+            pass
