@@ -1,6 +1,6 @@
 # m062x/Def2TZVP nosymm Counterpoise=2
 
-dimer from pet trimer from Brandon, opt with m062x/Def2TZVP
+Last conformation from file tests/test_data/gausslog2com/pet_mono_901_tzvp.log
 
 0 1   0 2    0 2
 O(Fragment=1)              2.459192    3.612952   -1.270150

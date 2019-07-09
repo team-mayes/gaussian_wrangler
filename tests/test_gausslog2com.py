@@ -15,7 +15,7 @@ MAIN_DIR = os.path.dirname(TEST_DIR)
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
 SUB_DATA_DIR = os.path.join(DATA_DIR, 'gausslog2com')
 
-COM_TPL = os.path.join(SUB_DATA_DIR, 'cp.tpl')
+CP_COM_TPL = os.path.join(SUB_DATA_DIR, 'cp.tpl')
 LOG_LIST = os.path.join(SUB_DATA_DIR, 'log_list.txt')
 COM1_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_843_tzvp_cp.com')
 GOOD_COM1_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_843_tzvp_cp_good.com')
@@ -25,6 +25,11 @@ GOOD_COM2_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_901_tzvp_cp_good.com')
 LOG_FILE = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp.log')
 COM3_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_cp.com')
 GOOD_COM3_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_cp_good.com')
+
+LOG_LOW_E_FILE = os.path.join(SUB_DATA_DIR, 'nylon66_dimer_49_69_f2_fb.log')
+LOW_E_TPL = os.path.join(SUB_DATA_DIR, 'fresh_fb.tpl')
+COM_LOW_E_OUT = os.path.join(SUB_DATA_DIR, 'nylon66_dimer_49_69_f2_fb_fresh_fb.com')
+GOOD_COM_LOW_E_FILE = os.path.join(SUB_DATA_DIR, 'nylon66_dimer_49_69_f2_fb_fresh_fb_good.com')
 
 
 class Testgausslog2comNoOut(unittest.TestCase):
@@ -50,7 +55,7 @@ class Testgausslog2comNoOut(unittest.TestCase):
 class Testgausslog2com(unittest.TestCase):
     # These test/demonstrate different options
     def testCPTpl(self):
-        test_input = ["-t", COM_TPL, "-l", LOG_LIST]
+        test_input = ["-t", CP_COM_TPL, "-l", LOG_LIST, "-c"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(COM1_OUT, GOOD_COM1_OUT))
@@ -61,10 +66,19 @@ class Testgausslog2com(unittest.TestCase):
             pass
 
     def testFileCPTpl(self):
-        test_input = ["-t", COM_TPL, "-f", LOG_FILE]
+        test_input = ["-t", CP_COM_TPL, "-f", LOG_FILE, "-c"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(COM3_OUT, GOOD_COM3_OUT))
         finally:
             silent_remove(COM3_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testLowEn(self):
+        test_input = ["-t", LOW_E_TPL, "-f", LOG_LOW_E_FILE, "-e"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(COM_LOW_E_OUT, GOOD_COM_LOW_E_FILE))
+        finally:
+            silent_remove(COM_LOW_E_OUT, disable=DISABLE_REMOVE)
             pass

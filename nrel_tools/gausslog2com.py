@@ -9,7 +9,7 @@ import sys
 import argparse
 from nrel_tools.common import (InvalidDataError, warning, create_out_fname, list_to_file, ATOM_NUM_DICT,
                                NUM_ATOMS, GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT,
-                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA)
+                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, GAU_CHARGE_PAT)
 
 try:
     # noinspection PyCompatibility
@@ -26,7 +26,6 @@ __author__ = 'hmayes'
 
 # Config keys
 DEF_LIST_FILE = 'log_list.txt'
-
 GAUSSLOG_FILES_FILE = 'gausslog_list_file'
 OUT_BASE_DIR = 'output_directory'
 
@@ -35,6 +34,19 @@ SEC_HEAD = 'head_section'
 SEC_ATOMS = 'atoms_section'
 SEC_TAIL = 'tail_section'
 COM_TYPE = 'com_type'
+CHARGE = 'charge'
+MULTIPLICITY = 'multiplicity'
+
+
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
 def parse_cmdline(argv):
@@ -54,7 +66,13 @@ def parse_cmdline(argv):
                                              "base directory where the program as run.".format(DEF_LIST_FILE),
                         default=DEF_LIST_FILE)
     parser.add_argument("-t", "--tpl", help="The location of the Gaussian input template file.")
-
+    parser.add_argument("-e", "--low_energy", help="Flag to take the lowest energy, rather than last, coordinates. "
+                                                   "The default is {}.".format(False),
+                        action="store_true", default=False)
+    parser.add_argument("-c", "--charge_from_tpl", help="Flag to take the charge and multiplicity from the tpl file "
+                                                        "rather than from the template file. "
+                                                        "The default is {}.".format(False),
+                        action="store_true", default=False)
     args = None
     try:
         args = parser.parse_args(argv)
@@ -68,17 +86,28 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def process_gausscom_files(gausslog_files, com_tpl_content):
+def process_gausscom_files(gausslog_files, com_tpl_content, charge_from_log_flag, find_low_energy):
     for gausslog_file in gausslog_files:
-        process_gausslog_file(gausslog_file, com_tpl_content)
+        process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, find_low_energy)
 
 
-def process_gausslog_file(gausslog_file, com_tpl_content):
+def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, find_low_energy):
     with open(gausslog_file) as d:
+        if find_low_energy:
+            com_tpl_content[SEC_HEAD][-3] = "Low energy conformation from file {}".format(gausslog_file)
+        else:
+            com_tpl_content[SEC_HEAD][-3] = "Last conformation from file {}".format(gausslog_file)
+        lowest_energy_found = 0.0
+        final_atoms_section = []
         section = SEC_HEAD
         atom_id = 0
         lines_after_coord = 2
         coord_match = False
+        # so don't change the flag that is passed it, so if there is another log file it will also be checked
+        if not charge_from_log_flag:
+            find_charge = True
+        else:
+            find_charge = False
 
         for line in d:
             line = line.strip()
@@ -86,6 +115,12 @@ def process_gausslog_file(gausslog_file, com_tpl_content):
                 continue
             # not currently keeping anything from the header
             if section == SEC_HEAD:
+                if find_charge:
+                    if GAU_CHARGE_PAT.match(line):
+                        split_line = line.split()
+                        com_tpl_content[SEC_HEAD][-1] = '{}  {}'.format(int(split_line[2]), int(split_line[5]))
+                        find_charge = False
+                        continue
                 if GAU_COORD_PAT.match(line):
                     coord_match = True
                     atoms_section = []
@@ -125,13 +160,20 @@ def process_gausslog_file(gausslog_file, com_tpl_content):
                     raise InvalidDataError('In gausslog file: {}\n  found {} atoms, but the tpl expects '
                                            '{} atoms'.format(gausslog_file, atom_id, com_tpl_content[NUM_ATOMS]))
                 if GAU_E_PAT.match(line):
+                    if find_low_energy:
+                        split_line = line.split()
+                        energy = float(split_line[4])
+                        if energy < lowest_energy_found:
+                            final_atoms_section = atoms_section.copy()
+                    else:
+                        final_atoms_section = atoms_section.copy()
                     section = SEC_HEAD
                     coord_match = False
                     atom_id = 0
                     lines_after_coord = 2
 
     f_name = create_out_fname(gausslog_file, ext='_' + com_tpl_content[COM_TYPE] + '.com')
-    list_to_file(com_tpl_content[SEC_HEAD] + atoms_section + com_tpl_content[SEC_TAIL],
+    list_to_file(com_tpl_content[SEC_HEAD] + final_atoms_section + com_tpl_content[SEC_TAIL],
                  f_name)
 
     # Now that finished reading the file, first make sure didn't  exit before reaching the desired number of atoms
@@ -148,9 +190,12 @@ def process_gausscom_tpl(com_tpl_file):
             line = line.strip()
             if section == SEC_HEAD:
                 com_tpl_content[SEC_HEAD].append(line)
-                if len(line) == 0:
+                if lines_after_first_blank == 0 and len(line) == 0:
                     lines_after_first_blank += 1
-                elif lines_after_first_blank == 2:
+                    continue
+                elif lines_after_first_blank > 0:
+                    lines_after_first_blank += 1
+                if lines_after_first_blank == 4:
                     section = SEC_ATOMS
             elif section == SEC_ATOMS:
                 if len(line) == 0:
@@ -188,7 +233,7 @@ def main(argv=None):
                                    "no list of files found")
             # Read template and data files
         com_tpl_content = process_gausscom_tpl(args.tpl)
-        process_gausscom_files(gausslog_files, com_tpl_content)
+        process_gausscom_files(gausslog_files, com_tpl_content, args.charge_from_tpl, args.low_energy)
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR

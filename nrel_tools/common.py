@@ -68,6 +68,7 @@ GAU_HEADER_PAT = re.compile(r"#.*")
 GAU_COORD_PAT = re.compile(r"Center     Atomic      Atomic             Coordinates.*")
 GAU_SEP_PAT = re.compile(r"---------------------------------------------------------------------.*")
 GAU_E_PAT = re.compile(r"SCF Done:.*")
+GAU_CHARGE_PAT = re.compile(r"Charge =.*")
 
 # From template files
 NUM_ATOMS = 'num_atoms'
