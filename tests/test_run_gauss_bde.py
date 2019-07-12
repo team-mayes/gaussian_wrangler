@@ -40,7 +40,7 @@ class TestRunGaussBDENoOut(unittest.TestCase):
 class TestRunGaussBDE(unittest.TestCase):
     # These test/demonstrate different options
     def testDefIni(self):
-        test_input = ["-c", DEF_INI]
+        test_input = ["ethylrad", "-c", DEF_INI]
         try:
             main(test_input)
         finally:

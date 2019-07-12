@@ -1,5 +1,6 @@
+#!/usr/bin/env bash
 # Set script variables
-INPUT_BASENAME=${job_name}
+INPUT_BASENAME={job_name}
 INPUT_FILE=$INPUT_BASENAME.com
 GAUSSIAN_EXEC=g16
 MEMSIZE=5GB
@@ -51,3 +52,6 @@ rm $SCRATCH2/*
 $GAUSSIAN_EXEC < $INFILE >& $INPUT_BASENAME.log
 rm $INFILE
 cp $SCRATCH2/$INPUT_BASENAME.chk .
+
+rm $SCRATCH/*
+rmdir $SCRATCH

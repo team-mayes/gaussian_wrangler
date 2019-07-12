@@ -11,7 +11,9 @@ import subprocess
 import numpy as np
 from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                               )
+                               read_tpl)
+from nrel_tools.fill_tpl import (OUT_DIR, MAIN_SEC, TPL_VALS_SEC, TPL_EQS_SEC,
+                                 TPL_VALS, TPL_EQ_PARAMS, NEW_FNAME, fill_save_tpl)
 
 try:
     # noinspection PyCompatibility
@@ -25,20 +27,23 @@ __author__ = 'hmayes'
 
 # Constants #
 
-# Config File Sections
-MAIN_SEC = 'main'
-
 # Config keys
 CONFIG_FILE = 'config_file_name'
+SLURM_NO_CHK_TPL = 'slurm_no_old_chk'
 
 # Defaults
 DEF_CFG_FILE = 'run_gauss_bde.ini'
+DEF_SLURM_NO_CHK_TPL = 'run_gauss_no_old_chk.tpl'
 
 # Set notation
 DEF_CFG_VALS = {CONFIG_FILE: DEF_CFG_FILE,
+                OUT_DIR: None,
+                SLURM_NO_CHK_TPL: DEF_SLURM_NO_CHK_TPL,
                 }
 REQ_KEYS = {
             }
+
+JOB_NAME = 'job_name'
 
 
 def read_cfg(f_loc, cfg_proc=process_cfg):
@@ -70,6 +75,7 @@ def parse_cmdline(argv):
 
     # initialize the parser object:
     parser = argparse.ArgumentParser(description='Runs the series of Gaussian jobs for BDEs using Slurm.')
+    parser.add_argument("job_name", help="The job name to run")
     parser.add_argument("-c", "--config", help="The location of the configuration file in ini format. "
                                                "The default file name is {}, located in the "
                                                "base directory where the program as run.".format(DEF_CFG_FILE),
@@ -101,8 +107,13 @@ def main(argv=None):
 
     # Read template and data files
     try:
-        result = subprocess.check_output(["echo", "${HOME}"]).strip().decode("utf-8")
-        print("I got back: {}".format(result))
+        tpl_str = read_tpl(cfg[SLURM_NO_CHK_TPL])
+        tpl_dict = {JOB_NAME: args.job_name}
+        slurm_file_name = create_out_fname(args.job_name, ext=".sh", base_dir=cfg[OUT_DIR])
+        fill_save_tpl(cfg, tpl_str, tpl_dict, cfg[SLURM_NO_CHK_TPL], slurm_file_name)
+        subprocess.call(["chmod", "+x", slurm_file_name])
+        subprocess.call(slurm_file_name)
+        print("job_name is {}".format(args.job_name))
         result = subprocess.check_output(["pwd"]).strip().decode("utf-8")
         print("I got back: {}".format(result))
         print(os.environ['HOME'])
