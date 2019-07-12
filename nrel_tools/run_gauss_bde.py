@@ -8,7 +8,7 @@ import os
 import sys
 import argparse
 import subprocess
-import numpy as np
+import re
 from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                read_tpl)
@@ -30,20 +30,33 @@ __author__ = 'hmayes'
 # Config keys
 CONFIG_FILE = 'config_file_name'
 SLURM_NO_CHK_TPL = 'slurm_no_old_chk'
+SLURM_FROM_CHK_TPL = 'slurm_from_chk'
+OPT_TPL = 'opt_tpl'
+STABLE_TPL = 'stable_tpl'
 
 # Defaults
 DEF_CFG_FILE = 'run_gauss_bde.ini'
 DEF_SLURM_NO_CHK_TPL = 'run_gauss_no_old_chk.tpl'
+DEF_SLURM_FROM_CHK_TPL = 'run_gauss_from_old_chk.tpl'
+DEF_OPT_TPL = 'opt.tpl'
+DEF_STABLE_TPL = 'stable.tpl'
+
 
 # Set notation
 DEF_CFG_VALS = {CONFIG_FILE: DEF_CFG_FILE,
                 OUT_DIR: None,
                 SLURM_NO_CHK_TPL: DEF_SLURM_NO_CHK_TPL,
+                SLURM_FROM_CHK_TPL: DEF_SLURM_FROM_CHK_TPL,
+                OPT_TPL: DEF_OPT_TPL,
+                STABLE_TPL: DEF_STABLE_TPL,
                 }
 REQ_KEYS = {
             }
 
 JOB_NAME = 'job_name'
+OLD_JOB_NAME = 'old_job_name'
+INPUT_FILE = 'input_file'
+GAU_GOOD_PAT = re.compile(r"Normal termination of Gaussian.*")
 
 
 def read_cfg(f_loc, cfg_proc=process_cfg):
@@ -104,19 +117,36 @@ def main(argv=None):
         return ret
 
     cfg = args.config
+    job_name = args.job_name
 
     # Read template and data files
     try:
-        tpl_str = read_tpl(cfg[SLURM_NO_CHK_TPL])
-        tpl_dict = {JOB_NAME: args.job_name}
-        slurm_file_name = create_out_fname(args.job_name, ext=".sh", base_dir=cfg[OUT_DIR])
-        fill_save_tpl(cfg, tpl_str, tpl_dict, cfg[SLURM_NO_CHK_TPL], slurm_file_name)
-        subprocess.call(["chmod", "+x", slurm_file_name])
-        subprocess.call(slurm_file_name)
-        print("job_name is {}".format(args.job_name))
-        result = subprocess.check_output(["pwd"]).strip().decode("utf-8")
-        print("I got back: {}".format(result))
-        print(os.environ['HOME'])
+        tpl_dict = {JOB_NAME: job_name}
+        slurm_file_name = create_out_fname(job_name, ext=".sh", base_dir=cfg[OUT_DIR])
+        job_names = ['', '_opt', '_stable']
+        gau_tpl_files = {'_opt': cfg[OPT_TPL], '_stable': STABLE_TPL}
+
+        # First job, svp
+        for job in job_names:
+            if job == '':
+                tpl_file = cfg[SLURM_NO_CHK_TPL]
+            else:
+                tpl_file = read_tpl(cfg[SLURM_FROM_CHK_TPL])
+                tpl_dict[OLD_JOB_NAME] = tpl_dict[JOB_NAME]
+                tpl_dict[JOB_NAME] = job_name + job
+                tpl_dict[INPUT_FILE] = gau_tpl_files[job]
+            tpl_str = read_tpl(tpl_file)
+            fill_save_tpl(cfg, tpl_str, tpl_dict, tpl_file, slurm_file_name)
+            subprocess.call(["chmod", "+x", slurm_file_name])
+            subprocess.call(slurm_file_name)
+            last_line = subprocess.check_output(["tail -1  " + tpl_dict[JOB_NAME] + ".log"]).strip().decode("utf-8")
+            if not GAU_GOOD_PAT.match(last_line):
+                return INVALID_DATA
+
+        # print("job_name is {}".format(args.job_name))
+        # result = subprocess.check_output(["pwd"]).strip().decode("utf-8")
+        # print("I got back: {}".format(result))
+        # print(os.environ['HOME'])
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR

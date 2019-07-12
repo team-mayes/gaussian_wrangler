@@ -106,3 +106,4 @@ nrel_tools/rdkit_attempts/
 .idea/
 .idea/workspace.xml
 tests/temp*
+update.sh
