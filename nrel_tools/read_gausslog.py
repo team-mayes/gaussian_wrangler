@@ -45,8 +45,9 @@ ZPE = "ZPE (Hartrees)"
 CP = "Counterpoise Correction (Hartrees)"
 H298 = "H298 (Hartrees)"
 G298 = "G298 (Hartrees)"
-FREQ2 = "Freq 1"
+FREQ1 = "Freq 1"
 FREQ2 = "Freq 2"
+
 
 def parse_cmdline(argv):
     """
@@ -90,38 +91,38 @@ def process_gausscom_files(gausslog_file, gausslog_file_list, job_type):
         with open(gausslog_file_list) as f:
             for data_file in f:
                 log_file_list.append(data_file.strip())
-    for file in log_file_list:
-        process_gausslog_file(file, job_type)
+    # for file in log_file_list:
+    #     process_gausslog_file(file, job_type)
 
 
-def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
-    with open(gausslog_file) as d:
-        section = SEC_HEAD
-        atom_id = 0
-        lines_after_coord = 2  # blank line, description, blank line, charge & multiplicity
-        message = True
-        coord_match = False
-        first_pass = True
-
-        for line in d:
-            line = line.strip()
-            if len(line) == 0:
-                continue
-            if GAU_E_PAT.match(line):
-                pdb_tpl_content[SEC_HEAD].append("REMARK    {}".format(line))
-                if not cfg[ONLY_FINAL]:
-                    check_and_print(cfg, atom_id, pdb_tpl_content, gausslog_file, pdb_data_section,
-                                    f_name, mode, message)
-                    message = False
-                    mode = 'a'
-                section = SEC_HEAD
-                coord_match = False
-                atom_id = 0
-                lines_after_coord = 2
-
-    if cfg[ONLY_FINAL]:
-        check_and_print(cfg, atom_id, pdb_tpl_content, gausslog_file, pdb_data_section,
-                        f_name, mode, message)
+# def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
+#     with open(gausslog_file) as d:
+#         section = SEC_HEAD
+#         atom_id = 0
+#         lines_after_coord = 2  # blank line, description, blank line, charge & multiplicity
+#         message = True
+#         coord_match = False
+#         first_pass = True
+#
+#         for line in d:
+#             line = line.strip()
+#             if len(line) == 0:
+#                 continue
+#             if GAU_E_PAT.match(line):
+#                 pdb_tpl_content[SEC_HEAD].append("REMARK    {}".format(line))
+#                 if not cfg[ONLY_FINAL]:
+#                     check_and_print(cfg, atom_id, pdb_tpl_content, gausslog_file, pdb_data_section,
+#                                     f_name, mode, message)
+#                     message = False
+#                     mode = 'a'
+#                 section = SEC_HEAD
+#                 coord_match = False
+#                 atom_id = 0
+#                 lines_after_coord = 2
+#
+#     if cfg[ONLY_FINAL]:
+#         check_and_print(cfg, atom_id, pdb_tpl_content, gausslog_file, pdb_data_section,
+#                         f_name, mode, message)
 
 
 def main(argv=None):
