@@ -123,7 +123,8 @@ def main(argv=None):
     try:
         tpl_dict = {JOB_NAME: job_name}
         slurm_file_name = create_out_fname(job_name, ext=".sh", base_dir=cfg[OUT_DIR])
-        job_names = ['', '_opt', '_stable']
+        # job_names = ['', '_opt', '_stable']
+        job_names = ['', ]
         gau_tpl_files = {'_opt': cfg[OPT_TPL], '_stable': STABLE_TPL}
 
         # First job, svp
@@ -139,14 +140,13 @@ def main(argv=None):
             fill_save_tpl(cfg, tpl_str, tpl_dict, tpl_file, slurm_file_name)
             subprocess.call(["chmod", "+x", slurm_file_name])
             subprocess.call(slurm_file_name)
-            last_line = subprocess.check_output(["tail -1  " + tpl_dict[JOB_NAME] + ".log"]).strip().decode("utf-8")
-            if not GAU_GOOD_PAT.match(last_line):
+            out_file = tpl_dict[JOB_NAME] + ".log"
+            last_line = subprocess.check_output(["tail", "-1",  out_file]).strip().decode("utf-8")
+            if GAU_GOOD_PAT.match(last_line):
+                print("Successfully completed {}".format(out_file))
+            else:
                 return INVALID_DATA
-
-        # print("job_name is {}".format(args.job_name))
-        # result = subprocess.check_output(["pwd"]).strip().decode("utf-8")
-        # print("I got back: {}".format(result))
-        # print(os.environ['HOME'])
+        
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR
