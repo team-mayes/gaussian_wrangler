@@ -164,9 +164,9 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
                         split_line = line.split()
                         energy = float(split_line[4])
                         if energy < lowest_energy_found:
-                            final_atoms_section = atoms_section.copy()
+                            final_atoms_section = atoms_section[:]
                     else:
-                        final_atoms_section = atoms_section.copy()
+                        final_atoms_section = atoms_section[:]
                     section = SEC_HEAD
                     coord_match = False
                     atom_id = 0
