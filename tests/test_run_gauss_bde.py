@@ -11,12 +11,14 @@ DISABLE_REMOVE = logger.isEnabledFor(logging.DEBUG)
 __author__ = 'hmayes'
 
 TEST_DIR = os.path.dirname(__file__)
+PARENT_DIR = os.path.join(TEST_DIR, os.pardir)
 MAIN_DIR = os.path.dirname(TEST_DIR)
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
 SUB_DATA_DIR = os.path.join(DATA_DIR, 'run_gauss_bde')
 
 DEF_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde.ini')
-F1_15_14_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_15_14_f1.com')
+DEF_SH_OUT = os.path.join(PARENT_DIR, 'ethylrad.sh')
+DEF_LOG_OUT = os.path.join(PARENT_DIR, 'ethylrad.log')
 
 
 class TestRunGaussBDENoOut(unittest.TestCase):
@@ -37,12 +39,16 @@ class TestRunGaussBDENoOut(unittest.TestCase):
             self.assertTrue("optional arguments" in output)
 
 
-# class TestRunGaussBDE(unittest.TestCase):
-#     # These test/demonstrate different options
-#     def testDefIni(self):
-#         test_input = ["ethylrad", "-c", DEF_INI]
-#         try:
-#             main(test_input)
-#         finally:
-#             pass
+class TestRunGaussBDE(unittest.TestCase):
+    # These test/demonstrate different options
+    def testDefIni(self):
+        test_input = ["ethylrad", "-c", DEF_INI]
+        try:
+            main(test_input)
+        except IOError:
+            pass
+        finally:
+            silent_remove(DEF_SH_OUT, disable=DISABLE_REMOVE)
+            silent_remove(DEF_LOG_OUT, disable=DISABLE_REMOVE)
+            pass
 

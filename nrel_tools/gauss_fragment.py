@@ -146,16 +146,16 @@ def validate_atom_num(atom_pair, atoms_content, gausscom_file):
 
 def fragment_molecule(atom_pair, atoms_content):
     single_bond_atoms = ['H', 'Cl', ]
-    atom_numbers = list(range(1, len(atoms_content)+1))
+    unassigned_atom_numbers = list(range(1, len(atoms_content)+1))
     frag1_list = []
     frag2_list = []
     for atom in atom_pair:
         # Check if fragment made up of just one atom
         lonely_frag = False
         if atoms_content[atom][ATOM_TYPE] == 'O':
-            for other_atom in atom_numbers:
+            for other_atom in unassigned_atom_numbers:
                 lonely_frag = True
-                if other_atom == atom_pair[0] or other_atom ==atom_pair[1]:
+                if other_atom == atom_pair[0] or other_atom == atom_pair[1]:
                     continue
                 pair_dist = calc_dist(atoms_content[atom][ATOM_COORDS], atoms_content[other_atom][ATOM_COORDS])
                 if pair_dist < MAX_BOND_DIST:
@@ -166,36 +166,40 @@ def fragment_molecule(atom_pair, atoms_content):
         if lonely_frag:
             atoms_content[atom][FRAGMENT] = 1
             frag1_list.append(atom)
-            atom_numbers.remove(atom)
-            frag2_list = atom_numbers
-            for other_atom in atom_numbers:
+            unassigned_atom_numbers.remove(atom)
+            frag2_list = unassigned_atom_numbers
+            for other_atom in unassigned_atom_numbers:
                 atoms_content[other_atom][FRAGMENT] = 2
             return frag1_list, frag2_list
     # Now the more difficult cases
     frag1_list.append(atom_pair[0])
-    atom_numbers.remove(atom_pair[0])
+    unassigned_atom_numbers.remove(atom_pair[0])
     atoms_content[atom_pair[0]][FRAGMENT] = 1
     frag2_list.append(atom_pair[1])
-    atom_numbers.remove(atom_pair[1])
+    unassigned_atom_numbers.remove(atom_pair[1])
     atoms_content[atom_pair[1]][FRAGMENT] = 2
     # first add to frag 1
     atoms_to_check = [atom_pair[0]]
-    add_atoms_to_fragment(atom_numbers, atoms_content, atoms_to_check, frag1_list, 1, single_bond_atoms)
-    # make sure no atoms in fragment 1 are within bonding distance of any atoms remaining in the atom_numbers list
+    add_atoms_to_fragment(unassigned_atom_numbers, atoms_content, atoms_to_check, frag1_list, 1, single_bond_atoms)
+    # make sure no atoms in fragment 1 are within bonding distance of any atoms remaining in the
+    # unassigned_atom_numbers list
     for f1_atom in frag1_list:
-        for atom in atom_numbers:
+        for atom in unassigned_atom_numbers:
             pair_dist = calc_dist(atoms_content[atom][ATOM_COORDS], atoms_content[f1_atom][ATOM_COORDS])
             if pair_dist < MAX_BOND_DIST:
                 raise InvalidDataError("Found that atom {} assigned to fragment 1 is within {} Angstroms of atom {} "
                                        "which was not assigned to fragment 1".format(f1_atom, MAX_BOND_DIST, atom))
     # check that all remaining atoms are bonded to each other
     atoms_to_check = [atom_pair[1]]
-    add_atoms_to_fragment(atom_numbers, atoms_content, atoms_to_check, frag2_list, 2, single_bond_atoms)
-    if len(atom_numbers) > 0:
-        raise InvalidDataError("Atoms {} were not assigned to either fragment 1 or 2.".format(atom_numbers))
+    add_atoms_to_fragment(unassigned_atom_numbers, atoms_content, atoms_to_check, frag2_list, 2, single_bond_atoms)
+    if len(unassigned_atom_numbers) > 0:
+        raise InvalidDataError("Atoms {} were not assigned to either fragment 1 or 2.".format(unassigned_atom_numbers))
     frag1_list.sort()
     frag2_list.sort()
-    return frag1_list, frag2_list
+    if len(frag1_list) > len(frag2_list):
+        return frag2_list, frag1_list
+    else:
+        return frag1_list, frag2_list
 
 
 def add_atoms_to_fragment(atom_numbers, atoms_content, atoms_to_check, frag_list, frag_num, single_bond_atoms):
@@ -220,12 +224,12 @@ def add_atoms_to_fragment(atom_numbers, atoms_content, atoms_to_check, frag_list
         add_to_atoms_to_check = []
 
 
-def write_com_file(cp_file_name, gauss_command, for_comment_line, atoms_content, broke_double_bond,
+def write_com_file(com_file_name, gauss_command, for_comment_line, atoms_content, broke_double_bond,
                    frag_num=None, frag_list=None):
     """
     After figuring out the fragments, make Gaussian input files to calculate the counterpoint correction (if a non-zero
     list is passed to "frag_list". Otherwise, make a Gaussian input file to optimize any fragments with len > 1.
-    :param cp_file_name: str
+    :param com_file_name: str
     :param gauss_command: str
     :param for_comment_line: str
     :param atoms_content: dictionary with atom type, atom coordinates, and fragment ID
@@ -237,9 +241,13 @@ def write_com_file(cp_file_name, gauss_command, for_comment_line, atoms_content,
     # Don't bother making a separate file if just one atom; there would be lots of repeat calculations that way
     if frag_list is None:
         frag_list = []
-    if len(frag_list) == 1:
-        return
     if frag_num:
+        if len(frag_list) < 6:
+            element_list = []
+            for atom_num in frag_list:
+                element_list.append(atoms_content[atom_num][ATOM_TYPE])
+            print("Fragment {} is only {}".format(os.path.basename(com_file_name), element_list))
+            return
         comment_begin = 'radical calculation of fragment {} '.format(frag_num)
         if broke_double_bond:
             charge_mult = '0 3'
@@ -264,7 +272,7 @@ def write_com_file(cp_file_name, gauss_command, for_comment_line, atoms_content,
         print_list.append(atom_line)
     print_list.append([])
     print_list.append([])
-    list_to_file(print_list, cp_file_name)
+    list_to_file(print_list, com_file_name)
 
 
 def print_com_files(atom_pair, atoms_content, gausscom_file, cfg, frag1, frag2):

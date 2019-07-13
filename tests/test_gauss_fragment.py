@@ -55,6 +55,7 @@ GOOD_F1_DI_18_16_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_16_f1_good.
 F2_DI_18_16_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_16_f2.com')
 GOOD_F2_DI_18_16_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_16_f2_good.com')
 
+
 class TestGausscomFragNoOut(unittest.TestCase):
     # These all test failure cases
     def testNoArgs(self):
@@ -83,8 +84,8 @@ class TestGausscomFrag(unittest.TestCase):
             self.assertFalse(diff_lines(CP_14_15_OUT, GOOD_CP_14_15_OUT))
             self.assertFalse(diff_lines(F1_14_15_OUT, GOOD_F1_14_15_OUT))
             self.assertFalse(diff_lines(F2_14_15_OUT, GOOD_F2_14_15_OUT))
-            self.assertEqual(len(diff_lines(F1_15_14_OUT, GOOD_F2_14_15_OUT)), 2)
-            self.assertEqual(len(diff_lines(F2_15_14_OUT, GOOD_F1_14_15_OUT)), 2)
+            self.assertEqual(len(diff_lines(F1_15_14_OUT, GOOD_F1_14_15_OUT)), 2)
+            self.assertEqual(len(diff_lines(F2_15_14_OUT, GOOD_F2_14_15_OUT)), 2)
         finally:
             silent_remove(CP_15_14_OUT, disable=DISABLE_REMOVE)
             silent_remove(CP_14_15_OUT, disable=DISABLE_REMOVE)

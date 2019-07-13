@@ -35,6 +35,7 @@ STABLE_TPL = 'stable_tpl'
 FREQ_TPL = 'freq_tpl'
 PFB_TPL = 'pfb_tpl'
 FB_TPL = 'fb_tpl'
+JOB_LIST = 'job_list'
 
 # Defaults
 DEF_CFG_FILE = 'run_gauss_bde.ini'
@@ -45,6 +46,7 @@ DEF_STABLE_TPL = 'stable.tpl'
 DEF_FREQ_TPL = 'freq.tpl'
 DEF_PFB_TPL = 'pfb.tpl'
 DEF_FB_TPL = 'fb.tpl'
+DEF_JOB_LIST = ['', '_opt', '_stable', '_freq', '_pfb', '_fb']
 
 # Set notation
 DEF_CFG_VALS = {CONFIG_FILE: DEF_CFG_FILE,
@@ -56,6 +58,7 @@ DEF_CFG_VALS = {CONFIG_FILE: DEF_CFG_FILE,
                 FREQ_TPL: DEF_FREQ_TPL,
                 PFB_TPL: DEF_PFB_TPL,
                 FB_TPL: DEF_FB_TPL,
+                JOB_LIST: DEF_JOB_LIST,
                 }
 REQ_KEYS = {
             }
@@ -80,7 +83,7 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
 
     if not good_files:
         raise IOError('Could not read file {}'.format(f_loc))
-    main_proc = cfg_proc(dict(config.items(MAIN_SEC)), DEF_CFG_VALS, REQ_KEYS)
+    main_proc = cfg_proc(dict(config.items(MAIN_SEC)), DEF_CFG_VALS, REQ_KEYS, int_list=False)
 
     return main_proc
 
@@ -129,13 +132,11 @@ def main(argv=None):
     # Read template and data files
     try:
         tpl_dict = {JOB_NAME: job_name}
-        job_names = ['', '_opt', '_stable', '_freq', '_pfb', '_fb']
-        # job_names = ['', ]
         gau_tpl_files = {'_opt': cfg[OPT_TPL], '_stable': cfg[STABLE_TPL], '_freq': cfg[STABLE_TPL],
                          '_pfb': cfg[PFB_TPL], '_fb': cfg[FB_TPL]}
 
         # First job, svp
-        for job in job_names:
+        for job in cfg[JOB_LIST]:
             new_job_name = tpl_dict[JOB_NAME]+job
             filled_tpl_name = create_out_fname(new_job_name, ext=".sh", base_dir=cfg[OUT_DIR])
             print("Running {}".format(new_job_name))
