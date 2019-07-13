@@ -4,16 +4,15 @@ makes and runs gaussian input
 """
 
 from __future__ import print_function
-import os
 import sys
 import argparse
 import subprocess
 import re
-from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file,
+import os
+from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                read_tpl)
-from nrel_tools.fill_tpl import (OUT_DIR, MAIN_SEC, TPL_VALS_SEC, TPL_EQS_SEC,
-                                 TPL_VALS, TPL_EQ_PARAMS, NEW_FNAME, fill_save_tpl)
+from nrel_tools.fill_tpl import (OUT_DIR, MAIN_SEC, fill_save_tpl)
 
 try:
     # noinspection PyCompatibility
@@ -33,6 +32,9 @@ SLURM_NO_CHK_TPL = 'slurm_no_old_chk'
 SLURM_FROM_CHK_TPL = 'slurm_from_chk'
 OPT_TPL = 'opt_tpl'
 STABLE_TPL = 'stable_tpl'
+FREQ_TPL = 'freq_tpl'
+PFB_TPL = 'pfb_tpl'
+FB_TPL = 'fb_tpl'
 
 # Defaults
 DEF_CFG_FILE = 'run_gauss_bde.ini'
@@ -40,7 +42,9 @@ DEF_SLURM_NO_CHK_TPL = 'run_gauss_no_old_chk.tpl'
 DEF_SLURM_FROM_CHK_TPL = 'run_gauss_from_old_chk.tpl'
 DEF_OPT_TPL = 'opt.tpl'
 DEF_STABLE_TPL = 'stable.tpl'
-
+DEF_FREQ_TPL = 'freq.tpl'
+DEF_PFB_TPL = 'pfb.tpl'
+DEF_FB_TPL = 'fb.tpl'
 
 # Set notation
 DEF_CFG_VALS = {CONFIG_FILE: DEF_CFG_FILE,
@@ -49,6 +53,9 @@ DEF_CFG_VALS = {CONFIG_FILE: DEF_CFG_FILE,
                 SLURM_FROM_CHK_TPL: DEF_SLURM_FROM_CHK_TPL,
                 OPT_TPL: DEF_OPT_TPL,
                 STABLE_TPL: DEF_STABLE_TPL,
+                FREQ_TPL: DEF_FREQ_TPL,
+                PFB_TPL: DEF_PFB_TPL,
+                FB_TPL: DEF_FB_TPL,
                 }
 REQ_KEYS = {
             }
@@ -122,31 +129,38 @@ def main(argv=None):
     # Read template and data files
     try:
         tpl_dict = {JOB_NAME: job_name}
-        slurm_file_name = create_out_fname(job_name, ext=".sh", base_dir=cfg[OUT_DIR])
-        # job_names = ['', '_opt', '_stable']
-        job_names = ['', ]
-        gau_tpl_files = {'_opt': cfg[OPT_TPL], '_stable': STABLE_TPL}
+        job_names = ['', '_opt', '_stable', '_freq', '_pfb', '_fb']
+        # job_names = ['', ]
+        gau_tpl_files = {'_opt': cfg[OPT_TPL], '_stable': cfg[STABLE_TPL], '_freq': cfg[STABLE_TPL],
+                         '_pfb': cfg[PFB_TPL], '_fb': cfg[FB_TPL]}
 
         # First job, svp
         for job in job_names:
+            new_job_name = tpl_dict[JOB_NAME]+job
+            filled_tpl_name = create_out_fname(new_job_name, ext=".sh", base_dir=cfg[OUT_DIR])
+            print("Running {}".format(new_job_name))
             if job == '':
                 tpl_file = cfg[SLURM_NO_CHK_TPL]
             else:
-                tpl_file = read_tpl(cfg[SLURM_FROM_CHK_TPL])
+                tpl_file = cfg[SLURM_FROM_CHK_TPL]
                 tpl_dict[OLD_JOB_NAME] = tpl_dict[JOB_NAME]
-                tpl_dict[JOB_NAME] = job_name + job
+                tpl_dict[JOB_NAME] = new_job_name
                 tpl_dict[INPUT_FILE] = gau_tpl_files[job]
             tpl_str = read_tpl(tpl_file)
-            fill_save_tpl(cfg, tpl_str, tpl_dict, tpl_file, slurm_file_name)
-            subprocess.call(["chmod", "+x", slurm_file_name])
-            subprocess.call(slurm_file_name)
+            fill_save_tpl(cfg, tpl_str, tpl_dict, tpl_file, filled_tpl_name)
+            subprocess.call(["chmod", "+x", filled_tpl_name])
+            p1 = subprocess.Popen(filled_tpl_name)
+            p1.wait()
+            # subprocess.call(["ls", "-lhatr", "*log"])
             out_file = tpl_dict[JOB_NAME] + ".log"
             last_line = subprocess.check_output(["tail", "-1",  out_file]).strip().decode("utf-8")
             if GAU_GOOD_PAT.match(last_line):
                 print("Successfully completed {}".format(out_file))
+                os.remove('infile_' + job_name)
+                os.remove(filled_tpl_name)
             else:
                 return INVALID_DATA
-        
+
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR

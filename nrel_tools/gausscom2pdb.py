@@ -163,8 +163,9 @@ def process_gausscom_file(cfg, gausscom_file, pdb_tpl_content):
                                 "is {}".format(atom_id, pdb_atom_type, atom_type))
                 else:
                     pdb_data_section.append(atom_id)
-                    pdb_data_section[atom_id] = ['HETATM', '{:5d}'.format(atom_id+1), '  {:4}'.format(atom_type),
-                                                 'UNL  ', 1, 0.0, 0.0, 0.0, '  1.00  0.00           '+atom_type]
+                    pdb_data_section[atom_id] = ['HETATM', '{:5d}'.format(atom_id+1), ' {:4} '.format(atom_type),
+                                                 'UNL  ', 1, 0.0, 0.0, 0.0,
+                                                 '  1.00  0.00          {:>2}'.format(atom_type)]
                 pdb_data_section[atom_id][5:8] = map(float, split_line[1:4])
                 atom_id += 1
                 # Check after increment because the counter started at 0

@@ -1,154 +1,154 @@
 TITLE     tests/test_data/gausslog2pdb/pet_mono_f1hs_1.log
 REMARK    SCF Done:  E(UM062X) =  -342.519400306     A.U. after   18 cycles
-HETATM    1  O   UNL     1       1.338   6.852  -0.456  1.00  0.00           O
-HETATM    2  H   UNL     1       0.971   6.524  -1.283  1.00  0.00           H
-HETATM    3  O   UNL     1       1.783   2.538   1.508  1.00  0.00           O
-HETATM    4  C   UNL     1       2.456   4.816   0.156  1.00  0.00           C
-HETATM    5  H   UNL     1       1.932   4.246  -0.611  1.00  0.00           H
-HETATM    6  H   UNL     1       3.423   4.346   0.349  1.00  0.00           H
-HETATM    7  C   UNL     1       2.603   6.270  -0.243  1.00  0.00           C
-HETATM    8  H   UNL     1       3.074   6.824   0.568  1.00  0.00           H
-HETATM    9  H   UNL     1       3.248   6.350  -1.124  1.00  0.00           H
-HETATM   10  C   UNL     1       1.454   3.606   1.886  1.00  0.00           C
-HETATM   11  O   UNL     1       1.678   4.793   1.380  1.00  0.00           O
+HETATM    1 O    UNL     1       1.338   6.852  -0.456  1.00  0.00           O
+HETATM    2 H    UNL     1       0.971   6.524  -1.283  1.00  0.00           H
+HETATM    3 O    UNL     1       1.783   2.538   1.508  1.00  0.00           O
+HETATM    4 C    UNL     1       2.456   4.816   0.156  1.00  0.00           C
+HETATM    5 H    UNL     1       1.932   4.246  -0.611  1.00  0.00           H
+HETATM    6 H    UNL     1       3.423   4.346   0.349  1.00  0.00           H
+HETATM    7 C    UNL     1       2.603   6.270  -0.243  1.00  0.00           C
+HETATM    8 H    UNL     1       3.074   6.824   0.568  1.00  0.00           H
+HETATM    9 H    UNL     1       3.248   6.350  -1.124  1.00  0.00           H
+HETATM   10 C    UNL     1       1.454   3.606   1.886  1.00  0.00           C
+HETATM   11 O    UNL     1       1.678   4.793   1.380  1.00  0.00           O
 END
 TITLE     tests/test_data/gausslog2pdb/pet_mono_f1hs_1.log
 REMARK    SCF Done:  E(UM062X) =  -342.520208637     A.U. after   16 cycles
-HETATM    1  O   UNL     1       1.343   6.883  -0.487  1.00  0.00           O
-HETATM    2  H   UNL     1       0.987   6.536  -1.311  1.00  0.00           H
-HETATM    3  O   UNL     1       1.786   2.534   1.475  1.00  0.00           O
-HETATM    4  C   UNL     1       2.449   4.822   0.172  1.00  0.00           C
-HETATM    5  H   UNL     1       1.902   4.236  -0.583  1.00  0.00           H
-HETATM    6  H   UNL     1       3.426   4.347   0.342  1.00  0.00           H
-HETATM    7  C   UNL     1       2.582   6.272  -0.241  1.00  0.00           C
-HETATM    8  H   UNL     1       3.055   6.834   0.576  1.00  0.00           H
-HETATM    9  H   UNL     1       3.255   6.325  -1.116  1.00  0.00           H
-HETATM   10  C   UNL     1       1.475   3.593   1.897  1.00  0.00           C
-HETATM   11  O   UNL     1       1.700   4.784   1.407  1.00  0.00           O
+HETATM    1 O    UNL     1       1.343   6.883  -0.487  1.00  0.00           O
+HETATM    2 H    UNL     1       0.987   6.536  -1.311  1.00  0.00           H
+HETATM    3 O    UNL     1       1.786   2.534   1.475  1.00  0.00           O
+HETATM    4 C    UNL     1       2.449   4.822   0.172  1.00  0.00           C
+HETATM    5 H    UNL     1       1.902   4.236  -0.583  1.00  0.00           H
+HETATM    6 H    UNL     1       3.426   4.347   0.342  1.00  0.00           H
+HETATM    7 C    UNL     1       2.582   6.272  -0.241  1.00  0.00           C
+HETATM    8 H    UNL     1       3.055   6.834   0.576  1.00  0.00           H
+HETATM    9 H    UNL     1       3.255   6.325  -1.116  1.00  0.00           H
+HETATM   10 C    UNL     1       1.475   3.593   1.897  1.00  0.00           C
+HETATM   11 O    UNL     1       1.700   4.784   1.407  1.00  0.00           O
 END
 TITLE     tests/test_data/gausslog2pdb/pet_mono_f1hs_1.log
 REMARK    SCF Done:  E(UM062X) =  -342.520322083     A.U. after   14 cycles
-HETATM    1  O   UNL     1       1.346   6.884  -0.501  1.00  0.00           O
-HETATM    2  H   UNL     1       0.985   6.517  -1.315  1.00  0.00           H
-HETATM    3  O   UNL     1       1.766   2.529   1.462  1.00  0.00           O
-HETATM    4  C   UNL     1       2.447   4.830   0.176  1.00  0.00           C
-HETATM    5  H   UNL     1       1.892   4.239  -0.572  1.00  0.00           H
-HETATM    6  H   UNL     1       3.431   4.358   0.322  1.00  0.00           H
-HETATM    7  C   UNL     1       2.578   6.276  -0.239  1.00  0.00           C
-HETATM    8  H   UNL     1       3.048   6.839   0.581  1.00  0.00           H
-HETATM    9  H   UNL     1       3.266   6.318  -1.105  1.00  0.00           H
-HETATM   10  C   UNL     1       1.482   3.590   1.900  1.00  0.00           C
-HETATM   11  O   UNL     1       1.720   4.783   1.422  1.00  0.00           O
+HETATM    1 O    UNL     1       1.346   6.884  -0.501  1.00  0.00           O
+HETATM    2 H    UNL     1       0.985   6.517  -1.315  1.00  0.00           H
+HETATM    3 O    UNL     1       1.766   2.529   1.462  1.00  0.00           O
+HETATM    4 C    UNL     1       2.447   4.830   0.176  1.00  0.00           C
+HETATM    5 H    UNL     1       1.892   4.239  -0.572  1.00  0.00           H
+HETATM    6 H    UNL     1       3.431   4.358   0.322  1.00  0.00           H
+HETATM    7 C    UNL     1       2.578   6.276  -0.239  1.00  0.00           C
+HETATM    8 H    UNL     1       3.048   6.839   0.581  1.00  0.00           H
+HETATM    9 H    UNL     1       3.266   6.318  -1.105  1.00  0.00           H
+HETATM   10 C    UNL     1       1.482   3.590   1.900  1.00  0.00           C
+HETATM   11 O    UNL     1       1.720   4.783   1.422  1.00  0.00           O
 END
 TITLE     tests/test_data/gausslog2pdb/pet_mono_f1hs_1.log
 REMARK    SCF Done:  E(UM062X) =  -342.520357291     A.U. after   13 cycles
-HETATM    1  O   UNL     1       1.347   6.884  -0.505  1.00  0.00           O
-HETATM    2  H   UNL     1       0.973   6.497  -1.304  1.00  0.00           H
-HETATM    3  O   UNL     1       1.739   2.531   1.444  1.00  0.00           O
-HETATM    4  C   UNL     1       2.454   4.833   0.180  1.00  0.00           C
-HETATM    5  H   UNL     1       1.898   4.237  -0.563  1.00  0.00           H
-HETATM    6  H   UNL     1       3.441   4.367   0.319  1.00  0.00           H
-HETATM    7  C   UNL     1       2.578   6.278  -0.241  1.00  0.00           C
-HETATM    8  H   UNL     1       3.046   6.845   0.577  1.00  0.00           H
-HETATM    9  H   UNL     1       3.270   6.318  -1.105  1.00  0.00           H
-HETATM   10  C   UNL     1       1.478   3.591   1.897  1.00  0.00           C
-HETATM   11  O   UNL     1       1.735   4.785   1.430  1.00  0.00           O
+HETATM    1 O    UNL     1       1.347   6.884  -0.505  1.00  0.00           O
+HETATM    2 H    UNL     1       0.973   6.497  -1.304  1.00  0.00           H
+HETATM    3 O    UNL     1       1.739   2.531   1.444  1.00  0.00           O
+HETATM    4 C    UNL     1       2.454   4.833   0.180  1.00  0.00           C
+HETATM    5 H    UNL     1       1.898   4.237  -0.563  1.00  0.00           H
+HETATM    6 H    UNL     1       3.441   4.367   0.319  1.00  0.00           H
+HETATM    7 C    UNL     1       2.578   6.278  -0.241  1.00  0.00           C
+HETATM    8 H    UNL     1       3.046   6.845   0.577  1.00  0.00           H
+HETATM    9 H    UNL     1       3.270   6.318  -1.105  1.00  0.00           H
+HETATM   10 C    UNL     1       1.478   3.591   1.897  1.00  0.00           C
+HETATM   11 O    UNL     1       1.735   4.785   1.430  1.00  0.00           O
 END
 TITLE     tests/test_data/gausslog2pdb/pet_mono_f1hs_1.log
 REMARK    SCF Done:  E(UM062X) =  -342.520394946     A.U. after   14 cycles
-HETATM    1  O   UNL     1       1.347   6.877  -0.505  1.00  0.00           O
-HETATM    2  H   UNL     1       0.947   6.449  -1.270  1.00  0.00           H
-HETATM    3  O   UNL     1       1.681   2.537   1.412  1.00  0.00           O
-HETATM    4  C   UNL     1       2.472   4.838   0.186  1.00  0.00           C
-HETATM    5  H   UNL     1       1.920   4.232  -0.551  1.00  0.00           H
-HETATM    6  H   UNL     1       3.465   4.383   0.321  1.00  0.00           H
-HETATM    7  C   UNL     1       2.582   6.282  -0.244  1.00  0.00           C
-HETATM    8  H   UNL     1       3.050   6.857   0.568  1.00  0.00           H
-HETATM    9  H   UNL     1       3.269   6.323  -1.111  1.00  0.00           H
-HETATM   10  C   UNL     1       1.464   3.598   1.885  1.00  0.00           C
-HETATM   11  O   UNL     1       1.762   4.790   1.439  1.00  0.00           O
+HETATM    1 O    UNL     1       1.347   6.877  -0.505  1.00  0.00           O
+HETATM    2 H    UNL     1       0.947   6.449  -1.270  1.00  0.00           H
+HETATM    3 O    UNL     1       1.681   2.537   1.412  1.00  0.00           O
+HETATM    4 C    UNL     1       2.472   4.838   0.186  1.00  0.00           C
+HETATM    5 H    UNL     1       1.920   4.232  -0.551  1.00  0.00           H
+HETATM    6 H    UNL     1       3.465   4.383   0.321  1.00  0.00           H
+HETATM    7 C    UNL     1       2.582   6.282  -0.244  1.00  0.00           C
+HETATM    8 H    UNL     1       3.050   6.857   0.568  1.00  0.00           H
+HETATM    9 H    UNL     1       3.269   6.323  -1.111  1.00  0.00           H
+HETATM   10 C    UNL     1       1.464   3.598   1.885  1.00  0.00           C
+HETATM   11 O    UNL     1       1.762   4.790   1.439  1.00  0.00           O
 END
 TITLE     tests/test_data/gausslog2pdb/pet_mono_f1hs_1.log
 REMARK    SCF Done:  E(UM062X) =  -342.520405657     A.U. after   13 cycles
-HETATM    1  O   UNL     1       1.344   6.870  -0.499  1.00  0.00           O
-HETATM    2  H   UNL     1       0.934   6.425  -1.248  1.00  0.00           H
-HETATM    3  O   UNL     1       1.652   2.542   1.396  1.00  0.00           O
-HETATM    4  C   UNL     1       2.484   4.839   0.188  1.00  0.00           C
-HETATM    5  H   UNL     1       1.936   4.229  -0.548  1.00  0.00           H
-HETATM    6  H   UNL     1       3.479   4.391   0.327  1.00  0.00           H
-HETATM    7  C   UNL     1       2.586   6.283  -0.246  1.00  0.00           C
-HETATM    8  H   UNL     1       3.055   6.863   0.561  1.00  0.00           H
-HETATM    9  H   UNL     1       3.265   6.327  -1.119  1.00  0.00           H
-HETATM   10  C   UNL     1       1.452   3.603   1.878  1.00  0.00           C
-HETATM   11  O   UNL     1       1.772   4.793   1.441  1.00  0.00           O
+HETATM    1 O    UNL     1       1.344   6.870  -0.499  1.00  0.00           O
+HETATM    2 H    UNL     1       0.934   6.425  -1.248  1.00  0.00           H
+HETATM    3 O    UNL     1       1.652   2.542   1.396  1.00  0.00           O
+HETATM    4 C    UNL     1       2.484   4.839   0.188  1.00  0.00           C
+HETATM    5 H    UNL     1       1.936   4.229  -0.548  1.00  0.00           H
+HETATM    6 H    UNL     1       3.479   4.391   0.327  1.00  0.00           H
+HETATM    7 C    UNL     1       2.586   6.283  -0.246  1.00  0.00           C
+HETATM    8 H    UNL     1       3.055   6.863   0.561  1.00  0.00           H
+HETATM    9 H    UNL     1       3.265   6.327  -1.119  1.00  0.00           H
+HETATM   10 C    UNL     1       1.452   3.603   1.878  1.00  0.00           C
+HETATM   11 O    UNL     1       1.772   4.793   1.441  1.00  0.00           O
 END
 TITLE     tests/test_data/gausslog2pdb/pet_mono_f1hs_1.log
 REMARK    SCF Done:  E(UM062X) =  -342.520406348     A.U. after   11 cycles
-HETATM    1  O   UNL     1       1.343   6.869  -0.498  1.00  0.00           O
-HETATM    2  H   UNL     1       0.932   6.420  -1.245  1.00  0.00           H
-HETATM    3  O   UNL     1       1.645   2.543   1.392  1.00  0.00           O
-HETATM    4  C   UNL     1       2.487   4.840   0.188  1.00  0.00           C
-HETATM    5  H   UNL     1       1.939   4.228  -0.546  1.00  0.00           H
-HETATM    6  H   UNL     1       3.483   4.392   0.328  1.00  0.00           H
-HETATM    7  C   UNL     1       2.587   6.283  -0.247  1.00  0.00           C
-HETATM    8  H   UNL     1       3.056   6.865   0.560  1.00  0.00           H
-HETATM    9  H   UNL     1       3.264   6.328  -1.120  1.00  0.00           H
-HETATM   10  C   UNL     1       1.450   3.604   1.876  1.00  0.00           C
-HETATM   11  O   UNL     1       1.775   4.794   1.442  1.00  0.00           O
+HETATM    1 O    UNL     1       1.343   6.869  -0.498  1.00  0.00           O
+HETATM    2 H    UNL     1       0.932   6.420  -1.245  1.00  0.00           H
+HETATM    3 O    UNL     1       1.645   2.543   1.392  1.00  0.00           O
+HETATM    4 C    UNL     1       2.487   4.840   0.188  1.00  0.00           C
+HETATM    5 H    UNL     1       1.939   4.228  -0.546  1.00  0.00           H
+HETATM    6 H    UNL     1       3.483   4.392   0.328  1.00  0.00           H
+HETATM    7 C    UNL     1       2.587   6.283  -0.247  1.00  0.00           C
+HETATM    8 H    UNL     1       3.056   6.865   0.560  1.00  0.00           H
+HETATM    9 H    UNL     1       3.264   6.328  -1.120  1.00  0.00           H
+HETATM   10 C    UNL     1       1.450   3.604   1.876  1.00  0.00           C
+HETATM   11 O    UNL     1       1.775   4.794   1.442  1.00  0.00           O
 END
 TITLE     tests/test_data/gausslog2pdb/pet_mono_f1hs_1.log
 REMARK    SCF Done:  E(UM062X) =  -342.520407209     A.U. after   12 cycles
-HETATM    1  O   UNL     1       1.341   6.865  -0.497  1.00  0.00           O
-HETATM    2  H   UNL     1       0.929   6.414  -1.242  1.00  0.00           H
-HETATM    3  O   UNL     1       1.630   2.545   1.384  1.00  0.00           O
-HETATM    4  C   UNL     1       2.492   4.840   0.190  1.00  0.00           C
-HETATM    5  H   UNL     1       1.944   4.226  -0.542  1.00  0.00           H
-HETATM    6  H   UNL     1       3.489   4.396   0.329  1.00  0.00           H
-HETATM    7  C   UNL     1       2.587   6.283  -0.247  1.00  0.00           C
-HETATM    8  H   UNL     1       3.056   6.868   0.558  1.00  0.00           H
-HETATM    9  H   UNL     1       3.262   6.329  -1.122  1.00  0.00           H
-HETATM   10  C   UNL     1       1.448   3.605   1.874  1.00  0.00           C
-HETATM   11  O   UNL     1       1.783   4.794   1.445  1.00  0.00           O
+HETATM    1 O    UNL     1       1.341   6.865  -0.497  1.00  0.00           O
+HETATM    2 H    UNL     1       0.929   6.414  -1.242  1.00  0.00           H
+HETATM    3 O    UNL     1       1.630   2.545   1.384  1.00  0.00           O
+HETATM    4 C    UNL     1       2.492   4.840   0.190  1.00  0.00           C
+HETATM    5 H    UNL     1       1.944   4.226  -0.542  1.00  0.00           H
+HETATM    6 H    UNL     1       3.489   4.396   0.329  1.00  0.00           H
+HETATM    7 C    UNL     1       2.587   6.283  -0.247  1.00  0.00           C
+HETATM    8 H    UNL     1       3.056   6.868   0.558  1.00  0.00           H
+HETATM    9 H    UNL     1       3.262   6.329  -1.122  1.00  0.00           H
+HETATM   10 C    UNL     1       1.448   3.605   1.874  1.00  0.00           C
+HETATM   11 O    UNL     1       1.783   4.794   1.445  1.00  0.00           O
 END
 TITLE     tests/test_data/gausslog2pdb/pet_mono_f1hs_1.log
 REMARK    SCF Done:  E(UM062X) =  -342.520407965     A.U. after   12 cycles
-HETATM    1  O   UNL     1       1.338   6.861  -0.495  1.00  0.00           O
-HETATM    2  H   UNL     1       0.928   6.412  -1.242  1.00  0.00           H
-HETATM    3  O   UNL     1       1.618   2.547   1.378  1.00  0.00           O
-HETATM    4  C   UNL     1       2.496   4.841   0.191  1.00  0.00           C
-HETATM    5  H   UNL     1       1.947   4.224  -0.538  1.00  0.00           H
-HETATM    6  H   UNL     1       3.495   4.399   0.328  1.00  0.00           H
-HETATM    7  C   UNL     1       2.586   6.283  -0.247  1.00  0.00           C
-HETATM    8  H   UNL     1       3.055   6.870   0.556  1.00  0.00           H
-HETATM    9  H   UNL     1       3.259   6.330  -1.124  1.00  0.00           H
-HETATM   10  C   UNL     1       1.447   3.606   1.874  1.00  0.00           C
-HETATM   11  O   UNL     1       1.791   4.794   1.449  1.00  0.00           O
+HETATM    1 O    UNL     1       1.338   6.861  -0.495  1.00  0.00           O
+HETATM    2 H    UNL     1       0.928   6.412  -1.242  1.00  0.00           H
+HETATM    3 O    UNL     1       1.618   2.547   1.378  1.00  0.00           O
+HETATM    4 C    UNL     1       2.496   4.841   0.191  1.00  0.00           C
+HETATM    5 H    UNL     1       1.947   4.224  -0.538  1.00  0.00           H
+HETATM    6 H    UNL     1       3.495   4.399   0.328  1.00  0.00           H
+HETATM    7 C    UNL     1       2.586   6.283  -0.247  1.00  0.00           C
+HETATM    8 H    UNL     1       3.055   6.870   0.556  1.00  0.00           H
+HETATM    9 H    UNL     1       3.259   6.330  -1.124  1.00  0.00           H
+HETATM   10 C    UNL     1       1.447   3.606   1.874  1.00  0.00           C
+HETATM   11 O    UNL     1       1.791   4.794   1.449  1.00  0.00           O
 END
 TITLE     tests/test_data/gausslog2pdb/pet_mono_f1hs_1.log
 REMARK    SCF Done:  E(UM062X) =  -342.520408182     A.U. after   10 cycles
-HETATM    1  O   UNL     1       1.336   6.859  -0.494  1.00  0.00           O
-HETATM    2  H   UNL     1       0.929   6.411  -1.243  1.00  0.00           H
-HETATM    3  O   UNL     1       1.611   2.547   1.375  1.00  0.00           O
-HETATM    4  C   UNL     1       2.498   4.840   0.192  1.00  0.00           C
-HETATM    5  H   UNL     1       1.949   4.223  -0.536  1.00  0.00           H
-HETATM    6  H   UNL     1       3.498   4.400   0.327  1.00  0.00           H
-HETATM    7  C   UNL     1       2.586   6.283  -0.247  1.00  0.00           C
-HETATM    8  H   UNL     1       3.054   6.871   0.556  1.00  0.00           H
-HETATM    9  H   UNL     1       3.258   6.331  -1.124  1.00  0.00           H
-HETATM   10  C   UNL     1       1.446   3.607   1.873  1.00  0.00           C
-HETATM   11  O   UNL     1       1.796   4.794   1.451  1.00  0.00           O
+HETATM    1 O    UNL     1       1.336   6.859  -0.494  1.00  0.00           O
+HETATM    2 H    UNL     1       0.929   6.411  -1.243  1.00  0.00           H
+HETATM    3 O    UNL     1       1.611   2.547   1.375  1.00  0.00           O
+HETATM    4 C    UNL     1       2.498   4.840   0.192  1.00  0.00           C
+HETATM    5 H    UNL     1       1.949   4.223  -0.536  1.00  0.00           H
+HETATM    6 H    UNL     1       3.498   4.400   0.327  1.00  0.00           H
+HETATM    7 C    UNL     1       2.586   6.283  -0.247  1.00  0.00           C
+HETATM    8 H    UNL     1       3.054   6.871   0.556  1.00  0.00           H
+HETATM    9 H    UNL     1       3.258   6.331  -1.124  1.00  0.00           H
+HETATM   10 C    UNL     1       1.446   3.607   1.873  1.00  0.00           C
+HETATM   11 O    UNL     1       1.796   4.794   1.451  1.00  0.00           O
 END
 TITLE     tests/test_data/gausslog2pdb/pet_mono_f1hs_1.log
 REMARK    SCF Done:  E(UM062X) =  -342.520408214     A.U. after   10 cycles
-HETATM    1  O   UNL     1       1.336   6.858  -0.494  1.00  0.00           O
-HETATM    2  H   UNL     1       0.929   6.411  -1.244  1.00  0.00           H
-HETATM    3  O   UNL     1       1.610   2.548   1.374  1.00  0.00           O
-HETATM    4  C   UNL     1       2.499   4.840   0.193  1.00  0.00           C
-HETATM    5  H   UNL     1       1.949   4.222  -0.536  1.00  0.00           H
-HETATM    6  H   UNL     1       3.498   4.400   0.327  1.00  0.00           H
-HETATM    7  C   UNL     1       2.585   6.283  -0.247  1.00  0.00           C
-HETATM    8  H   UNL     1       3.054   6.871   0.556  1.00  0.00           H
-HETATM    9  H   UNL     1       3.258   6.331  -1.124  1.00  0.00           H
-HETATM   10  C   UNL     1       1.446   3.607   1.874  1.00  0.00           C
-HETATM   11  O   UNL     1       1.797   4.793   1.452  1.00  0.00           O
+HETATM    1 O    UNL     1       1.336   6.858  -0.494  1.00  0.00           O
+HETATM    2 H    UNL     1       0.929   6.411  -1.244  1.00  0.00           H
+HETATM    3 O    UNL     1       1.610   2.548   1.374  1.00  0.00           O
+HETATM    4 C    UNL     1       2.499   4.840   0.193  1.00  0.00           C
+HETATM    5 H    UNL     1       1.949   4.222  -0.536  1.00  0.00           H
+HETATM    6 H    UNL     1       3.498   4.400   0.327  1.00  0.00           H
+HETATM    7 C    UNL     1       2.585   6.283  -0.247  1.00  0.00           C
+HETATM    8 H    UNL     1       3.054   6.871   0.556  1.00  0.00           H
+HETATM    9 H    UNL     1       3.258   6.331  -1.124  1.00  0.00           H
+HETATM   10 C    UNL     1       1.446   3.607   1.874  1.00  0.00           C
+HETATM   11 O    UNL     1       1.797   4.793   1.452  1.00  0.00           O
 END

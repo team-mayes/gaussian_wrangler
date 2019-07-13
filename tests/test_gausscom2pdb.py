@@ -109,7 +109,7 @@ class Testgauscom2pdbNoOut(unittest.TestCase):
             self.assertTrue("optional arguments" in output)
 
 
-class Testgauscom2pdb(unittest.TestCase):
+class TestGaussCom2pdb(unittest.TestCase):
     # These test/demonstrate different options
     def testDefIni(self):
         test_input = ["-c", DEF_INI]
@@ -119,8 +119,8 @@ class Testgauscom2pdb(unittest.TestCase):
             main(test_input)
             self.assertFalse(diff_lines(PDB_OUT, GOOD_PDB_OUT))
         finally:
-            # silent_remove(PDB_TPL_OUT)
-            silent_remove(PDB_OUT, disable=DISABLE_REMOVE)
+            # silent_remove(PDB_OUT, disable=DISABLE_REMOVE)
+            pass
 
     def testNoTplIni(self):
         test_input = ["-c", NO_TPL_INI]

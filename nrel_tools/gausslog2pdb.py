@@ -220,10 +220,11 @@ def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
                     atom_type = element_type
                     if cfg[ADD_NUM_TO_TYPE]:
                         # catch too long atom_type after adding number...
-                        max_atom_num_length = 3 - len(atom_type)
+                        max_atom_num_length = 4 - len(atom_type)
                         atom_type += str(atom_id + 1)[:max_atom_num_length]
-                    pdb_data_section[atom_id] = ['HETATM', '{:5d}'.format(atom_id + 1), '  {:4}'.format(atom_type),
-                                                 'UNL  ', 1, 0.0, 0.0, 0.0, '  1.00  0.00           ' + element_type]
+                    pdb_data_section[atom_id] = ['HETATM', '{:5d}'.format(atom_id + 1), ' {:4} '.format(atom_type),
+                                                 'UNL  ', 1, 0.0, 0.0, 0.0,
+                                                 '  1.00  0.00          {:>2}'.format(element_type)]
                 pdb_data_section[atom_id][5:8] = map(float, split_line[3:6])
                 atom_id += 1
             elif section == SEC_TAIL:

@@ -37,12 +37,12 @@ class TestRunGaussBDENoOut(unittest.TestCase):
             self.assertTrue("optional arguments" in output)
 
 
-class TestRunGaussBDE(unittest.TestCase):
-    # These test/demonstrate different options
-    def testDefIni(self):
-        test_input = ["ethylrad", "-c", DEF_INI]
-        try:
-            main(test_input)
-        finally:
-            pass
+# class TestRunGaussBDE(unittest.TestCase):
+#     # These test/demonstrate different options
+#     def testDefIni(self):
+#         test_input = ["ethylrad", "-c", DEF_INI]
+#         try:
+#             main(test_input)
+#         finally:
+#             pass
 

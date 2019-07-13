@@ -74,6 +74,7 @@ class Testgausslog2pdb(unittest.TestCase):
             self.assertFalse(diff_lines(PDB_OUT, GOOD_PDB_ALL_OUT))
         finally:
             silent_remove(PDB_OUT, disable=DISABLE_REMOVE)
+            pass
 
     def testLastIni(self):
         test_input = ["-c", LAST_INI]
