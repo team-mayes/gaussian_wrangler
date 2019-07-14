@@ -162,7 +162,7 @@ def main(argv=None):
             last_line = subprocess.check_output(["tail", "-1",  out_file]).strip().decode("utf-8")
             if GAU_GOOD_PAT.match(last_line):
                 print("Successfully completed {}".format(out_file))
-                os.remove('infile_' + job_name)
+                # os.remove('infile_' + job_name)
                 os.remove(filled_tpl_name)
             else:
                 return INVALID_DATA
