@@ -28,14 +28,15 @@ __author__ = 'hmayes'
 
 # Config keys
 CONFIG_FILE = 'config_file_name'
-SLURM_NO_CHK_TPL = 'slurm_no_old_chk'
-SLURM_FROM_CHK_TPL = 'slurm_from_chk'
 OPT_TPL = 'opt_tpl'
 STABLE_TPL = 'stable_tpl'
 FREQ_TPL = 'freq_tpl'
 PFB_TPL = 'pfb_tpl'
 FB_TPL = 'fb_tpl'
 JOB_LIST = 'job_list'
+FIRST_JOB_TPL = "first_job_tpl"
+REMAINING_JOBS_TPL = "remaining_jobs_tpl"
+FIRST_JOB_CHK = 'chk_for_first_job'
 
 # Defaults
 DEF_CFG_FILE = 'run_gauss_bde.ini'
@@ -51,14 +52,15 @@ DEF_JOB_LIST = ['', '_opt', '_stable', '_freq', '_pfb', '_fb']
 # Set notation
 DEF_CFG_VALS = {CONFIG_FILE: DEF_CFG_FILE,
                 OUT_DIR: None,
-                SLURM_NO_CHK_TPL: DEF_SLURM_NO_CHK_TPL,
-                SLURM_FROM_CHK_TPL: DEF_SLURM_FROM_CHK_TPL,
+                FIRST_JOB_TPL: DEF_SLURM_NO_CHK_TPL,
+                REMAINING_JOBS_TPL: DEF_SLURM_FROM_CHK_TPL,
                 OPT_TPL: DEF_OPT_TPL,
                 STABLE_TPL: DEF_STABLE_TPL,
                 FREQ_TPL: DEF_FREQ_TPL,
                 PFB_TPL: DEF_PFB_TPL,
                 FB_TPL: DEF_FB_TPL,
                 JOB_LIST: DEF_JOB_LIST,
+                FIRST_JOB_CHK: None,
                 }
 REQ_KEYS = {
             }
@@ -141,18 +143,21 @@ def main(argv=None):
             filled_tpl_name = create_out_fname(new_job_name, ext=".sh", base_dir=cfg[OUT_DIR])
             print("Running {}".format(new_job_name))
             if job == '':
-                tpl_file = cfg[SLURM_NO_CHK_TPL]
+                if cfg[FIRST_JOB_CHK]:
+                    tpl_dict[OLD_JOB_NAME] = cfg[FIRST_JOB_CHK]
+                    tpl_file = cfg[REMAINING_JOBS_TPL]
+                else:
+                    tpl_file = cfg[FIRST_JOB_TPL]
             else:
-                tpl_file = cfg[SLURM_FROM_CHK_TPL]
+                tpl_file = cfg[REMAINING_JOBS_TPL]
                 tpl_dict[OLD_JOB_NAME] = tpl_dict[JOB_NAME]
-                tpl_dict[JOB_NAME] = new_job_name
-                tpl_dict[INPUT_FILE] = gau_tpl_files[job]
+            tpl_dict[JOB_NAME] = new_job_name
+            tpl_dict[INPUT_FILE] = tpl_dict[JOB_NAME] + job + ".com"
             tpl_str = read_tpl(tpl_file)
             fill_save_tpl(cfg, tpl_str, tpl_dict, tpl_file, filled_tpl_name)
             subprocess.call(["chmod", "+x", filled_tpl_name])
             p1 = subprocess.Popen(filled_tpl_name)
             p1.wait()
-            # subprocess.call(["ls", "-lhatr", "*log"])
             out_file = tpl_dict[JOB_NAME] + ".log"
             last_line = subprocess.check_output(["tail", "-1",  out_file]).strip().decode("utf-8")
             if GAU_GOOD_PAT.match(last_line):
