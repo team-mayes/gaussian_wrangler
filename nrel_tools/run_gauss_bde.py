@@ -134,7 +134,7 @@ def main(argv=None):
     # Read template and data files
     try:
         tpl_dict = {JOB_NAME: job_name}
-        gau_tpl_files = {'_opt': cfg[OPT_TPL], '_stable': cfg[STABLE_TPL], '_freq': cfg[STABLE_TPL],
+        gau_tpl_files = {'_opt': cfg[OPT_TPL], '_stable': cfg[STABLE_TPL], '_freq': cfg[FREQ_TPL],
                          '_pfb': cfg[PFB_TPL], '_fb': cfg[FB_TPL]}
 
         # First job, svp
@@ -143,6 +143,7 @@ def main(argv=None):
             filled_tpl_name = create_out_fname(new_job_name, ext=".sh", base_dir=cfg[OUT_DIR])
             print("Running {}".format(new_job_name))
             if job == '':
+                tpl_dict[INPUT_FILE] = job_name + ".com"
                 if cfg[FIRST_JOB_CHK]:
                     tpl_dict[OLD_JOB_NAME] = cfg[FIRST_JOB_CHK]
                     tpl_file = cfg[REMAINING_JOBS_TPL]
@@ -151,8 +152,8 @@ def main(argv=None):
             else:
                 tpl_file = cfg[REMAINING_JOBS_TPL]
                 tpl_dict[OLD_JOB_NAME] = tpl_dict[JOB_NAME]
+                tpl_dict[INPUT_FILE] = gau_tpl_files[job]
             tpl_dict[JOB_NAME] = new_job_name
-            tpl_dict[INPUT_FILE] = tpl_dict[JOB_NAME] + job + ".com"
             tpl_str = read_tpl(tpl_file)
             fill_save_tpl(cfg, tpl_str, tpl_dict, tpl_file, filled_tpl_name)
             subprocess.call(["chmod", "+x", filled_tpl_name])
