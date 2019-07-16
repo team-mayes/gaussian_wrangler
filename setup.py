@@ -34,8 +34,8 @@ setup(
                                       'gausslog2pdb = nrel_tools.gausslog2pdb:main',
                                       'gausslog2com = nrel_tools.gausslog2com:main',
                                       'gauss_fragment = nrel_tools.gauss_fragment:main',
-                                      'run_gauss_bde = nrel_tools.run_gauss_bde:main'
-                                      'check_gauss = nrel_tools.check_gauss:main'
+                                      'run_gauss_bde = nrel_tools.run_gauss_bde:main',
+                                      'check_gauss = nrel_tools.check_gauss:main',
                                       ],
                   },     package_dir={'nrel_tools': 'nrel_tools'},
 
