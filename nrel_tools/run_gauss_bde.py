@@ -105,9 +105,14 @@ def parse_cmdline(argv):
                                                "The default file name is {}, located in the "
                                                "base directory where the program as run.".format(DEF_CFG_FILE),
                         default=DEF_CFG_FILE, type=read_cfg)
+    parser.add_argument("-o", "--old_chk_file", help="The base name of the checkpoint file (do not include '.chk')"
+                                                     "to be used for the first job (optional).",
+                        default=None)
     args = None
     try:
         args = parser.parse_args(argv)
+        if args.old_chk_file:
+            args.config[FIRST_JOB_CHK] = args.old_chk_file
     except IOError as e:
         warning("Problems reading file:", e)
         parser.print_help()

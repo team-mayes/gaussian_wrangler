@@ -1,0 +1,4 @@
+PGFIO/stdio: Stale file handle
+PGFIO-F-/formatted read/unit=5/error code returned by host stdio - 116.
+ File name = stdin     formatted, sequential access   record = 3
+ In source file rdcard.f, at line number 13
