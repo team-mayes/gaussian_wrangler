@@ -28,37 +28,37 @@ __author__ = 'hmayes'
 
 # Config keys
 CONFIG_FILE = 'config_file_name'
-OPT_TPL = 'opt_tpl'
-STABLE_TPL = 'stable_tpl'
-FREQ_TPL = 'freq_tpl'
-PFB_TPL = 'pfb_tpl'
-FB_TPL = 'fb_tpl'
+# OPT_TPL = 'opt_tpl'
+# STABLE_TPL = 'stable_tpl'
+# FREQ_TPL = 'freq_tpl'
+# PFB_TPL = 'pfb_tpl'
+# FB_TPL = 'fb_tpl'
 JOB_LIST = 'job_list'
-FIRST_JOB_TPL = "first_job_tpl"
-REMAINING_JOBS_TPL = "remaining_jobs_tpl"
+TPL_DICT = 'dictionary of tpls for jobs'
+FIRST_SUBMIT_TPL = "first_submit_tpl"
+REMAINING_JOB_SUBMIT_TPL = "rest_submit_tpl"
 FIRST_JOB_CHK = 'chk_for_first_job'
 
-# Defaults
 DEF_CFG_FILE = 'run_gauss_bde.ini'
 DEF_SLURM_NO_CHK_TPL = 'run_gauss_no_old_chk.tpl'
 DEF_SLURM_FROM_CHK_TPL = 'run_gauss_from_old_chk.tpl'
-DEF_OPT_TPL = 'opt.tpl'
-DEF_STABLE_TPL = 'stable.tpl'
-DEF_FREQ_TPL = 'freq.tpl'
-DEF_PFB_TPL = 'pfb.tpl'
-DEF_FB_TPL = 'fb.tpl'
-DEF_JOB_LIST = ['', '_opt', '_stable', '_freq', '_pfb', '_fb']
+# DEF_OPT_TPL = 'opt.tpl'
+# DEF_STABLE_TPL = 'stable.tpl'
+# DEF_FREQ_TPL = 'freq.tpl'
+# DEF_PFB_TPL = 'pfb.tpl'
+# DEF_FB_TPL = 'fb.tpl'
+DEF_JOB_LIST = ['', 'opt', 'stable', 'freq', 'pfb', 'fb']
 
 # Set notation
 DEF_CFG_VALS = {CONFIG_FILE: DEF_CFG_FILE,
                 OUT_DIR: None,
-                FIRST_JOB_TPL: DEF_SLURM_NO_CHK_TPL,
-                REMAINING_JOBS_TPL: DEF_SLURM_FROM_CHK_TPL,
-                OPT_TPL: DEF_OPT_TPL,
-                STABLE_TPL: DEF_STABLE_TPL,
-                FREQ_TPL: DEF_FREQ_TPL,
-                PFB_TPL: DEF_PFB_TPL,
-                FB_TPL: DEF_FB_TPL,
+                FIRST_SUBMIT_TPL: DEF_SLURM_NO_CHK_TPL,
+                REMAINING_JOB_SUBMIT_TPL: DEF_SLURM_FROM_CHK_TPL,
+                # OPT_TPL: DEF_OPT_TPL,
+                # STABLE_TPL: DEF_STABLE_TPL,
+                # FREQ_TPL: DEF_FREQ_TPL,
+                # PFB_TPL: DEF_PFB_TPL,
+                # FB_TPL: DEF_FB_TPL,
                 JOB_LIST: DEF_JOB_LIST,
                 FIRST_JOB_CHK: None,
                 }
@@ -86,6 +86,19 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
     if not good_files:
         raise IOError('Could not read file {}'.format(f_loc))
     main_proc = cfg_proc(dict(config.items(MAIN_SEC)), DEF_CFG_VALS, REQ_KEYS, int_list=False)
+
+    for job in main_proc[JOB_LIST]:
+        if job == '':
+            continue
+        tpl_name = job + '.tpl'
+        if os.path.isfile(tpl_name):
+            main_proc[TPL_DICT][job] = tpl_name
+        else:
+            raise InvalidDataError("For job '{}', could not find a template file '{}'".format(job, tpl_name))
+
+    for file in [main_proc[REMAINING_JOB_SUBMIT_TPL], main_proc[FIRST_SUBMIT_TPL]]:
+        if not os.path.isfile(file):
+            raise InvalidDataError("Could not find the submit template '{}'".format(file))
 
     return main_proc
 
@@ -139,25 +152,27 @@ def main(argv=None):
     # Read template and data files
     try:
         tpl_dict = {JOB_NAME: job_name}
-        gau_tpl_files = {'_opt': cfg[OPT_TPL], '_stable': cfg[STABLE_TPL], '_freq': cfg[FREQ_TPL],
-                         '_pfb': cfg[PFB_TPL], '_fb': cfg[FB_TPL]}
+        # gau_tpl_files = {'_opt': cfg[OPT_TPL], '_stable': cfg[STABLE_TPL], '_freq': cfg[FREQ_TPL],
+        #                  '_pfb': cfg[PFB_TPL], '_fb': cfg[FB_TPL]}
 
         # First job, svp
         for job in cfg[JOB_LIST]:
-            new_job_name = tpl_dict[JOB_NAME]+job
-            filled_tpl_name = create_out_fname(new_job_name, ext=".sh", base_dir=cfg[OUT_DIR])
-            print("Running {}".format(new_job_name))
             if job == '':
+                new_job_name = tpl_dict[JOB_NAME]
                 tpl_dict[INPUT_FILE] = job_name + ".com"
                 if cfg[FIRST_JOB_CHK]:
                     tpl_dict[OLD_JOB_NAME] = cfg[FIRST_JOB_CHK]
-                    tpl_file = cfg[REMAINING_JOBS_TPL]
+                    tpl_file = cfg[REMAINING_JOB_SUBMIT_TPL]
                 else:
-                    tpl_file = cfg[FIRST_JOB_TPL]
+                    tpl_file = cfg[FIRST_SUBMIT_TPL]
             else:
-                tpl_file = cfg[REMAINING_JOBS_TPL]
+                new_job_name = tpl_dict[JOB_NAME] + '_' + job
+                tpl_file = cfg[REMAINING_JOB_SUBMIT_TPL]
                 tpl_dict[OLD_JOB_NAME] = tpl_dict[JOB_NAME]
-                tpl_dict[INPUT_FILE] = gau_tpl_files[job]
+                tpl_dict[INPUT_FILE] = cfg[TPL_DICT][job]
+            filled_tpl_name = create_out_fname(new_job_name, ext=".sh", base_dir=cfg[OUT_DIR])
+            print("Running {}".format(new_job_name))
+
             tpl_dict[JOB_NAME] = new_job_name
             tpl_str = read_tpl(tpl_file)
             fill_save_tpl(cfg, tpl_str, tpl_dict, tpl_file, filled_tpl_name)

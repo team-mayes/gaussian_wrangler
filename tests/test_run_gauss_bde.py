@@ -18,6 +18,7 @@ SUB_DATA_DIR = os.path.join(DATA_DIR, 'run_gauss_bde')
 
 DEF_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde.ini')
 DEF_SH_OUT = os.path.join(PARENT_DIR, 'ethylrad.sh')
+GOOD_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad.sh')
 DEF_LOG_OUT = os.path.join(PARENT_DIR, 'ethylrad.log')
 ONE_JOB_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde_one_job.ini')
 
@@ -58,7 +59,7 @@ class TestRunGaussBDE(unittest.TestCase):
         try:
             main(test_input)
         except IOError:
-            pass
+            self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_SH_OUT))
         finally:
             silent_remove(DEF_SH_OUT, disable=DISABLE_REMOVE)
             silent_remove(DEF_LOG_OUT, disable=DISABLE_REMOVE)
