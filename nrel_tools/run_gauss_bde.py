@@ -87,6 +87,7 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
         raise IOError('Could not read file {}'.format(f_loc))
     main_proc = cfg_proc(dict(config.items(MAIN_SEC)), DEF_CFG_VALS, REQ_KEYS, int_list=False)
 
+    main_proc[TPL_DICT] = {}
     for job in main_proc[JOB_LIST]:
         if job == '':
             continue
