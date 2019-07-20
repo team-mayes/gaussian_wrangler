@@ -113,7 +113,7 @@ def main(argv=None):
                 check_file_list.append(os.path.join(search_folder, file))
         if len(check_file_list) == 0:
             raise InvalidDataError("Could not find files with extension '{}' in directory '{}'".format(args.extension,
-                                                                                                       args.directory))
+                                                                                                       search_folder))
         for file in check_file_list:
             process_list_file(file, likely_failed_list, args.output_directory, perhaps_running_list)
         if len(likely_failed_list) > 0:

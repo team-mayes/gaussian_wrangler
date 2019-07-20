@@ -42,8 +42,9 @@ ADD_NUM_TO_TYPE = 'add_nums_to_type'
 
 # Defaults
 DEF_CFG_FILE = 'gausslog2pdb.ini'
+DEF_LIST_FILE = 'log_list.txt'
 # Set notation
-DEF_CFG_VALS = {GAUSSLOG_FILES_FILE: 'gausslog_list.txt',
+DEF_CFG_VALS = {GAUSSLOG_FILES_FILE: DEF_LIST_FILE,
                 OUT_BASE_DIR: None,
                 GAUSSLOG_FILE: None,
                 PDB_TPL_FILE: None,
@@ -77,17 +78,6 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
         raise IOError('Could not read file {}'.format(f_loc))
     main_proc = cfg_proc(dict(config.items(MAIN_SEC)), DEF_CFG_VALS, REQ_KEYS)
 
-    # To fix; have this as default!
-    main_proc[GAUSSLOG_FILES] = []
-    if os.path.isfile(main_proc[GAUSSLOG_FILES_FILE]):
-        with open(main_proc[GAUSSLOG_FILES_FILE]) as f:
-            for data_file in f:
-                main_proc[GAUSSLOG_FILES].append(data_file.strip())
-    if main_proc[GAUSSLOG_FILE] is not None:
-        main_proc[GAUSSLOG_FILES].append(main_proc[GAUSSLOG_FILE])
-    if len(main_proc[GAUSSLOG_FILES]) == 0:
-        raise InvalidDataError("No files to process: no '{}' specified and "
-                               "no list of files found for: {}".format(GAUSSLOG_FILE, main_proc[GAUSSLOG_FILES_FILE]))
     if main_proc[COMBINE_LOGS] and not main_proc[OUTFILE_NAME]:
         raise InvalidDataError("When combining outputs from multiple log files into one pdb, specify the output "
                                "file name")
@@ -118,6 +108,20 @@ def parse_cmdline(argv):
                                                "The default file name is {}, located in the "
                                                "base directory where the program as run.".format(DEF_CFG_FILE),
                         default=DEF_CFG_FILE, type=read_cfg)
+
+    parser.add_argument("-f", "--file", help="The location of a Gaussian output file. Will override any entries in a "
+                                             "configuration file.", default=None)
+    parser.add_argument("-l", "--list", help="The location of the list of Gaussian output files. Will override any "
+                                             "entries in a configuration file.",
+                        default=None)
+    parser.add_argument("-o", "--out_dir", help="The directory where the output files will be placed. This will "
+                                                "an entry in the configuration file. The default is "
+                                                "the same directory as the log file.",
+                        default=None)
+    parser.add_argument("-t", "--tpl", help="The location of the pdb template file. Will override any entry in the "
+                                            "config file.",
+                        default=None)
+
     args = None
     try:
         args = parser.parse_args(argv)
@@ -259,6 +263,28 @@ def main(argv=None):
 
     # Read template and data files
     try:
+        # override config entries if command-line options used
+        if args.file:
+            cfg[GAUSSLOG_FILE] = args.file
+        if args.list:
+            cfg[GAUSSLOG_FILES_FILE] = args.list
+        if args.tpl:
+            cfg[PDB_TPL_FILE] = args.tpl
+        if args.out_dir:
+            cfg[OUT_BASE_DIR] = args.out_dir
+        # set up list of files to process
+        cfg[GAUSSLOG_FILES] = []
+        if os.path.isfile(cfg[GAUSSLOG_FILES_FILE]):
+            with open(cfg[GAUSSLOG_FILES_FILE]) as f:
+                for data_file in f:
+                    cfg[GAUSSLOG_FILES].append(data_file.strip())
+        if cfg[GAUSSLOG_FILE] is not None:
+            cfg[GAUSSLOG_FILES].append(cfg[GAUSSLOG_FILE])
+        if len(cfg[GAUSSLOG_FILES]) == 0:
+            raise InvalidDataError("No files to process: no '{}' specified and "
+                                   "no list of files found for: {}".format(GAUSSLOG_FILE, cfg[GAUSSLOG_FILES_FILE]))
+
+        # no start the actual work
         if cfg[PDB_TPL_FILE]:
             pdb_tpl_content = process_pdb_file(cfg[PDB_TPL_FILE])
         else:

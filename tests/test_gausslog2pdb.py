@@ -39,13 +39,14 @@ MULT_PDB_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_mult_mol_in_pdb.ini')
 MULT_PDB_OUT = os.path.join(SUB_DATA_DIR, 'pet_trimer_confab_1_tzvp_opt.pdb')
 GOOD_MULT_PDB_OUT = os.path.join(SUB_DATA_DIR, 'pet_trimer_confab_1_tzvp_opt_good.pdb')
 
-
 SINGLE_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_dimer.ini')
 SINGLE_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer.pdb')
 GOOD_SINGLE_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_good.pdb')
 
+NO_LOG_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_no_logs.ini')
 
-class Testgausslog2pdbNoOut(unittest.TestCase):
+
+class TestGausslog2pdbNoOut(unittest.TestCase):
     # These all test failure cases
     def testNoArgs(self):
         with capture_stderr(main, []) as output:
@@ -142,3 +143,14 @@ class Testgausslog2pdb(unittest.TestCase):
         finally:
             silent_remove(SINGLE_OUT, disable=DISABLE_REMOVE)
             pass
+
+    def testCommandLineFile(self):
+        test_input = ["-c", NO_LOG_INI, "-f", "tests/test_data/gausslog2pdb/pet_mono_f1hs_1.log",
+                      "-o", "tests/test_data/gausslog2pdb"]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(PDB_OUT, GOOD_PDB_LAST_OUT))
+        finally:
+            silent_remove(PDB_OUT, disable=DISABLE_REMOVE)

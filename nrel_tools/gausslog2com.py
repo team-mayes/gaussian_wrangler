@@ -172,6 +172,8 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
                     atom_id = 0
                     lines_after_coord = 2
 
+    if len(final_atoms_section) == 0:
+        raise InvalidDataError("Check that the following log file has coordinates to use: {}".format(gausslog_file))
     f_name = create_out_fname(gausslog_file, ext='_' + com_tpl_content[COM_TYPE] + '.com')
     list_to_file(com_tpl_content[SEC_HEAD] + final_atoms_section + com_tpl_content[SEC_TAIL],
                  f_name)

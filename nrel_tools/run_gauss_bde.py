@@ -28,11 +28,6 @@ __author__ = 'hmayes'
 
 # Config keys
 CONFIG_FILE = 'config_file_name'
-# OPT_TPL = 'opt_tpl'
-# STABLE_TPL = 'stable_tpl'
-# FREQ_TPL = 'freq_tpl'
-# PFB_TPL = 'pfb_tpl'
-# FB_TPL = 'fb_tpl'
 JOB_LIST = 'job_list'
 TPL_DICT = 'dictionary of tpls for jobs'
 FIRST_SUBMIT_TPL = "first_submit_tpl"
@@ -42,11 +37,6 @@ FIRST_JOB_CHK = 'chk_for_first_job'
 DEF_CFG_FILE = 'run_gauss_bde.ini'
 DEF_SLURM_NO_CHK_TPL = 'run_gauss_no_old_chk.tpl'
 DEF_SLURM_FROM_CHK_TPL = 'run_gauss_from_old_chk.tpl'
-# DEF_OPT_TPL = 'opt.tpl'
-# DEF_STABLE_TPL = 'stable.tpl'
-# DEF_FREQ_TPL = 'freq.tpl'
-# DEF_PFB_TPL = 'pfb.tpl'
-# DEF_FB_TPL = 'fb.tpl'
 DEF_JOB_LIST = ['', 'opt', 'stable', 'freq', 'pfb', 'fb']
 
 # Set notation
@@ -54,11 +44,6 @@ DEF_CFG_VALS = {CONFIG_FILE: DEF_CFG_FILE,
                 OUT_DIR: None,
                 FIRST_SUBMIT_TPL: DEF_SLURM_NO_CHK_TPL,
                 REMAINING_JOB_SUBMIT_TPL: DEF_SLURM_FROM_CHK_TPL,
-                # OPT_TPL: DEF_OPT_TPL,
-                # STABLE_TPL: DEF_STABLE_TPL,
-                # FREQ_TPL: DEF_FREQ_TPL,
-                # PFB_TPL: DEF_PFB_TPL,
-                # FB_TPL: DEF_FB_TPL,
                 JOB_LIST: DEF_JOB_LIST,
                 FIRST_JOB_CHK: None,
                 }
@@ -153,10 +138,8 @@ def main(argv=None):
     # Read template and data files
     try:
         tpl_dict = {JOB_NAME: job_name}
-        # gau_tpl_files = {'_opt': cfg[OPT_TPL], '_stable': cfg[STABLE_TPL], '_freq': cfg[FREQ_TPL],
-        #                  '_pfb': cfg[PFB_TPL], '_fb': cfg[FB_TPL]}
 
-        # First job, svp
+        # First job often has different options svp than later jobs
         for job in cfg[JOB_LIST]:
             if job == '':
                 new_job_name = tpl_dict[JOB_NAME]
