@@ -109,17 +109,17 @@ def parse_cmdline(argv):
                                                "base directory where the program as run.".format(DEF_CFG_FILE),
                         default=DEF_CFG_FILE, type=read_cfg)
 
-    parser.add_argument("-f", "--file", help="The location of a Gaussian output file. Will override any entries in a "
-                                             "configuration file.", default=None)
+    parser.add_argument("-f", "--file", help="The location of a Gaussian output file. Will override any '{}' entry in "
+                                             "the configuration file.".format(GAUSSLOG_FILE), default=None)
     parser.add_argument("-l", "--list", help="The location of the list of Gaussian output files. Will override any "
-                                             "entries in a configuration file.",
+                                             "'{}' entry in a configuration file.".format(GAUSSLOG_FILES_FILE),
                         default=None)
     parser.add_argument("-o", "--out_dir", help="The directory where the output files will be placed. This will "
-                                                "an entry in the configuration file. The default is "
-                                                "the same directory as the log file.",
+                                                "override any '{}' entry in the configuration file. The default is "
+                                                "the same directory as the log file.".format(OUT_BASE_DIR),
                         default=None)
-    parser.add_argument("-t", "--tpl", help="The location of the pdb template file. Will override any entry in the "
-                                            "config file.",
+    parser.add_argument("-t", "--tpl", help="The location of the pdb template file. Will override any '{}'entry in the "
+                                            "config file.".format(PDB_TPL_FILE),
                         default=None)
 
     args = None
