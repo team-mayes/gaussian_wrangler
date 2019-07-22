@@ -20,6 +20,8 @@ DEF_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb.ini')
 PDB_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_1.pdb')
 GOOD_PDB_ALL_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_1_all_good.pdb')
 
+GOOD_PDB_FIRST_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_1_first_good.pdb')
+
 LAST_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_last.ini')
 GOOD_PDB_LAST_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_1_last_good.pdb')
 
@@ -64,7 +66,7 @@ class TestGausslog2pdbNoOut(unittest.TestCase):
             self.assertTrue("optional arguments" in output)
 
 
-class Testgausslog2pdb(unittest.TestCase):
+class TestGausslog2pdb(unittest.TestCase):
     # These test/demonstrate different options
     def testDefIni(self):
         test_input = ["-c", DEF_INI]
@@ -73,6 +75,17 @@ class Testgausslog2pdb(unittest.TestCase):
         try:
             main(test_input)
             self.assertFalse(diff_lines(PDB_OUT, GOOD_PDB_ALL_OUT))
+        finally:
+            silent_remove(PDB_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testFirstIni(self):
+        test_input = ["-c", DEF_INI, "-a"]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(PDB_OUT, GOOD_PDB_FIRST_OUT))
         finally:
             silent_remove(PDB_OUT, disable=DISABLE_REMOVE)
             pass

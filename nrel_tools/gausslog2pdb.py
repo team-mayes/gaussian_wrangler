@@ -32,6 +32,7 @@ PDB_TPL_FILE = 'pdb_tpl_file'
 GAUSSLOG_FILES_FILE = 'gausslog_list_file'
 GAUSSLOG_FILES = 'gausslog_files_list'
 GAUSSLOG_FILE = 'gausslog_file'
+ONLY_FIRST = 'only_first_coords'
 ONLY_FINAL = 'only_final_coords'
 OUT_BASE_DIR = 'output_directory'
 OUTFILE_NAME = 'output_file_name'
@@ -48,6 +49,7 @@ DEF_CFG_VALS = {GAUSSLOG_FILES_FILE: DEF_LIST_FILE,
                 OUT_BASE_DIR: None,
                 GAUSSLOG_FILE: None,
                 PDB_TPL_FILE: None,
+                ONLY_FIRST: False,
                 ONLY_FINAL: False,
                 OUTFILE_NAME: None,
                 COMBINE_LOGS: False,
@@ -121,6 +123,16 @@ def parse_cmdline(argv):
     parser.add_argument("-t", "--tpl", help="The location of the pdb template file. Will override any '{}'entry in the "
                                             "config file.".format(PDB_TPL_FILE),
                         default=None)
+
+    parser.add_argument("-a", "--only_first", help="Flag to have the program output a pdb only from the first "
+                                                   "set of coordinates in the log file. Will override any '{}' entry "
+                                                   "in the config file. The default is False.".format(ONLY_FIRST),
+                        action="store_true", default=False)
+
+    parser.add_argument("-z", "--only_final", help="Flag to have the program output a pdb only from the last "
+                                                   "set of coordinates in the log file. Will override any '{}' entry "
+                                                   "in the config file. The default is False.".format(ONLY_FINAL),
+                        action="store_true", default=False)
 
     args = None
     try:
@@ -241,12 +253,17 @@ def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
                     if not cfg[ONLY_FINAL]:
                         check_and_print(cfg, atom_id, pdb_tpl_content, gausslog_file, pdb_data_section,
                                         f_name, mode, message)
+                        if cfg[ONLY_FIRST]:
+                            return
                         message = False
                         mode = 'a'
                     section = SEC_HEAD
                     coord_match = False
                     atom_id = 0
                     lines_after_coord = 2
+
+    if len(pdb_tpl_content) == 0:
+        raise InvalidDataError("Did not find Gaussian output coordinates in file {}".format(gausslog_file))
 
     if cfg[ONLY_FINAL]:
         check_and_print(cfg, atom_id, pdb_tpl_content, gausslog_file, pdb_data_section,
@@ -272,6 +289,10 @@ def main(argv=None):
             cfg[PDB_TPL_FILE] = args.tpl
         if args.out_dir:
             cfg[OUT_BASE_DIR] = args.out_dir
+        if args.only_first:
+            cfg[ONLY_FIRST] = True
+        if args.only_final:
+            cfg[ONLY_FINAL] = True
         # set up list of files to process
         cfg[GAUSSLOG_FILES] = []
         if os.path.isfile(cfg[GAUSSLOG_FILES_FILE]):
@@ -283,6 +304,8 @@ def main(argv=None):
         if len(cfg[GAUSSLOG_FILES]) == 0:
             raise InvalidDataError("No files to process: no '{}' specified and "
                                    "no list of files found for: {}".format(GAUSSLOG_FILE, cfg[GAUSSLOG_FILES_FILE]))
+        if cfg[ONLY_FIRST] and cfg[ONLY_FINAL]:
+            raise InvalidDataError("Cannot specify both '{}' and '{}'".format(ONLY_FIRST, ONLY_FINAL))
 
         # no start the actual work
         if cfg[PDB_TPL_FILE]:
