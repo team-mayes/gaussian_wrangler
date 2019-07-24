@@ -55,6 +55,24 @@ GOOD_F1_DI_18_16_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_16_f1_good.
 F2_DI_18_16_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_16_f2.com')
 GOOD_F2_DI_18_16_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_tzvp_18_16_f2_good.com')
 
+CC_INI = os.path.join(SUB_DATA_DIR, 'tbut_frag.ini')
+CP_CC_12_11_OUT = os.path.join(SUB_DATA_DIR, 'tbut_12_11_cp.com')
+GOOD_CP_CC_12_11_OUT = os.path.join(SUB_DATA_DIR, 'tbut_12_11_cp_good.com')
+F1_CC_12_11_OUT = os.path.join(SUB_DATA_DIR, 'tbut_12_11_f1.com')
+GOOD_F1_CC_12_11_OUT = os.path.join(SUB_DATA_DIR, 'tbut_12_11_f1_good.com')
+F2_CC_12_11_OUT = os.path.join(SUB_DATA_DIR, 'tbut_12_11_f2.com')
+GOOD_F2_CC_12_11_OUT = os.path.join(SUB_DATA_DIR, 'tbut_12_11_f2_good.com')
+CP_CC_12_38_OUT = os.path.join(SUB_DATA_DIR, 'tbut_12_38_cp.com')
+GOOD_CP_CC_12_38_OUT = os.path.join(SUB_DATA_DIR, 'tbut_12_38_cp_good.com')
+F2_CC_12_38_OUT = os.path.join(SUB_DATA_DIR, 'tbut_12_38_f2.com')
+GOOD_F2_CC_12_38_OUT = os.path.join(SUB_DATA_DIR, 'tbut_12_38_f2_good.com')
+CP_CC_13_12_OUT = os.path.join(SUB_DATA_DIR, 'tbut_13_12_cp.com')
+GOOD_CP_CC_13_12_OUT = os.path.join(SUB_DATA_DIR, 'tbut_13_12_cp_good.com')
+F1_CC_13_12_OUT = os.path.join(SUB_DATA_DIR, 'tbut_13_12_f1.com')
+GOOD_F1_CC_13_12_OUT = os.path.join(SUB_DATA_DIR, 'tbut_13_12_f1_good.com')
+F2_CC_13_12_OUT = os.path.join(SUB_DATA_DIR, 'tbut_13_12_f2.com')
+GOOD_F2_CC_13_12_OUT = os.path.join(SUB_DATA_DIR, 'tbut_13_12_f2_good.com')
+
 
 class TestGausscomFragNoOut(unittest.TestCase):
     # These all test failure cases
@@ -129,4 +147,27 @@ class TestGausscomFrag(unittest.TestCase):
             silent_remove(CP_DI_18_16_OUT, disable=DISABLE_REMOVE)
             silent_remove(F1_DI_18_16_OUT, disable=DISABLE_REMOVE)
             silent_remove(F2_DI_18_16_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testDubCC(self):
+        test_input = ["-c", CC_INI]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(CP_CC_12_11_OUT, GOOD_CP_CC_12_11_OUT))
+            self.assertFalse(diff_lines(F1_CC_12_11_OUT, GOOD_F1_CC_12_11_OUT))
+            self.assertFalse(diff_lines(F2_CC_12_11_OUT, GOOD_F2_CC_12_11_OUT))
+            self.assertFalse(diff_lines(CP_CC_12_38_OUT, GOOD_CP_CC_12_38_OUT))
+            self.assertFalse(diff_lines(F2_CC_12_38_OUT, GOOD_F2_CC_12_38_OUT))
+            self.assertFalse(diff_lines(CP_CC_13_12_OUT, GOOD_CP_CC_13_12_OUT))
+            self.assertFalse(diff_lines(F1_CC_13_12_OUT, GOOD_F1_CC_13_12_OUT))
+            self.assertFalse(diff_lines(F2_CC_13_12_OUT, GOOD_F2_CC_13_12_OUT))
+        finally:
+            silent_remove(CP_CC_12_11_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F1_CC_12_11_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F2_CC_12_11_OUT, disable=DISABLE_REMOVE)
+            silent_remove(CP_CC_12_38_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F2_CC_12_38_OUT, disable=DISABLE_REMOVE)
+            silent_remove(CP_CC_13_12_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F1_CC_13_12_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F2_CC_13_12_OUT, disable=DISABLE_REMOVE)
             pass
