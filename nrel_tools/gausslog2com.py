@@ -147,8 +147,8 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
                 if com_tpl_content[NUM_ATOMS]:
                     com_atom_type = com_tpl_content[SEC_ATOMS][atom_id].split('(')[0].strip()
                     if com_atom_type != atom_type:
-                        raise InvalidDataError("For atom number {}, {} has atom type {}, while the template has atom "
-                                               "type {}".format(atom_id+1, gausslog_file, atom_type, com_atom_type))
+                        raise InvalidDataError("For atom number {}, {} has atom type '{}', while the template has atom "
+                                               "type '{}'".format(atom_id+1, gausslog_file, atom_type, com_atom_type))
                     atom_type = com_tpl_content[SEC_ATOMS][atom_id]  # This keeps the "fragment" number if there
                 atom_type += '      '
 
