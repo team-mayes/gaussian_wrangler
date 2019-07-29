@@ -31,8 +31,13 @@ LOW_E_TPL = os.path.join(SUB_DATA_DIR, 'fresh_fb.tpl')
 COM_LOW_E_OUT = os.path.join(SUB_DATA_DIR, 'nylon66_dimer_49_69_f2_fb_fresh_fb.com')
 GOOD_COM_LOW_E_FILE = os.path.join(SUB_DATA_DIR, 'nylon66_dimer_49_69_f2_fb_fresh_fb_good.com')
 
+TYPE_MATCH_TPL = os.path.join(SUB_DATA_DIR, 's12but_17_84_f2.com')
+TYPE_MATCH_LOG = os.path.join(SUB_DATA_DIR, 's12but_17_84_f2.log')
+TYPE_MATCH_OUT = os.path.join(SUB_DATA_DIR, 's12but_17_84_f2_s12but_17_84_f2.com')
+GOOD_TYPE_MATCH_OUT = os.path.join(SUB_DATA_DIR, 's12but_17_84_f2_good.com')
 
-class Testgausslog2comNoOut(unittest.TestCase):
+
+class TestGausslog2comNoOut(unittest.TestCase):
     # These all test failure cases
     def testNoArgs(self):
         test_input = []
@@ -52,7 +57,7 @@ class Testgausslog2comNoOut(unittest.TestCase):
             self.assertTrue("optional arguments" in output)
 
 
-class Testgausslog2com(unittest.TestCase):
+class TestGausslog2com(unittest.TestCase):
     # These test/demonstrate different options
     def testCPTpl(self):
         test_input = ["-t", CP_COM_TPL, "-l", LOG_LIST, "-c"]
@@ -81,4 +86,13 @@ class Testgausslog2com(unittest.TestCase):
             self.assertFalse(diff_lines(COM_LOW_E_OUT, GOOD_COM_LOW_E_FILE))
         finally:
             silent_remove(COM_LOW_E_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testTemplateTypeMatching(self):
+        test_input = ["-t", TYPE_MATCH_TPL, "-f", TYPE_MATCH_LOG, "-e"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(TYPE_MATCH_OUT, GOOD_TYPE_MATCH_OUT))
+        finally:
+            silent_remove(TYPE_MATCH_OUT, disable=DISABLE_REMOVE)
             pass
