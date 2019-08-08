@@ -1,4 +1,4 @@
-# m062x/Def2TZVP nosymm Counterpoise=2
+# m062x/Def2TZVP nosymm Counterpoise=2 CPHF=Grid=Fine
 
 cp calculation from fragment pair [24, 18] and tests/test_data/gauss_fragment/pet_mono_1_tzvp.com
 

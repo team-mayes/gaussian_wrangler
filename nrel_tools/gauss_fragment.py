@@ -39,8 +39,8 @@ GAUSS_CP_COMMAND = 'gaussian_cp_options_line'
 
 # Defaults
 DEF_CFG_FILE = 'gausscom_fragment.ini'
-DEF_GAUSS_COMMAND = '# m062x/Def2TZVP nosymm scf=xqc opt freq'
-DEF_GAUSS_CP_COMMAND = '# m062x/Def2TZVP nosymm Counterpoise=2'
+DEF_GAUSS_COMMAND = '# m062x/Def2SVP nosymm scf=xqc opt guess=mix freq=noraman CPHF=Grid=Fine'
+DEF_GAUSS_CP_COMMAND = '# m062x/Def2TZVP nosymm Counterpoise=2 CPHF=Grid=Fine'
 
 # Set notation
 DEF_CFG_VALS = {OUT_BASE_DIR: None,
@@ -145,6 +145,7 @@ def validate_atom_num(atom_pair, atoms_content, gausscom_file):
 
 
 def fragment_molecule(atom_pair, atoms_content):
+    broke_triple_bond = False
     broke_double_bond = False
     broke_double_bond_list = [False, False]
     single_bond_atoms = ['H', 'Cl', ]
@@ -154,18 +155,25 @@ def fragment_molecule(atom_pair, atoms_content):
     for atom in atom_pair:
         # Check if fragment made up of just one atom
         lonely_frag = False
-        if atoms_content[atom][ATOM_TYPE] in single_bond_atoms:
+        test_atom_type = atoms_content[atom][ATOM_TYPE]
+        if test_atom_type in single_bond_atoms:
             lonely_frag = True
-        elif atoms_content[atom][ATOM_TYPE] == 'O':
+        elif test_atom_type == 'O' or test_atom_type == 'N':
             for other_atom in unassigned_atom_numbers:
                 lonely_frag = True
-                broke_double_bond = True
+                if test_atom_type == 'O':
+                    broke_double_bond = True
+                else:
+                    broke_triple_bond = True
                 if other_atom == atom_pair[0] or other_atom == atom_pair[1]:
                     continue
                 pair_dist = calc_dist(atoms_content[atom][ATOM_COORDS], atoms_content[other_atom][ATOM_COORDS])
                 if pair_dist < MAX_BOND_DIST:
                     lonely_frag = False
-                    broke_double_bond = False
+                    if test_atom_type == 'O':
+                        broke_double_bond = False
+                    else:
+                        broke_triple_bond = False
                     break
         if lonely_frag:
             atoms_content[atom][FRAGMENT] = 1
@@ -174,7 +182,7 @@ def fragment_molecule(atom_pair, atoms_content):
             frag2_list = unassigned_atom_numbers
             for other_atom in unassigned_atom_numbers:
                 atoms_content[other_atom][FRAGMENT] = 2
-            return frag1_list, frag2_list, broke_double_bond
+            return frag1_list, frag2_list, broke_double_bond, broke_triple_bond
 
     # Now the more difficult cases
     frag1_list.append(atom_pair[0])
@@ -193,7 +201,12 @@ def fragment_molecule(atom_pair, atoms_content):
                 if pair_dist < MAX_BOND_DIST:
                     bonded_to_c.append(other_atom)
             if len(bonded_to_c) == 2:
-                broke_double_bond_list[counter] = True
+                type1 = atoms_content[bonded_to_c[0]][ATOM_TYPE]
+                type2 = atoms_content[bonded_to_c[0]][ATOM_TYPE]
+                if type1 == 'O' and type2 == 'O':
+                    broke_double_bond_list[counter] = False
+                else:
+                    broke_double_bond_list[counter] = True
     # if one atom has a double-bond but not the other, then a it is a single bond that is broken, so leave
     # broke_double_bond as false, otherwise:
     if broke_double_bond_list[0] == broke_double_bond_list[1]:
@@ -218,9 +231,9 @@ def fragment_molecule(atom_pair, atoms_content):
     frag1_list.sort()
     frag2_list.sort()
     if len(frag1_list) > len(frag2_list):
-        return frag2_list, frag1_list, broke_double_bond
+        return frag2_list, frag1_list, broke_double_bond, broke_triple_bond
     else:
-        return frag1_list, frag2_list, broke_double_bond
+        return frag1_list, frag2_list, broke_double_bond, broke_triple_bond
 
 
 def add_atoms_to_fragment(atom_numbers, atoms_content, atoms_to_check, frag_list, frag_num, single_bond_atoms):
@@ -245,7 +258,7 @@ def add_atoms_to_fragment(atom_numbers, atoms_content, atoms_to_check, frag_list
         add_to_atoms_to_check = []
 
 
-def write_com_file(com_file_name, gauss_command, for_comment_line, atoms_content, broke_double_bond,
+def write_com_file(com_file_name, gauss_command, for_comment_line, atoms_content, broke_double_bond, broke_triple_bond,
                    frag_num=None, frag_list=None):
     """
     After figuring out the fragments, make Gaussian input files to calculate the counterpoint correction (if a non-zero
@@ -255,6 +268,7 @@ def write_com_file(com_file_name, gauss_command, for_comment_line, atoms_content
     :param for_comment_line: str
     :param atoms_content: dictionary with atom type, atom coordinates, and fragment ID
     :param broke_double_bond: flag to change multiplicity
+    :param broke_triple_bond: flag to change multiplicity
     :param frag_num: optional integer that will be used to name the file
     :param frag_list: optional list that will be used to make a Gaussian input file with only the atoms in that fragment
     :return: nothing
@@ -263,7 +277,7 @@ def write_com_file(com_file_name, gauss_command, for_comment_line, atoms_content
     if frag_list is None:
         frag_list = []
     if frag_num:
-        if len(frag_list) < 6:
+        if len(frag_list) < 7:
             element_list = []
             for atom_num in frag_list:
                 element_list.append(atoms_content[atom_num][ATOM_TYPE])
@@ -272,12 +286,16 @@ def write_com_file(com_file_name, gauss_command, for_comment_line, atoms_content
         comment_begin = 'radical calculation of fragment {} '.format(frag_num)
         if broke_double_bond:
             charge_mult = '0 3'
+        elif broke_triple_bond:
+            charge_mult = '0 4'
         else:
             charge_mult = '0 2'
     else:
         comment_begin = 'cp calculation '
         if broke_double_bond:
             charge_mult = '0 1   0 3    0 3'
+        elif broke_triple_bond:
+            charge_mult = '0 1   0 4    0 4'
         else:
             charge_mult = '0 1   0 2    0 2'
         frag_list = range(1, len(atoms_content)+1)
@@ -296,17 +314,20 @@ def write_com_file(com_file_name, gauss_command, for_comment_line, atoms_content
     list_to_file(print_list, com_file_name)
 
 
-def print_com_files(atom_pair, atoms_content, gausscom_file, cfg, frag1, frag2, broke_double_bond):
+def print_com_files(atom_pair, atoms_content, gausscom_file, cfg, frag1, frag2, broke_double_bond, broke_triple_bond):
     for_comment_line = 'from fragment pair {} and {}'.format(atom_pair, gausscom_file)
     # First print template for CP calc (the coordinates should later be replaced by further optimized coordinates,
     # if desired)
     cp_file_name = create_out_fname(gausscom_file, suffix='_{}_{}_cp'.format(*atom_pair),
                                     ext='.com', base_dir=cfg[OUT_BASE_DIR])
-    write_com_file(cp_file_name, cfg[GAUSS_CP_COMMAND], for_comment_line, atoms_content, broke_double_bond)
+    write_com_file(cp_file_name, cfg[GAUSS_CP_COMMAND], for_comment_line, atoms_content, broke_double_bond,
+                   broke_triple_bond)
     frag1_file_name = create_out_fname(gausscom_file, suffix='_{}_{}_f1'.format(*atom_pair), base_dir=cfg[OUT_BASE_DIR])
-    write_com_file(frag1_file_name, cfg[GAUSS_COMMAND], for_comment_line, atoms_content, broke_double_bond, 1, frag1)
+    write_com_file(frag1_file_name, cfg[GAUSS_COMMAND], for_comment_line, atoms_content, broke_double_bond,
+                   broke_triple_bond, 1, frag1)
     frag2_file_name = create_out_fname(gausscom_file, suffix='_{}_{}_f2'.format(*atom_pair), base_dir=cfg[OUT_BASE_DIR])
-    write_com_file(frag2_file_name, cfg[GAUSS_COMMAND], for_comment_line, atoms_content, broke_double_bond, 2, frag2)
+    write_com_file(frag2_file_name, cfg[GAUSS_COMMAND], for_comment_line, atoms_content, broke_double_bond,
+                   broke_triple_bond, 2, frag2)
 
 
 def main(argv=None):
@@ -335,8 +356,8 @@ def main(argv=None):
         for atom_pair in cfg[CUT_PAIR_LIST]:
             validate_atom_num(atom_pair, atom_data, gauss_file)
         for atom_pair in cfg[CUT_PAIR_LIST]:
-            frag1, frag2, broke_double_bond = fragment_molecule(atom_pair, atom_data)
-            print_com_files(atom_pair, atom_data, gauss_file, cfg, frag1, frag2, broke_double_bond)
+            frag1, frag2, broke_double_bond, broke_triple_bond = fragment_molecule(atom_pair, atom_data)
+            print_com_files(atom_pair, atom_data, gauss_file, cfg, frag1, frag2, broke_double_bond, broke_triple_bond)
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR

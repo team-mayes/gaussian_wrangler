@@ -1,4 +1,4 @@
-# m062x/Def2TZVP nosymm scf=xqc opt freq
+# m062x/Def2SVP nosymm scf=xqc opt guess=mix freq=noraman CPHF=Grid=Fine
 
 radical calculation of fragment 1 from fragment pair [18, 16] and tests/test_data/gauss_fragment/pet_dimer_tzvp.com
 
