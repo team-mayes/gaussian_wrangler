@@ -98,7 +98,8 @@ def parse_cmdline(argv):
         argv = sys.argv[1:]
 
     # initialize the parser object:
-    parser = argparse.ArgumentParser(description='Runs the series of Gaussian jobs for BDEs using Slurm.')
+    parser = argparse.ArgumentParser(description='Sets up and runs series of Gaussian jobs, checking between jobs '
+                                                 'for normal termination.')
     parser.add_argument("job_name", help="The job name to run")
     parser.add_argument("-c", "--config", help="The location of the configuration file in ini format. "
                                                "The default file name is {}, located in the "
