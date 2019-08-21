@@ -1,6 +1,6 @@
 import unittest
 import os
-from nrel_tools.run_gauss_bde import main
+from nrel_tools.run_gauss import main
 from nrel_tools.common import diff_lines, silent_remove, capture_stdout, capture_stderr
 import logging
 
@@ -14,7 +14,7 @@ TEST_DIR = os.path.dirname(__file__)
 PARENT_DIR = os.path.join(TEST_DIR, os.pardir)
 MAIN_DIR = os.path.dirname(TEST_DIR)
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
-SUB_DATA_DIR = os.path.join(DATA_DIR, 'run_gauss_bde')
+SUB_DATA_DIR = os.path.join(DATA_DIR, 'run_gauss')
 
 DEF_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde.ini')
 DEF_SH_OUT = os.path.join(PARENT_DIR, 'ethylrad.sh')
