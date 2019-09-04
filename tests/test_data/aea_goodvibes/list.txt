@@ -1,0 +1,3 @@
+tests/test_data/aea_goodvibes/pdc2_eghtsct_ircf_opt.log tests/test_data/aea_goodvibes/pdc2_eghtsct.log
+
+tests/test_data/aea_goodvibes/tpainter_tsc_ts_ircr_opt.log tests/test_data/aea_goodvibes/tpainter_tsc_ts.log
