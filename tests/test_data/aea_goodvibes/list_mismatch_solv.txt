@@ -1,0 +1,3 @@
+tests/test_data/aea_goodvibes/ts3b_ircr_opt_gas.log tests/test_data/aea_goodvibes/ts3b.log
+
+tests/test_data/aea_goodvibes/pdc2_eghtsct_ircf_opt.log tests/test_data/aea_goodvibes/pdc2_eghtsct.log

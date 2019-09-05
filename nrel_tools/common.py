@@ -33,10 +33,17 @@ BACKUP_TS_FMT = "_%Y-%m-%d_%H-%M-%S_%f"
 
 # Boltzmann's Constant in kcal/mol Kelvin
 BOLTZ_CONST = 0.0019872041
+KB = 1.38064852e-23  # [J/K]
+
 # Planck's Constant in kcal s / mol
 PLANCK_CONST = 9.53707E-14
+H = 6.626070e-34  # [Js]
+
 # Universal gas constant in kcal/mol K
-R = 0.001985877534
+RG = 0.001985877534
+
+EHPART_TO_KCALMOL = 627.5094709  # [kcal/mol/(Eh/part)]
+
 
 XYZ_ORIGIN = np.zeros(3)
 
@@ -193,7 +200,7 @@ def calc_k(temp, delta_gibbs):
     @param delta_gibbs: the change in Gibbs free energy in kcal/mol
     @return: rate coefficient in inverse seconds
     """
-    return BOLTZ_CONST * temp / PLANCK_CONST * math.exp(-delta_gibbs / (R * temp))
+    return BOLTZ_CONST * temp / PLANCK_CONST * math.exp(-delta_gibbs / (RG * temp))
 
 
 def pbc_dist(a, b, box):
