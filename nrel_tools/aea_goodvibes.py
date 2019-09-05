@@ -4,14 +4,14 @@ Creates pdb data files from lammps data files, given a template pdb file.
 """
 
 from __future__ import print_function
-import os
+
+import csv
 import subprocess
 import sys
 import argparse
-import tempfile
-from nrel_tools.common import (InvalidDataError, warning, create_out_fname, list_to_file, ATOM_NUM_DICT,
-                               NUM_ATOMS, GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT, read_csv,
-                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, GAU_CHARGE_PAT)
+from nrel_tools.common import (InvalidDataError, warning,
+                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
+                               )
 
 try:
     # noinspection PyCompatibility
@@ -85,7 +85,7 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def process_gausslog_file_set(file_set, hartree_loc):
+def check_gausslog_fileset(file_set, hartree_loc):
     if len(file_set) == 2:
         react_type = 1  # for uni-molecular
     elif len(file_set) == 3:
@@ -95,22 +95,18 @@ def process_gausslog_file_set(file_set, hartree_loc):
     else:
         raise InvalidDataError("Expected 2,3, or 4 files in a set, but found {}: {}".format(len(file_set), file_set))
 
-    hartree_csv = tempfile.NamedTemporaryFile()
-
-    hartree_out_list = []
-    for fname in file_set:
+    for index, fname in enumerate(file_set):
         hartree_output = subprocess.check_output(["java", "-jar", hartree_loc,
                                                   "snap", "-f",  fname]).decode("utf-8").strip().split("\n")
-        list_to_file(hartree_output, hartree_csv, print_message=False)
-        hartree_dict = read_csv(hartree_csv)
 
-        # keys = [x.strip('"')for x in hartree_output[0].split(",")]
-        # vals = [x.strip('"')for x in hartree_output[1].split(",")]
-        # hartree_dict = dict(zip(keys, vals))
-        # hartree_out_list.append(hartree_dict)
-
-    for index in range(0, react_type):
-        print(hartree_out_list[index][FREQ1], hartree_out_list[index][FREQ2])
+        reader = csv.DictReader(hartree_output, quoting=csv.QUOTE_NONNUMERIC)
+        for row in reader:
+            if index < react_type:
+                if float(row[FREQ1]) < 0 or float(row[FREQ2]) < 0:
+                    raise InvalidDataError("Expected no imaginary frequencies in file: {}".format(fname))
+            else:
+                if float(row[FREQ1]) > 0 or float(row[FREQ2]) < 0:
+                    raise InvalidDataError("Expected one imaginary frequency in file: {}".format(fname))
 
     return react_type
 
@@ -138,7 +134,7 @@ def main(argv=None):
             raise InvalidDataError("No files or list of files found")
         
         for file_set in row_list:
-            process_gausslog_file_set(file_set, args[0].hartree_location)
+            check_gausslog_fileset(file_set, args[0].hartree_location)
 
     except IOError as e:
         warning("Problems reading file:", e)
