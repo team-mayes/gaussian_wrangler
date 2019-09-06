@@ -37,12 +37,15 @@ DEF_OUT_FILE_NAME = 'aea_out.csv'
 # For data processing; standard hartree fieldnames below
 # '"File Name","Solvent type","Stoichiometry","Charge","Mult","Functional","Basis Set","Energy (A.U.)","dipole",
 # "ZPE (Hartrees)","H298 (Hartrees)","G298 (Hartrees)","Freq 1","Freq 2","BSSE (Hartrees)"'
+FUNCTIONAL = 'Functional'
+BASIS_SET = 'Basis Set'
 STOICH = 'Stoichiometry'
 SOLV = 'Solvent type'
 CHARGE = 'Charge'
 MULT = 'Mult'
 FREQ1 = 'Freq 1'
 FREQ2 = 'Freq 2'
+GAUSSIAN_SEPARATOR = '******************************************'
 GOODVIBES_ERROR_PAT = re.compile(r"x .*")
 GOODVIBES_DATA_PAT = re.compile(r" {3}Structure .*")
 
@@ -107,7 +110,7 @@ def check_gausslog_fileset(file_set, hartree_loc):
     checks include:
        using hartree to get info to check for:
            the correct number of imaginary freq
-           the stoichiometry adds up   ##TODO
+           the stoichiometry adds up
         using GoodVibes for its various checks (all same solvent, level of theory, etc.)
     :param file_set: list of reactant file(s) and TS file
     :param hartree_loc: location where hartree can be found to run
@@ -117,12 +120,13 @@ def check_gausslog_fileset(file_set, hartree_loc):
     if len(file_set) < 2 or len(file_set) > 4:
         raise InvalidDataError("Expected 2,3, or 4 files in a set, but found {}: {}".format(len(file_set), file_set))
 
-    # Made the empty list below to make my IDE happy
-    hartree_list = []
     total_react_charge = 0
     ts_charge = np.nan
     multiplicities = np.full([len(file_set)], np.nan)
-    solvent = False
+    solvent = None
+
+    react_stoich_dict = {}  # empty dict to make IDE happy
+    ts_stoich_dict = {}  # empty dict to make IDE happy
     for index, fname in enumerate(file_set):
         hartree_output = subprocess.check_output(["java", "-jar", hartree_loc,
                                                   "snap", "-f",  fname]).decode("utf-8").strip().split("\n")
@@ -134,14 +138,27 @@ def check_gausslog_fileset(file_set, hartree_loc):
                 if float(row[FREQ1]) < 0 or float(row[FREQ2]) < 0:
                     raise InvalidDataError("Expected no imaginary frequencies in file: {}".format(fname))
                 total_react_charge += int(row[CHARGE])
+                if index == 0:
+                    react_stoich_dict = parse_stoich(row[STOICH])
+                else:
+                    react_stoich_dict = parse_stoich(row[STOICH], add_to_dict=react_stoich_dict)
             else:
                 if float(row[FREQ1]) > 0 or float(row[FREQ2]) < 0:
                     raise InvalidDataError("Expected one imaginary frequency in file: {}".format(fname))
                 ts_charge = int(row[CHARGE])
+                ts_stoich_dict = parse_stoich(row[STOICH])
+            if index == 0:
+                solvent = row[SOLV]
+            else:
+                if row[SOLV] != solvent:
+                    raise InvalidDataError("Different solvents ({}, {}) found for file set: "
+                                           "{}".format(solvent, row[SOLV], file_set))
 
-    if hartree_list[0][SOLV] != 'N/A':
+    if react_stoich_dict != ts_stoich_dict:
+        raise InvalidDataError("Check stoichiometries of reactants and transition state")
+
+    if solvent:
         file_set = file_set + ["-c", "1"]
-        solvent = True
 
     vibes_out = subprocess.check_output(["python", "-m", "goodvibes"] + file_set +
                                         ["--check"]).decode("utf-8").strip().split("\n")
@@ -156,6 +173,20 @@ def check_gausslog_fileset(file_set, hartree_loc):
             raise InvalidDataError("See GoodVibes error checking report: 'Goodvibes_output.dat'")
 
     return solvent
+
+
+def parse_stoich(stoich_string, add_to_dict=None):
+    raw_list = re.findall(r'([A-Z][a-z]*)(\d*)', stoich_string)
+    stoich_dict = {}
+    for atom_tuple in raw_list:
+        stoich_dict[atom_tuple[0]] = int(atom_tuple[1])
+    if add_to_dict:
+        for key, val in add_to_dict.items():
+            if key in stoich_dict:
+                stoich_dict[key] += add_to_dict[key]
+            else:
+                stoich_dict[key] = add_to_dict[key]
+    return stoich_dict
 
 
 def get_thermochem(file_set, temp_range, solvent):
