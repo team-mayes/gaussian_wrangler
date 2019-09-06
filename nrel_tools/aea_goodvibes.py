@@ -122,6 +122,7 @@ def check_gausslog_fileset(file_set, hartree_loc):
     total_react_charge = 0
     ts_charge = np.nan
     multiplicities = np.full([len(file_set)], np.nan)
+    solvent = False
     for index, fname in enumerate(file_set):
         hartree_output = subprocess.check_output(["java", "-jar", hartree_loc,
                                                   "snap", "-f",  fname]).decode("utf-8").strip().split("\n")
@@ -133,7 +134,6 @@ def check_gausslog_fileset(file_set, hartree_loc):
                 if float(row[FREQ1]) < 0 or float(row[FREQ2]) < 0:
                     raise InvalidDataError("Expected no imaginary frequencies in file: {}".format(fname))
                 total_react_charge += int(row[CHARGE])
-                # total_multiplicity
             else:
                 if float(row[FREQ1]) > 0 or float(row[FREQ2]) < 0:
                     raise InvalidDataError("Expected one imaginary frequency in file: {}".format(fname))
@@ -141,6 +141,7 @@ def check_gausslog_fileset(file_set, hartree_loc):
 
     if hartree_list[0][SOLV] != 'N/A':
         file_set = file_set + ["-c", "1"]
+        solvent = True
 
     vibes_out = subprocess.check_output(["python", "-m", "goodvibes"] + file_set +
                                         ["--check"]).decode("utf-8").strip().split("\n")
@@ -154,19 +155,26 @@ def check_gausslog_fileset(file_set, hartree_loc):
                     continue
             raise InvalidDataError("See GoodVibes error checking report: 'Goodvibes_output.dat'")
 
+    return solvent
 
-def get_thermochem(file_set, temp_range):
+
+def get_thermochem(file_set, temp_range, solvent):
     """
     Calls GoodVibes to get thermochem at a range of temps
     :param file_set: list of reactant file(s) and TS file
     :param temp_range: string with range of temperatures at which to calculate thermochem
+    :param solvent: boolean to decide whether to include
     :return: nothing
     """
     qh_gt = []
     temps = []
     for index, file in enumerate(file_set):
-        vibes_out = subprocess.check_output(["python", "-m", "goodvibes", file,
-                                             "--ti", temp_range]).decode("utf-8").strip().split("\n")
+        vibes_input = ["python", "-m", "goodvibes", file, "--ti", temp_range]
+        if solvent:
+            # Todo: see why this doesn't change the answers
+            #  Check whether I need to add the factor Rkcal*temp*LN(Ratm*temp)
+            vibes_input += ["-c", "1"]
+        vibes_out = subprocess.check_output(vibes_input).decode("utf-8").strip().split("\n")
         found_structure = False
         skip_line = True
         qh_gt.append([])
@@ -266,8 +274,8 @@ def main(argv=None):
         # now the calculations and printing
         print_mode = 'w'
         for file_set in row_list:
-            check_gausslog_fileset(file_set, args[0].hartree_location)
-            temps, qh_gt = get_thermochem(file_set, args[0].temp_range)
+            solvent = check_gausslog_fileset(file_set, args[0].hartree_location)
+            temps, qh_gt = get_thermochem(file_set, args[0].temp_range, solvent)
             kt = get_kt(temps, qh_gt)
             a, ea = fit_arrhenius(temps, kt)
             print_results(a, ea, file_set, args[0].output_fname, print_mode)
