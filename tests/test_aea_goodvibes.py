@@ -29,14 +29,17 @@ GOOD_AE_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_good.csv')
 BI_LIST = os.path.join(SUB_DATA_DIR, 'list_bimolec.txt')
 GOOD_AE_BI_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_bi_good.csv')
 
+TI_LIST = os.path.join(SUB_DATA_DIR, 'list_ti.txt')
+GOOD_AE_TI_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_ti_good.csv')
+
 
 class TestAEaGoodVibesNoOut(unittest.TestCase):
     # These all test failure cases
     def testNoArgs(self):
         test_input = []
-        main(test_input)
-        # with capture_stderr(main, test_input) as output:
-        #     self.assertTrue("WARNING:  Problems reading file: Could not read file" in output)
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("No files" in output)
         # with capture_stdout(main, test_input) as output:
         #     self.assertTrue("optional arguments" in output)
 
@@ -56,7 +59,7 @@ class TestAEaGoodVibesInputError(unittest.TestCase):
         try:
             # main(test_input)
             with capture_stderr(main, test_input) as output:
-                self.assertTrue("GoodVibes error" in output)
+                self.assertTrue("Different solvents" in output)
         finally:
             silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
             silent_remove(GOODVIBES_CSV, disable=DISABLE_REMOVE)
@@ -67,7 +70,7 @@ class TestAEaGoodVibesInputError(unittest.TestCase):
         try:
             # main(test_input)
             with capture_stderr(main, test_input) as output:
-                self.assertTrue("GoodVibes error" in output)
+                self.assertTrue("Different basis sets" in output)
         finally:
             silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
             silent_remove(GOODVIBES_CSV, disable=DISABLE_REMOVE)
@@ -91,6 +94,17 @@ class TestAEaGoodVibes(unittest.TestCase):
         try:
             main(test_input)
             self.assertFalse(diff_lines(AE_OUT, GOOD_AE_BI_OUT))
+        finally:
+            silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
+            silent_remove(AE_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testTi(self):
+        # check handles it when not all atoms in are in all molecules
+        test_input = ["-l", TI_LIST, "-d", SUB_DATA_DIR]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(AE_OUT, GOOD_AE_TI_OUT))
         finally:
             silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
             silent_remove(AE_OUT, disable=DISABLE_REMOVE)

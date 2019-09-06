@@ -84,6 +84,11 @@ def parse_cmdline(argv):
                         default="300,600,30")
     parser.add_argument("-o", "--output_fname", help="The name of the output file to be created. The default is {}"
                                                      "".format(DEF_OUT_FILE_NAME), default=DEF_OUT_FILE_NAME)
+    parser.add_argument("-v", "--vibes_check", help="In addition to standard checks always run (matching solvent, "
+                                                    "level of theory, stoichiometry, charge, multiplicity, and "
+                                                    "Gaussian versions), run files through GoodVibes '--check' before "
+                                                    "performing calculations. The default is {}".format(False),
+                        default=False)
 
     args = None
     try:
@@ -105,15 +110,19 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def check_gausslog_fileset(file_set, hartree_loc):
+def check_gausslog_fileset(file_set, hartree_loc, good_vibes_check):
     """
     checks include:
        using hartree to get info to check for:
            the correct number of imaginary freq
            the stoichiometry adds up
-        using GoodVibes for its various checks (all same solvent, level of theory, etc.)
+           same implicit solvent (or lack thereof)
+           same functional and basis set
+        awk for same versions of Gaussian
+        made GoodVibes checks optional to save run time
     :param file_set: list of reactant file(s) and TS file
     :param hartree_loc: location where hartree can be found to run
+    :param good_vibes_check: boolean to run goodvibes checking; will slow down calculations
     :return: reaction_type: integer for molecularity of reaction
     """
     # Runs check that there is one terminal TS file, then calls GoodVibes for its checks
@@ -123,8 +132,12 @@ def check_gausslog_fileset(file_set, hartree_loc):
     total_react_charge = 0
     ts_charge = np.nan
     multiplicities = np.full([len(file_set)], np.nan)
-    solvent = None
 
+    # initialize the variables below to make my IDE happy
+    solvent = None
+    func = None
+    basis = None
+    gauss_ver = None
     react_stoich_dict = {}  # empty dict to make IDE happy
     ts_stoich_dict = {}  # empty dict to make IDE happy
     for index, fname in enumerate(file_set):
@@ -147,30 +160,45 @@ def check_gausslog_fileset(file_set, hartree_loc):
                     raise InvalidDataError("Expected one imaginary frequency in file: {}".format(fname))
                 ts_charge = int(row[CHARGE])
                 ts_stoich_dict = parse_stoich(row[STOICH])
+
+            # additional checks as we go...
+            awk_command = ['awk', '/\*\*\*/{getline; print; exit}', fname]
             if index == 0:
                 solvent = row[SOLV]
+                func = row[FUNCTIONAL]
+                basis = row[BASIS_SET]
+                gauss_ver = subprocess.check_output(awk_command).strip().split()[:3]
             else:
                 if row[SOLV] != solvent:
                     raise InvalidDataError("Different solvents ({}, {}) found for file set: "
                                            "{}".format(solvent, row[SOLV], file_set))
+                if row[FUNCTIONAL] != func:
+                    raise InvalidDataError("Different functionals ({}, {}) found for file set: "
+                                           "{}".format(func, row[FUNCTIONAL], file_set))
+                if row[BASIS_SET] != basis:
+                    raise InvalidDataError("Different basis sets ({}, {}) found for file set: "
+                                           "{}".format(basis, row[BASIS_SET], file_set))
+                this_gauss_ver = subprocess.check_output(awk_command).strip().split()[:3]
+                if gauss_ver != this_gauss_ver:
+                    raise InvalidDataError("Different Gaussian versions ({}, {}) found for file set: "
+                                           "{}".format(gauss_ver, this_gauss_ver, file_set))
 
     if react_stoich_dict != ts_stoich_dict:
         raise InvalidDataError("Check stoichiometries of reactants and transition state")
 
-    if solvent:
-        file_set = file_set + ["-c", "1"]
-
-    vibes_out = subprocess.check_output(["python", "-m", "goodvibes"] + file_set +
-                                        ["--check"]).decode("utf-8").strip().split("\n")
-
-    for line in vibes_out:
-        if GOODVIBES_ERROR_PAT.match(line):
-            if 'Different charge and multiplicity' in line:
-                # check if multiplicities all the same
-                mult_check = np.sum(multiplicities - multiplicities[0])
-                if mult_check == 0 and total_react_charge == ts_charge:
-                    continue
-            raise InvalidDataError("See GoodVibes error checking report: 'Goodvibes_output.dat'")
+    if good_vibes_check:
+        if solvent:
+            file_set = file_set + ["-c", "1"]
+        vibes_out = subprocess.check_output(["python", "-m", "goodvibes"] + file_set +
+                                            ["--check"]).decode("utf-8").strip().split("\n")
+        for line in vibes_out:
+            if GOODVIBES_ERROR_PAT.match(line):
+                if 'Different charge and multiplicity' in line:
+                    # check if multiplicities all the same
+                    mult_check = np.sum(multiplicities - multiplicities[0])
+                    if mult_check == 0 and total_react_charge == ts_charge:
+                        continue
+                raise InvalidDataError("See GoodVibes error checking report: 'Goodvibes_output.dat'")
 
     return solvent
 
@@ -179,7 +207,10 @@ def parse_stoich(stoich_string, add_to_dict=None):
     raw_list = re.findall(r'([A-Z][a-z]*)(\d*)', stoich_string)
     stoich_dict = {}
     for atom_tuple in raw_list:
-        stoich_dict[atom_tuple[0]] = int(atom_tuple[1])
+        if atom_tuple[1] == '':
+            stoich_dict[atom_tuple[0]] = 1
+        else:
+            stoich_dict[atom_tuple[0]] = int(atom_tuple[1])
     if add_to_dict:
         for key, val in add_to_dict.items():
             if key in stoich_dict:
@@ -305,7 +336,7 @@ def main(argv=None):
         # now the calculations and printing
         print_mode = 'w'
         for file_set in row_list:
-            solvent = check_gausslog_fileset(file_set, args[0].hartree_location)
+            solvent = check_gausslog_fileset(file_set, args[0].hartree_location, args[0].vibes_check)
             temps, qh_gt = get_thermochem(file_set, args[0].temp_range, solvent)
             kt = get_kt(temps, qh_gt)
             a, ea = fit_arrhenius(temps, kt)
