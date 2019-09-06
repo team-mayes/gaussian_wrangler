@@ -354,10 +354,13 @@ def main(argv=None):
             raise InvalidDataError("No files or list of files found")
 
         # now a quick first check that all files exist
+        missing_files = []
         for file_set in row_list:
             for file in file_set:
                 if not os.path.isfile(file):
-                    raise IOError(file)
+                    missing_files.append(file)
+        if len(missing_files) > 0:
+            raise IOError(missing_files)
 
         # now the calculations and printing
         print_mode = 'w'  # for the AEa output, so only prints header once, and then appends to file
