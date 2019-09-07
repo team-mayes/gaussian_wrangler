@@ -45,7 +45,7 @@ install:
 
 
 script:
-  - pytest -v --cov=nrel_tools nrel_tools/tests/
+  - pytest -v --cov=nrel_tools tests/
 
 notifications:
     email: false
