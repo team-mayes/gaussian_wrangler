@@ -74,7 +74,7 @@ def parse_cmdline(argv):
                                                  'a file (each line listing a set of reactant(s) and transition '
                                                  'structure).')
     parser.add_argument("-d", "--out_dir", help="A directory where output files should be saved. The default location "
-                                                "is the current working directory.", default=False)
+                                                "is the current working directory.", default=None)
     parser.add_argument("-hl", "--hartree_location", help="Optional: the call to invoke hartree. The default is: "
                                                           "{}".format(DEF_HARTREE_LOC), default=DEF_HARTREE_LOC)
     parser.add_argument("-l", "--list", help="The location of the list of Gaussian output files. "
@@ -84,6 +84,9 @@ def parse_cmdline(argv):
                         default="300,600,30")
     parser.add_argument("-o", "--output_fname", help="The name of the output file to be created. The default is {}"
                                                      "".format(DEF_OUT_FILE_NAME), default=DEF_OUT_FILE_NAME)
+    parser.add_argument("-q", "--quasiharmonic", help="Use the quasi-harmonic Gibbs free energy (qh-G(T)), not the "
+                                                      "(default) harmonic G(T) output from GoodVibes. ",
+                        action='store_true')
     parser.add_argument("-s", "--save_vibes", help="Save the output from running GoodVibes in separate files, "
                                                    "renamed with the Gaussian log file prefix and '.dat'. "
                                                    "The default is False.",
@@ -228,7 +231,7 @@ def parse_stoich(stoich_string, add_to_dict=None):
     return stoich_dict
 
 
-def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_output_fname):
+def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_output_fname, quasiharm):
     """
     Calls GoodVibes to get thermochem at a range of temps
     :param file_set: list of reactant file(s) and TS file
@@ -237,9 +240,10 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
     :param save_vibes: boolean to determine whether to save each GoodVibes output separately
     :param out_dir: directory to save GoodVibes output files (if requested)
     :param tog_output_fname: None or string (file name) if saving each GoodVibes output together
+    :param quasiharm: boolean to use the quasiharmonic qh-G(T), not the harmonic G(T)
     :return: nothing
     """
-    qh_gt = []
+    gt = []
     temps = []
     for index, file in enumerate(file_set):
         vibes_input = ["python", "-m", "goodvibes", file, "--ti", temp_range]
@@ -250,7 +254,7 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
         vibes_out = subprocess.check_output(vibes_input).decode("utf-8").strip().split("\n")
         found_structure = False
         skip_line = True
-        qh_gt.append([])
+        gt.append([])
         # we know the last line should be dropped, and at least the first 10
         for line in vibes_out[10:-1]:
             if GOODVIBES_ERROR_PAT.match(line):
@@ -266,7 +270,10 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
                 vals = line.split()
                 if index == 0:
                     temps.append(float(vals[2]))
-                qh_gt[index].append(float(vals[-1]))
+                if quasiharm:
+                    gt[index].append(float(vals[-1]))
+                else:
+                    gt[index].append(float(vals[-2]))
         if save_vibes:
             vibes_out_fname = create_out_fname(file, suffix='_vibes', base_dir=out_dir, ext='.dat')
             os.rename(GOODVIBES_OUT_FNAME, vibes_out_fname)
@@ -276,27 +283,27 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
                     f.write(infile.read())
 
     temps = np.asarray(temps)
-    for index in range(len(qh_gt)):
-        qh_gt[index] = np.asarray(qh_gt[index]) * EHPART_TO_KCALMOL
+    for index in range(len(gt)):
+        gt[index] = np.asarray(gt[index]) * EHPART_TO_KCALMOL
 
-    return temps, qh_gt
+    return temps, gt
 
 
-def get_kt(temps, qh_gt):
+def get_kt(temps, gt):
     """
     Calculate the rate coefficient at each temperature in temps
     :param temps: np array of temperatures (in K) to be evaluated
-    :param qh_gt: list of np arrays with quasi-harmonic treatment of G(T) for each output file at each temp
+    :param gt: list of np arrays with quasi-harmonic treatment of G(T) for each output file at each temp
     :return: kt: np array of rate coefficients at each temp
     """
-    gibbs_react = qh_gt[0]
+    gibbs_react = gt[0]
     # any files before the last will be a reactant file
-    for index in range(len(qh_gt) - 1):
+    for index in range(len(gt) - 1):
         if index == 0:
-            gibbs_react = qh_gt[0]
+            gibbs_react = gt[0]
         else:
-            gibbs_react += qh_gt[index]
-    gibbs_ts = qh_gt[-1]
+            gibbs_react += gt[index]
+    gibbs_ts = gt[-1]
     delta_gibbs = gibbs_ts - gibbs_react
 
     # rate coefficient from Eyring equation
@@ -372,9 +379,9 @@ def main(argv=None):
             tog_fname = None
         for file_set in row_list:
             solvent = check_gausslog_fileset(file_set, args[0].hartree_location, args[0].vibes_check)
-            temps, qh_gt = get_thermochem(file_set, args[0].temp_range, solvent, args[0].save_vibes, args[0].out_dir,
-                                          tog_fname)
-            kt = get_kt(temps, qh_gt)
+            temps, gt = get_thermochem(file_set, args[0].temp_range, solvent, args[0].save_vibes, args[0].out_dir,
+                                       tog_fname, args[0].quasiharmonic)
+            kt = get_kt(temps, gt)
             a, ea = fit_arrhenius(temps, kt)
             print_results(a, ea, file_set, args[0].output_fname, print_mode)
             print_mode = 'a'

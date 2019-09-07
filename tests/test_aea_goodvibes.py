@@ -37,6 +37,9 @@ TI_LIST = os.path.join(SUB_DATA_DIR, 'list_ti.txt')
 GOOD_AE_TI_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_ti_good.csv')
 TI_VIBES_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_vibes.dat')
 
+TPA_LIST = os.path.join(SUB_DATA_DIR, 'tpa_testing.txt')
+GOOD_AE_TPA_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_tpa_good.csv')
+
 
 class TestAEaGoodVibesNoOut(unittest.TestCase):
     # These all test failure cases
@@ -107,7 +110,7 @@ class TestAEaGoodVibesInputError(unittest.TestCase):
 class TestAEaGoodVibes(unittest.TestCase):
     # These test/demonstrate different options
     def testTwoUni(self):
-        test_input = ["-l", FILE_LIST, "-d", SUB_DATA_DIR]
+        test_input = ["-l", FILE_LIST, "-d", SUB_DATA_DIR, "-q"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(AE_OUT, GOOD_AE_OUT))
@@ -137,11 +140,25 @@ class TestAEaGoodVibes(unittest.TestCase):
     def testTi(self):
         # check handles it when not all atoms in are in all molecules
         # also checks saving GoodVibes output together
-        test_input = ["-l", TI_LIST, "-d", SUB_DATA_DIR, "-t"]
+        test_input = ["-l", TI_LIST, "-d", SUB_DATA_DIR, "-t", "-q"]
         silent_remove(TI_VIBES_OUT)
         try:
             main(test_input)
+            self.assertFalse(diff_lines(AE_OUT, GOOD_AE_TI_OUT))
             self.assertTrue(os.path.exists(TI_VIBES_OUT))
+        finally:
+            silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
+            silent_remove(AE_OUT, disable=DISABLE_REMOVE)
+            silent_remove(TI_VIBES_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testTPA(self):
+        # check handles it when not all atoms in are in all molecules
+        # also checks saving GoodVibes output together
+        test_input = ["-l", TPA_LIST, "-d", SUB_DATA_DIR, "-t"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(AE_OUT, GOOD_AE_TPA_OUT))
         finally:
             silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
             silent_remove(AE_OUT, disable=DISABLE_REMOVE)
