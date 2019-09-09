@@ -1,0 +1,1 @@
+tests/test_data/gausscom2pdb/pet_cp1_def2_end.com
