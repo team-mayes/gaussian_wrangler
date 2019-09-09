@@ -1,6 +1,6 @@
 import unittest
 import os
-from nrel_tools.aea_goodvibes import main
+from nrel_tools.goodvibes_helper import main
 from nrel_tools.common import diff_lines, silent_remove, capture_stdout, capture_stderr
 import logging
 
@@ -13,7 +13,7 @@ __author__ = 'hmayes'
 TEST_DIR = os.path.dirname(__file__)
 MAIN_DIR = os.path.dirname(TEST_DIR)
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
-SUB_DATA_DIR = os.path.join(DATA_DIR, 'aea_goodvibes')
+SUB_DATA_DIR = os.path.join(DATA_DIR, 'goodvibes_helper')
 
 GOODVIBES_DAT = os.path.abspath(os.path.join(TEST_DIR, '..', 'Goodvibes_output.dat'))
 GOODVIBES_CSV = os.path.abspath(os.path.join(TEST_DIR, '..', 'Goodvibes_output.csv'))
@@ -48,8 +48,6 @@ class TestAEaGoodVibesNoOut(unittest.TestCase):
         # main(test_input)
         with capture_stderr(main, test_input) as output:
             self.assertTrue("No files" in output)
-        # with capture_stdout(main, test_input) as output:
-        #     self.assertTrue("optional arguments" in output)
 
     def testHelp(self):
         test_input = ['-h']
@@ -140,7 +138,7 @@ class TestAEaGoodVibes(unittest.TestCase):
     def testTi(self):
         # check handles it when not all atoms in are in all molecules
         # also checks saving GoodVibes output together
-        test_input = ["-l", TI_LIST, "-d", SUB_DATA_DIR, "-t", "-q"]
+        test_input = ["-l", TI_LIST, "-d", SUB_DATA_DIR, "-t"]
         silent_remove(TI_VIBES_OUT)
         try:
             main(test_input)
