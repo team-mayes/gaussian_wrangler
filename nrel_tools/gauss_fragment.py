@@ -33,7 +33,10 @@ GAUSSCOM_FILE = 'input_com_or_pdb_file'
 OUT_BASE_DIR = 'output_directory'
 CUT_ATOMS = 'cut_atoms'
 GAUSS_COMMAND = 'gaussian_options_line'
+GAUSS_END = 'gaussian_options_end'
 GAUSS_CP_COMMAND = 'gaussian_cp_options_line'
+IGNORE_MAX_DIST = 'ignore_max_distance'
+
 
 # data file info
 
@@ -46,7 +49,9 @@ DEF_GAUSS_CP_COMMAND = '# m062x/Def2TZVP nosymm Counterpoise=2 CPHF=Grid=Fine'
 DEF_CFG_VALS = {OUT_BASE_DIR: None,
                 GAUSSCOM_FILE: None,
                 GAUSS_COMMAND: DEF_GAUSS_COMMAND,
+                GAUSS_END: '',
                 GAUSS_CP_COMMAND: DEF_GAUSS_CP_COMMAND,
+                IGNORE_MAX_DIST: False,
                 }
 REQ_KEYS = {CUT_ATOMS: str,
             }
@@ -58,6 +63,7 @@ SEC_ATOMS = 'atoms_section'
 SEC_TAIL = 'tail_section'
 FRAGMENT = 'fragment'
 MAX_BOND_DIST = 1.9  # same length units as in input and output file, here Angstroms
+MAX_HBOND_DIST = 1.5  # same length units as in input and output file, here Angstroms
 
 
 def read_cfg(f_loc, cfg_proc=process_cfg):
@@ -130,7 +136,7 @@ def calc_dist(a, b):
     return np.linalg.norm(np.subtract(a, b))
 
 
-def validate_atom_num(atom_pair, atoms_content, gausscom_file):
+def validate_atom_num(atom_pair, atoms_content, gausscom_file, ignore_max_dist):
     # check that both atom numbers are not larger than the total number of atoms,
     # and that they are close enough to be bonded
     for atom_num in atom_pair:
@@ -138,13 +144,13 @@ def validate_atom_num(atom_pair, atoms_content, gausscom_file):
             raise InvalidDataError("Found atom id {} in '{}', but there are only {} atoms in the file {}"
                                    "".format(atom_num, CUT_ATOMS, len(atoms_content), gausscom_file))
     pair_dist = calc_dist(atoms_content[atom_pair[0]][ATOM_COORDS], atoms_content[atom_pair[1]][ATOM_COORDS])
-    if pair_dist > MAX_BOND_DIST:
-        raise InvalidDataError("Atom ids {} and {} are {:.2f} Angstroms apart, which is greater than the tested "
+    if pair_dist > MAX_BOND_DIST and not ignore_max_dist:
+        raise InvalidDataError("Atom ids {} and {} are {:.2f} Angstroms apart, which is greater than "
                                "maximum bond distance of {:.2f}".format(atom_pair[0], atom_pair[1], pair_dist,
                                                                         MAX_BOND_DIST))
 
 
-def fragment_molecule(atom_pair, atoms_content):
+def fragment_molecule(atom_pair, atoms_content, ignore_max_dist):
     broke_triple_bond = False
     broke_double_bond = False
     broke_double_bond_list = [False, False]
@@ -152,65 +158,74 @@ def fragment_molecule(atom_pair, atoms_content):
     unassigned_atom_numbers = list(range(1, len(atoms_content)+1))
     frag1_list = []
     frag2_list = []
-    for atom in atom_pair:
-        # Check if fragment made up of just one atom
-        lonely_frag = False
-        test_atom_type = atoms_content[atom][ATOM_TYPE]
-        if test_atom_type in single_bond_atoms:
-            lonely_frag = True
-        elif test_atom_type == 'O' or test_atom_type == 'N':
-            for other_atom in unassigned_atom_numbers:
+    if not ignore_max_dist:
+        for atom in atom_pair:
+            # Check if fragment made up of just one atom
+            lonely_frag = False
+            test_atom_type = atoms_content[atom][ATOM_TYPE]
+            if test_atom_type in single_bond_atoms:
                 lonely_frag = True
-                if test_atom_type == 'O':
-                    broke_double_bond = True
-                else:
-                    broke_triple_bond = True
-                if other_atom == atom_pair[0] or other_atom == atom_pair[1]:
-                    continue
-                pair_dist = calc_dist(atoms_content[atom][ATOM_COORDS], atoms_content[other_atom][ATOM_COORDS])
-                if pair_dist < MAX_BOND_DIST:
-                    lonely_frag = False
+            elif test_atom_type == 'O' or test_atom_type == 'N':
+                for other_atom in unassigned_atom_numbers:
+                    lonely_frag = True
                     if test_atom_type == 'O':
-                        broke_double_bond = False
+                        broke_double_bond = True
                     else:
-                        broke_triple_bond = False
-                    break
-        if lonely_frag:
-            atoms_content[atom][FRAGMENT] = 1
-            frag1_list.append(atom)
-            unassigned_atom_numbers.remove(atom)
-            frag2_list = unassigned_atom_numbers
-            for other_atom in unassigned_atom_numbers:
-                atoms_content[other_atom][FRAGMENT] = 2
-            return frag1_list, frag2_list, broke_double_bond, broke_triple_bond
+                        broke_triple_bond = True
+                    if other_atom == atom_pair[0] or other_atom == atom_pair[1]:
+                        continue
+                    pair_dist = calc_dist(atoms_content[atom][ATOM_COORDS], atoms_content[other_atom][ATOM_COORDS])
+                    if atoms_content[other_atom][ATOM_TYPE] == 'H':
+                        max_dist = MAX_HBOND_DIST
+                    else:
+                        max_dist = MAX_BOND_DIST
+                    if pair_dist < max_dist:
+                        lonely_frag = False
+                        if test_atom_type == 'O':
+                            broke_double_bond = False
+                        else:
+                            broke_triple_bond = False
+                        break
+            if lonely_frag:
+                atoms_content[atom][FRAGMENT] = 1
+                frag1_list.append(atom)
+                unassigned_atom_numbers.remove(atom)
+                frag2_list = unassigned_atom_numbers
+                for other_atom in unassigned_atom_numbers:
+                    atoms_content[other_atom][FRAGMENT] = 2
+                return frag1_list, frag2_list, broke_double_bond, broke_triple_bond
 
-    # Now the more difficult cases
-    frag1_list.append(atom_pair[0])
-    unassigned_atom_numbers.remove(atom_pair[0])
-    atoms_content[atom_pair[0]][FRAGMENT] = 1
-    frag2_list.append(atom_pair[1])
-    unassigned_atom_numbers.remove(atom_pair[1])
-    atoms_content[atom_pair[1]][FRAGMENT] = 2
+        # Now the more difficult cases
+        frag1_list.append(atom_pair[0])
+        unassigned_atom_numbers.remove(atom_pair[0])
+        atoms_content[atom_pair[0]][FRAGMENT] = 1
+        frag2_list.append(atom_pair[1])
+        unassigned_atom_numbers.remove(atom_pair[1])
+        atoms_content[atom_pair[1]][FRAGMENT] = 2
 
-    # first check for C=C
-    for counter, atom in enumerate(atom_pair):
-        if atoms_content[atom][ATOM_TYPE] == 'C':
-            bonded_to_c = []
-            for other_atom in unassigned_atom_numbers:
-                pair_dist = calc_dist(atoms_content[atom][ATOM_COORDS], atoms_content[other_atom][ATOM_COORDS])
-                if pair_dist < MAX_BOND_DIST:
-                    bonded_to_c.append(other_atom)
-            if len(bonded_to_c) == 2:
-                type1 = atoms_content[bonded_to_c[0]][ATOM_TYPE]
-                type2 = atoms_content[bonded_to_c[0]][ATOM_TYPE]
-                if type1 == 'O' and type2 == 'O':
-                    broke_double_bond_list[counter] = False
-                else:
-                    broke_double_bond_list[counter] = True
-    # if one atom has a double-bond but not the other, then a it is a single bond that is broken, so leave
-    # broke_double_bond as false, otherwise:
-    if broke_double_bond_list[0] == broke_double_bond_list[1]:
-        broke_double_bond = broke_double_bond_list[0]
+        # first check for C=C
+        for counter, atom in enumerate(atom_pair):
+            if atoms_content[atom][ATOM_TYPE] == 'C':
+                bonded_to_c = []
+                for other_atom in unassigned_atom_numbers:
+                    pair_dist = calc_dist(atoms_content[atom][ATOM_COORDS], atoms_content[other_atom][ATOM_COORDS])
+                    if atoms_content[other_atom][ATOM_TYPE] == 'H':
+                        max_dist = MAX_HBOND_DIST
+                    else:
+                        max_dist = MAX_BOND_DIST
+                    if pair_dist < max_dist:
+                        bonded_to_c.append(other_atom)
+                if len(bonded_to_c) == 2:
+                    type1 = atoms_content[bonded_to_c[0]][ATOM_TYPE]
+                    type2 = atoms_content[bonded_to_c[0]][ATOM_TYPE]
+                    if type1 == 'O' and type2 == 'O':
+                        broke_double_bond_list[counter] = False
+                    else:
+                        broke_double_bond_list[counter] = True
+        # if one atom has a double-bond but not the other, then a it is a single bond that is broken, so leave
+        # broke_double_bond as false, otherwise:
+        if broke_double_bond_list[0] == broke_double_bond_list[1]:
+            broke_double_bond = broke_double_bond_list[0]
 
     # first add to frag 1
     atoms_to_check = [atom_pair[0]]
@@ -220,7 +235,11 @@ def fragment_molecule(atom_pair, atoms_content):
     for f1_atom in frag1_list:
         for atom in unassigned_atom_numbers:
             pair_dist = calc_dist(atoms_content[atom][ATOM_COORDS], atoms_content[f1_atom][ATOM_COORDS])
-            if pair_dist < MAX_BOND_DIST:
+            if atoms_content[atom][ATOM_TYPE] == 'H' or atoms_content[f1_atom][ATOM_TYPE] == 'H':
+                max_dist = MAX_HBOND_DIST
+            else:
+                max_dist = MAX_BOND_DIST
+            if pair_dist < max_dist:
                 raise InvalidDataError("Found that atom {} assigned to fragment 1 is within {} Angstroms of atom {} "
                                        "which was not assigned to fragment 1".format(f1_atom, MAX_BOND_DIST, atom))
     # check that all remaining atoms are bonded to each other
@@ -243,7 +262,11 @@ def add_atoms_to_fragment(atom_numbers, atoms_content, atoms_to_check, frag_list
             atoms_to_remove_from_atom_list = []
             for atom in atom_numbers:
                 pair_dist = calc_dist(atoms_content[atom][ATOM_COORDS], atoms_content[check_atom][ATOM_COORDS])
-                if pair_dist < MAX_BOND_DIST:
+                if atoms_content[atom][ATOM_TYPE] == 'H' or atoms_content[check_atom][ATOM_TYPE] == 'H':
+                    max_dist = MAX_HBOND_DIST
+                else:
+                    max_dist = MAX_BOND_DIST
+                if pair_dist < max_dist:
                     frag_list.append(atom)
                     atoms_content[atom][FRAGMENT] = frag_num
                     # avoid changing list while iterating
@@ -258,13 +281,14 @@ def add_atoms_to_fragment(atom_numbers, atoms_content, atoms_to_check, frag_list
         add_to_atoms_to_check = []
 
 
-def write_com_file(com_file_name, gauss_command, for_comment_line, atoms_content, broke_double_bond, broke_triple_bond,
-                   frag_num=None, frag_list=None):
+def write_com_file(com_file_name, gauss_command, gauss_end, for_comment_line, atoms_content, broke_double_bond,
+                   broke_triple_bond, frag_num=None, frag_list=None):
     """
     After figuring out the fragments, make Gaussian input files to calculate the counterpoint correction (if a non-zero
     list is passed to "frag_list". Otherwise, make a Gaussian input file to optimize any fragments with len > 1.
     :param com_file_name: str
     :param gauss_command: str
+    :param gauss_end: str
     :param for_comment_line: str
     :param atoms_content: dictionary with atom type, atom coordinates, and fragment ID
     :param broke_double_bond: flag to change multiplicity
@@ -310,6 +334,9 @@ def write_com_file(com_file_name, gauss_command, for_comment_line, atoms_content
                                                                              *atoms_content[atom_num][ATOM_COORDS])
         print_list.append(atom_line)
     print_list.append([])
+    if len(gauss_end) > 0:
+        print_list.append([gauss_end])
+        print_list.append([])
     print_list.append([])
     list_to_file(print_list, com_file_name)
 
@@ -320,14 +347,14 @@ def print_com_files(atom_pair, atoms_content, gausscom_file, cfg, frag1, frag2, 
     # if desired)
     cp_file_name = create_out_fname(gausscom_file, suffix='_{}_{}_cp'.format(*atom_pair),
                                     ext='.com', base_dir=cfg[OUT_BASE_DIR])
-    write_com_file(cp_file_name, cfg[GAUSS_CP_COMMAND], for_comment_line, atoms_content, broke_double_bond,
+    write_com_file(cp_file_name, cfg[GAUSS_CP_COMMAND], '', for_comment_line, atoms_content, broke_double_bond,
                    broke_triple_bond)
     frag1_file_name = create_out_fname(gausscom_file, suffix='_{}_{}_f1'.format(*atom_pair), base_dir=cfg[OUT_BASE_DIR])
-    write_com_file(frag1_file_name, cfg[GAUSS_COMMAND], for_comment_line, atoms_content, broke_double_bond,
-                   broke_triple_bond, 1, frag1)
+    write_com_file(frag1_file_name, cfg[GAUSS_COMMAND], cfg[GAUSS_END], for_comment_line, atoms_content,
+                   broke_double_bond, broke_triple_bond, 1, frag1)
     frag2_file_name = create_out_fname(gausscom_file, suffix='_{}_{}_f2'.format(*atom_pair), base_dir=cfg[OUT_BASE_DIR])
-    write_com_file(frag2_file_name, cfg[GAUSS_COMMAND], for_comment_line, atoms_content, broke_double_bond,
-                   broke_triple_bond, 2, frag2)
+    write_com_file(frag2_file_name, cfg[GAUSS_COMMAND], cfg[GAUSS_END], for_comment_line, atoms_content,
+                   broke_double_bond, broke_triple_bond, 2, frag2)
 
 
 def main(argv=None):
@@ -354,9 +381,10 @@ def main(argv=None):
                                    "pdb file with extension '.pdb', but input file is {}".format(gauss_file))
         # Before making files, check that atom numbers are valid
         for atom_pair in cfg[CUT_PAIR_LIST]:
-            validate_atom_num(atom_pair, atom_data, gauss_file)
+            validate_atom_num(atom_pair, atom_data, gauss_file, cfg[IGNORE_MAX_DIST])
         for atom_pair in cfg[CUT_PAIR_LIST]:
-            frag1, frag2, broke_double_bond, broke_triple_bond = fragment_molecule(atom_pair, atom_data)
+            frag1, frag2, broke_double_bond, broke_triple_bond = fragment_molecule(atom_pair, atom_data,
+                                                                                   cfg[IGNORE_MAX_DIST])
             print_com_files(atom_pair, atom_data, gauss_file, cfg, frag1, frag2, broke_double_bond, broke_triple_bond)
     except IOError as e:
         warning("Problems reading file:", e)

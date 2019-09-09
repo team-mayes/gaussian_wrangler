@@ -238,7 +238,13 @@ def main(argv=None):
         if len(gausslog_files) == 0:
             raise InvalidDataError("No files to process: no single log file specified and "
                                    "no list of files found")
-            # Read template and data files
+        # and a template file to process
+        if not args.tpl:
+            raise InvalidDataError("No template file ('-t' option) specified")
+        if not os.path.isfile(args.tpl):
+            raise IOError(args.tpl)
+
+        # Read template and data files
         com_tpl_content = process_gausscom_tpl(args.tpl)
         process_gausscom_files(gausslog_files, com_tpl_content, args.charge_from_tpl, args.low_energy)
     except IOError as e:

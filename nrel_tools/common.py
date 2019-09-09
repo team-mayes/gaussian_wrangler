@@ -1048,7 +1048,7 @@ def conv_raw_val(param, def_val, int_list=True):
     return param
 
 
-def process_cfg(raw_cfg, def_cfg_vals=None, req_keys=None, int_list=True):
+def process_cfg(raw_cfg, def_cfg_vals=None, req_keys=None, int_list=True, store_extra_keys=False):
     """
     Converts the given raw configuration, filling in defaults and converting the specified value (if any) to the
     default value's type.
@@ -1056,19 +1056,26 @@ def process_cfg(raw_cfg, def_cfg_vals=None, req_keys=None, int_list=True):
     @param def_cfg_vals: dictionary of default values
     @param req_keys: dictionary of required types
     @param int_list: flag to specify if lists should converted to a list of integers
+    @param store_extra_keys: boolean to skip error if there are unexpected keys
     @return: The processed configuration.
 
     """
     proc_cfg = {}
+    extra_keys = []
     for key in raw_cfg:
         if not (key in def_cfg_vals or key in req_keys):
-            raise InvalidDataError("Unexpected key '{}' in configuration ('ini') file.".format(key))
+            if store_extra_keys:
+                extra_keys.append(key)
+            else:
+                raise InvalidDataError("Unexpected key '{}' in configuration ('ini') file.".format(key))
     key = None
     try:
         for key, def_val in def_cfg_vals.items():
             proc_cfg[key] = conv_raw_val(raw_cfg.get(key), def_val, int_list)
         for key, type_func in req_keys.items():
             proc_cfg[key] = type_func(raw_cfg[key])
+        for key in extra_keys:
+            proc_cfg[key] = raw_cfg[key]
     except KeyError as e:
         raise KeyError("Missing config val for key '{}'".format(key, e))
     except Exception as e:

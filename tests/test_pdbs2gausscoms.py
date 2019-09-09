@@ -38,6 +38,8 @@ ALT_INI = os.path.join(SUB_DATA_DIR, 'pdb2gau_2.ini')
 ALT_OUT = os.path.join(SUB_DATA_DIR, 'pe_linear.com')
 GOOD_ALT_OUT = os.path.join(SUB_DATA_DIR, 'pe_linear_good.com')
 
+MISSING_FILE_INI = os.path.join(SUB_DATA_DIR, 'pdb2gau_missing_file.ini')
+
 
 class TestPdbs2GausscomsNoOut(unittest.TestCase):
     # These all test failure cases
@@ -55,6 +57,13 @@ class TestPdbs2GausscomsNoOut(unittest.TestCase):
             self.assertFalse(output)
         with capture_stdout(main, test_input) as output:
             self.assertTrue("optional arguments" in output)
+
+    def testMissingFile(self):
+        test_input = ["-c", MISSING_FILE_INI]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("No such file" in output)
 
 
 class TestPdbs2Gausscoms(unittest.TestCase):

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Set script variables
 INPUT_BASENAME={job_name}
-INPUT_FILE=$INPUT_BASENAME.com
+INPUT_FILE={input_file}
 GAUSSIAN_EXEC=g16
 MEMSIZE=5GB
 SCRATCH=/tmp/scratch/$SLURM_JOB_ID
@@ -15,15 +15,15 @@ INFILE=infile_$INPUT_BASENAME
 #
 NUMRWFLINES=`grep "RWF" $INPUT_FILE | wc -l`
 if [ $NUMRWFLINES -eq 1 ]; then
-echo "standard file found"
-cp $INPUT_FILE $INFILE
+    echo "standard file found"
+    cp $INPUT_FILE $INFILE
 else
-echo "prepending lines to input file"
-echo "%RWF=$SCRATCH2/,$MEMSIZE,$SCRATCH/,-1" > $INFILE
-echo "%NoSave" >> $INFILE
-echo "%Chk=$SCRATCH2/$INPUT_BASENAME.chk" >> $INFILE
-echo " " >> $INFILE
-cat $INPUT_FILE >> $INFILE
+    echo "prepending lines to input file"
+    echo "%RWF=$SCRATCH2/,$MEMSIZE,$SCRATCH/,-1" > $INFILE
+    echo "%NoSave" >> $INFILE
+    echo "%Chk=$SCRATCH2/$INPUT_BASENAME.chk" >> $INFILE
+    echo " " >> $INFILE
+    cat $INPUT_FILE >> $INFILE
 fi
 
 #

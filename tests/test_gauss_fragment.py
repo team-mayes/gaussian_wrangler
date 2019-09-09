@@ -15,6 +15,8 @@ MAIN_DIR = os.path.dirname(TEST_DIR)
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
 SUB_DATA_DIR = os.path.join(DATA_DIR, 'gauss_fragment')
 
+MISSING_FILE_INI = os.path.join(SUB_DATA_DIR, 'ghost_frag.ini')
+
 DEF_INI = os.path.join(SUB_DATA_DIR, 'gausscom_fragment.ini')
 F1_15_14_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_15_14_f1.com')
 F2_15_14_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_1_tzvp_15_14_f2.com')
@@ -73,6 +75,18 @@ GOOD_F1_CC_13_12_OUT = os.path.join(SUB_DATA_DIR, 'tbut_13_12_f1_good.com')
 F2_CC_13_12_OUT = os.path.join(SUB_DATA_DIR, 'tbut_13_12_f2.com')
 GOOD_F2_CC_13_12_OUT = os.path.join(SUB_DATA_DIR, 'tbut_13_12_f2_good.com')
 
+IGNORE_MAX_INI = os.path.join(SUB_DATA_DIR, 'gauss_frag_ignore_max_dist.ini')
+CP_TPA_OUT = os.path.join(SUB_DATA_DIR, 'tpaegh1ats_ts_ircf_opt_1_2_cp.com')
+GOOD_CP_TPA_OUT = os.path.join(SUB_DATA_DIR, 'tpaegh1ats_ts_ircf_opt_1_2_cp_good.com')
+F2_TPA_OUT = os.path.join(SUB_DATA_DIR, 'tpaegh1ats_ts_ircf_opt_1_2_f2.com')
+GOOD_F2_TPA_OUT = os.path.join(SUB_DATA_DIR, 'tpaegh1ats_ts_ircf_opt_1_2_f2_good.com')
+
+N_TRIPLE_BOND_INI = os.path.join(SUB_DATA_DIR, 'iso_frag.ini')
+CP_N_OUT = os.path.join(SUB_DATA_DIR, 'initrile_16_8_cp.com')
+GOOD_CP_N_OUT = os.path.join(SUB_DATA_DIR, 'initrile_16_8_cp_good.com')
+F2_N_OUT = os.path.join(SUB_DATA_DIR, 'initrile_16_8_f2.com')
+GOOD_F2_N_OUT = os.path.join(SUB_DATA_DIR, 'initrile_16_8_f2_good.com')
+
 
 class TestGausscomFragNoOut(unittest.TestCase):
     # These all test failure cases
@@ -90,6 +104,13 @@ class TestGausscomFragNoOut(unittest.TestCase):
             self.assertFalse(output)
         with capture_stdout(main, test_input) as output:
             self.assertTrue("optional arguments" in output)
+
+    def testMissingFile(self):
+        test_input = ['-c', MISSING_FILE_INI]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("No such file or directory" in output)
 
 
 class TestGausscomFrag(unittest.TestCase):
@@ -170,4 +191,28 @@ class TestGausscomFrag(unittest.TestCase):
             silent_remove(CP_CC_13_12_OUT, disable=DISABLE_REMOVE)
             silent_remove(F1_CC_13_12_OUT, disable=DISABLE_REMOVE)
             silent_remove(F2_CC_13_12_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testNTripleBond(self):
+        test_input = ["-c", N_TRIPLE_BOND_INI]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(CP_N_OUT, GOOD_CP_N_OUT))
+            self.assertFalse(diff_lines(F2_N_OUT, GOOD_F2_N_OUT))
+        finally:
+            silent_remove(CP_N_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F2_N_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testSepMolecules(self):
+        # to help when there is a reactant or product complex that is two different molecules; ignores the
+        #   larger distance between the atoms belonging to two different molecules
+        test_input = ["-c", IGNORE_MAX_INI]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(CP_TPA_OUT, GOOD_CP_TPA_OUT))
+            self.assertFalse(diff_lines(F2_TPA_OUT, GOOD_F2_TPA_OUT))
+        finally:
+            silent_remove(CP_TPA_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F2_TPA_OUT, disable=DISABLE_REMOVE)
             pass

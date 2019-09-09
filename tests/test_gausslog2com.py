@@ -45,11 +45,8 @@ class TestGausslog2comNoOut(unittest.TestCase):
     # These all test failure cases
     def testNoArgs(self):
         test_input = []
-        main(test_input)
-        # with capture_stderr(main, test_input) as output:
-        #     self.assertTrue("WARNING:  Problems reading file: Could not read file" in output)
-        # with capture_stdout(main, test_input) as output:
-        #     self.assertTrue("optional arguments" in output)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("No files to process" in output)
 
     def testHelp(self):
         test_input = ['-h']
@@ -59,6 +56,39 @@ class TestGausslog2comNoOut(unittest.TestCase):
             self.assertFalse(output)
         with capture_stdout(main, test_input) as output:
             self.assertTrue("optional arguments" in output)
+
+    def testMissingTpl(self):
+        test_input = ["-f", LOG_FILE, "-c"]
+        # main(test_input)
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("No template file" in output)
+
+    def testMissingFile(self):
+        test_input = ["-t", "ghost.tpl", "-f", LOG_FILE, "-c"]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("Problems reading file" in output)
+
+    def testMisMatchLogCom(self):
+        test_input = ["-t", TYPE_MATCH_TPL, "-f", LOG_LOW_E_FILE]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("has atom type" in output)
+
+    def testNotTpl(self):
+        test_input = ["-t", LOG_LOW_E_FILE, "-f", LOG_LOW_E_FILE]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("Problems reading data" in output)
+
+    def testNotLog(self):
+        test_input = ["-t", TYPE_MATCH_TPL, "-f", TYPE_MATCH_TPL, "-e"]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("log file has coordinates to use" in output)
 
 
 class TestGausslog2com(unittest.TestCase):

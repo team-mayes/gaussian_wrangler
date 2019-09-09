@@ -46,6 +46,7 @@ SINGLE_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer.pdb')
 GOOD_SINGLE_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_good.pdb')
 
 NO_LOG_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_no_logs.ini')
+MISSING_FILE_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_missing_file.ini')
 
 
 class TestGausslog2pdbNoOut(unittest.TestCase):
@@ -65,13 +66,32 @@ class TestGausslog2pdbNoOut(unittest.TestCase):
         with capture_stdout(main, test_input) as output:
             self.assertTrue("optional arguments" in output)
 
+    def testRequestFirstLast(self):
+        test_input = ["-c", DEF_INI, "-a", "-z"]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("Cannot specify both" in output)
+
+    def testNoLogFile(self):
+        test_input = ["-c", NO_LOG_INI]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("No files to process" in output)
+
+    def testMissingFile(self):
+        test_input = ["-c", MISSING_FILE_INI]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("No such file or directory" in output)
+
 
 class TestGausslog2pdb(unittest.TestCase):
     # These test/demonstrate different options
     def testDefIni(self):
         test_input = ["-c", DEF_INI]
-        if logger.isEnabledFor(logging.DEBUG):
-            main(test_input)
         try:
             main(test_input)
             self.assertFalse(diff_lines(PDB_OUT, GOOD_PDB_ALL_OUT))
@@ -81,8 +101,6 @@ class TestGausslog2pdb(unittest.TestCase):
 
     def testFirstIni(self):
         test_input = ["-c", DEF_INI, "-a"]
-        if logger.isEnabledFor(logging.DEBUG):
-            main(test_input)
         try:
             main(test_input)
             self.assertFalse(diff_lines(PDB_OUT, GOOD_PDB_FIRST_OUT))
@@ -92,8 +110,6 @@ class TestGausslog2pdb(unittest.TestCase):
 
     def testLastIni(self):
         test_input = ["-c", LAST_INI]
-        if logger.isEnabledFor(logging.DEBUG):
-            main(test_input)
         try:
             main(test_input)
             self.assertFalse(diff_lines(PDB_OUT, GOOD_PDB_LAST_OUT))
@@ -102,8 +118,6 @@ class TestGausslog2pdb(unittest.TestCase):
 
     def testMultIni(self):
         test_input = ["-c", MULT_INI]
-        if logger.isEnabledFor(logging.DEBUG):
-            main(test_input)
         try:
             main(test_input)
             self.assertFalse(diff_lines(PDB_OUT, GOOD_PDB_LAST_OUT))
@@ -115,8 +129,6 @@ class TestGausslog2pdb(unittest.TestCase):
 
     def testCombIni(self):
         test_input = ["-c", COMB_INI]
-        if logger.isEnabledFor(logging.DEBUG):
-            main(test_input)
         try:
             main(test_input)
             self.assertFalse(diff_lines(PDB12_OUT, GOOD_PDB12_LAST_OUT))
@@ -126,8 +138,6 @@ class TestGausslog2pdb(unittest.TestCase):
 
     def testComb2Ini(self):
         test_input = ["-c", COMB2_INI]
-        if logger.isEnabledFor(logging.DEBUG):
-            main(test_input)
         try:
             main(test_input)
             self.assertFalse(diff_lines(COMB_PDB_OUT, GOOD_COMB_PDB_OUT))
@@ -137,8 +147,6 @@ class TestGausslog2pdb(unittest.TestCase):
 
     def testMultPDB(self):
         test_input = ["-c", MULT_PDB_INI]
-        if logger.isEnabledFor(logging.DEBUG):
-            main(test_input)
         try:
             main(test_input)
             self.assertFalse(diff_lines(MULT_PDB_OUT, GOOD_MULT_PDB_OUT))
@@ -148,8 +156,6 @@ class TestGausslog2pdb(unittest.TestCase):
 
     def testSingle(self):
         test_input = ["-c", SINGLE_INI]
-        if logger.isEnabledFor(logging.DEBUG):
-            main(test_input)
         try:
             main(test_input)
             self.assertFalse(diff_lines(SINGLE_OUT, GOOD_SINGLE_OUT))
@@ -160,8 +166,6 @@ class TestGausslog2pdb(unittest.TestCase):
     def testCommandLineFile(self):
         test_input = ["-c", NO_LOG_INI, "-f", "tests/test_data/gausslog2pdb/pet_mono_f1hs_1.log",
                       "-o", "tests/test_data/gausslog2pdb"]
-        if logger.isEnabledFor(logging.DEBUG):
-            main(test_input)
         try:
             main(test_input)
             self.assertFalse(diff_lines(PDB_OUT, GOOD_PDB_LAST_OUT))

@@ -21,6 +21,10 @@ DEF_SH_OUT = os.path.join(PARENT_DIR, 'ethylrad.sh')
 GOOD_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad.sh')
 DEF_LOG_OUT = os.path.join(PARENT_DIR, 'ethylrad.log')
 ONE_JOB_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde_one_job.ini')
+GOOD_ONE_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_one.sh')
+
+MISSING_TPL_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_missing_tpl.ini')
+ONE_NEW_JOB_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_one.ini')
 
 
 class TestRunGaussBDENoOut(unittest.TestCase):
@@ -40,13 +44,21 @@ class TestRunGaussBDENoOut(unittest.TestCase):
         with capture_stdout(main, test_input) as output:
             self.assertTrue("optional arguments" in output)
 
+    def testMissingListIni(self):
+        test_input = ["tests/test_data/run_gauss/ethylrad", "-c", MISSING_TPL_INI]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("could not find a template file" in output)
+
 
 class TestRunGaussBDE(unittest.TestCase):
     # These test/demonstrate different options
     def testDefIni(self):
-        test_input = ["ethylrad", "-c", DEF_INI]
+        test_input = ["tests/test_data/run_gauss/ethylrad", "-c", DEF_INI]
         try:
             main(test_input)
+            self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_SH_OUT))
         except IOError:
             pass
         finally:
@@ -55,11 +67,10 @@ class TestRunGaussBDE(unittest.TestCase):
             pass
 
     def testOneJobIni(self):
-        test_input = ["ethylrad", "-c", ONE_JOB_INI]
+        test_input = ["tests/test_data/run_gauss/ethylrad", "-c", ONE_JOB_INI]
         try:
             main(test_input)
-        except IOError:
-            self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_SH_OUT))
+            self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_ONE_SH_OUT))
         finally:
             silent_remove(DEF_SH_OUT, disable=DISABLE_REMOVE)
             silent_remove(DEF_LOG_OUT, disable=DISABLE_REMOVE)

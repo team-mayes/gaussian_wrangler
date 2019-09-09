@@ -111,3 +111,5 @@ update.sh
 tests/test_data/gausslog2com/s12but_17_84_f2_s12but_17_84_f2_tpl.com
 Goodvibes_output.dat
 tests/test_data/aea_goodvibes/aea_out.csv
+ethylrad.sh
+tests/test_data/run_gauss/ethylrad.sh

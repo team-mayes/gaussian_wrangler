@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Set script variables
 INPUT_BASENAME=ethylrad
-INPUT_FILE=$INPUT_BASENAME.com
+INPUT_FILE=tests/test_data/run_gauss/ethylrad.com
 GAUSSIAN_EXEC=g16
 MEMSIZE=5GB
 SCRATCH=/tmp/scratch/$SLURM_JOB_ID
@@ -15,15 +15,16 @@ INFILE=infile_$INPUT_BASENAME
 #
 NUMRWFLINES=`grep "RWF" $INPUT_FILE | wc -l`
 if [ $NUMRWFLINES -eq 1 ]; then
-echo "standard file found"
-cp $INPUT_FILE $INFILE
+    echo "standard file found"
+    cp $INPUT_FILE $INFILE
 else
-echo "prepending lines to input file"
-echo "%RWF=$SCRATCH2/,$MEMSIZE,$SCRATCH/,-1" > $INFILE
-echo "%NoSave" >> $INFILE
-echo "%Chk=$SCRATCH2/$INPUT_BASENAME.chk" >> $INFILE
-echo " " >> $INFILE
-cat $INPUT_FILE >> $INFILE
+    echo "prepending lines to input file"
+    echo "%RWF=$SCRATCH2/,$MEMSIZE,$SCRATCH/,-1" > $INFILE
+    echo "%NoSave" >> $INFILE
+    echo "%OldChk=tests/test_data/run_gauss/pvc_at1.chk" >> $INFILE
+    echo "%Chk=$SCRATCH2/ethylrad.chk" >> $INFILE
+    echo " " >> $INFILE
+    cat $INPUT_FILE >> $INFILE
 fi
 
 #

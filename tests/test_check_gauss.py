@@ -33,8 +33,9 @@ class TestCheckGaussNoOut(unittest.TestCase):
     # These test failure cases that do not produce output files
     def testNoArgs(self):
         test_input = []
+        # main(test_input)
         with capture_stderr(main, test_input) as output:
-            self.assertTrue("WARNING:  Problems reading data: Could not find files" in output)
+            self.assertTrue("Could not find files" in output)
 
     def testHelp(self):
         test_input = ['-h']
@@ -44,6 +45,22 @@ class TestCheckGaussNoOut(unittest.TestCase):
             self.assertFalse(output)
         with capture_stdout(main, test_input) as output:
             self.assertTrue("optional arguments" in output)
+
+    def testWrongKey(self):
+        test_input = ['-ghost']
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("unrecognized arguments" in output)
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue("optional arguments" in output)
+
+    def testWrongDir(self):
+        test_input = ["-d", "ghost"]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("Could not find" in output)
 
 
 class TestCheckGauss(unittest.TestCase):

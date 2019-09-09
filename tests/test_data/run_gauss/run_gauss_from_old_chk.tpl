@@ -15,16 +15,16 @@ INFILE=infile_$INPUT_BASENAME
 #
 NUMRWFLINES=`grep "RWF" $INPUT_FILE | wc -l`
 if [ $NUMRWFLINES -eq 1 ]; then
-echo "standard file found"
-cp $INPUT_FILE $INFILE
+    echo "standard file found"
+    cp $INPUT_FILE $INFILE
 else
-echo "prepending lines to input file"
-echo "%RWF=$SCRATCH2/,$MEMSIZE,$SCRATCH/,-1" > $INFILE
-echo "%NoSave" >> $INFILE
-echo "%OldChk={old_job_name}.chk" >> $INFILE
-echo "%Chk=$SCRATCH2/{job_name}.chk" >> $INFILE
-echo " " >> $INFILE
-cat $INPUT_FILE >> $INFILE
+    echo "prepending lines to input file"
+    echo "%RWF=$SCRATCH2/,$MEMSIZE,$SCRATCH/,-1" > $INFILE
+    echo "%NoSave" >> $INFILE
+    echo "%OldChk={old_job_name}.chk" >> $INFILE
+    echo "%Chk=$SCRATCH2/{job_name}.chk" >> $INFILE
+    echo " " >> $INFILE
+    cat $INPUT_FILE >> $INFILE
 fi
 
 #

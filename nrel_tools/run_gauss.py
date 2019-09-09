@@ -70,17 +70,22 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
 
     if not good_files:
         raise IOError('Could not read file {}'.format(f_loc))
-    main_proc = cfg_proc(dict(config.items(MAIN_SEC)), DEF_CFG_VALS, REQ_KEYS, int_list=False)
+    main_proc = cfg_proc(dict(config.items(MAIN_SEC)), DEF_CFG_VALS, REQ_KEYS, int_list=False, store_extra_keys=True)
 
     main_proc[TPL_DICT] = {}
     for job in main_proc[JOB_LIST]:
         if job == '':
             continue
-        tpl_name = job + '.tpl'
+        if job in main_proc:
+            tpl_name = main_proc[job]
+        else:
+            tpl_name = job + '.tpl'
         if os.path.isfile(tpl_name):
             main_proc[TPL_DICT][job] = tpl_name
         else:
-            raise InvalidDataError("For job '{}', could not find a template file '{}'".format(job, tpl_name))
+            raise InvalidDataError("For job '{}', could not find a template file '{}'\n"
+                                   "You may specify the template to use (including path) using {} as a key in the "\
+                                   "config file.".format(job, tpl_name, job))
 
     for file in [main_proc[REMAINING_JOB_SUBMIT_TPL], main_proc[FIRST_SUBMIT_TPL]]:
         if not os.path.isfile(file):
@@ -134,7 +139,8 @@ def main(argv=None):
         return ret
 
     cfg = args.config
-    job_name = args.job_name
+    job_name_perhaps_with_dir = args.job_name
+    job_name = os.path.basename(args.job_name)
 
     # Read template and data files
     try:
@@ -144,7 +150,7 @@ def main(argv=None):
         for job in cfg[JOB_LIST]:
             if job == '':
                 new_job_name = tpl_dict[JOB_NAME]
-                tpl_dict[INPUT_FILE] = job_name + ".com"
+                tpl_dict[INPUT_FILE] = job_name_perhaps_with_dir + ".com"
                 if cfg[FIRST_JOB_CHK]:
                     tpl_dict[OLD_JOB_NAME] = cfg[FIRST_JOB_CHK]
                     tpl_file = cfg[REMAINING_JOB_SUBMIT_TPL]
@@ -155,6 +161,9 @@ def main(argv=None):
                 tpl_file = cfg[REMAINING_JOB_SUBMIT_TPL]
                 tpl_dict[OLD_JOB_NAME] = tpl_dict[JOB_NAME]
                 tpl_dict[INPUT_FILE] = cfg[TPL_DICT][job]
+            if not os.path.isfile(tpl_dict[INPUT_FILE]):
+                raise IOError(tpl_dict[INPUT_FILE])
+
             filled_tpl_name = create_out_fname(new_job_name, ext=".sh", base_dir=cfg[OUT_DIR])
             print("Running {}".format(new_job_name))
 

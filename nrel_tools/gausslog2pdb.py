@@ -307,7 +307,7 @@ def main(argv=None):
         if cfg[ONLY_FIRST] and cfg[ONLY_FINAL]:
             raise InvalidDataError("Cannot specify both '{}' and '{}'".format(ONLY_FIRST, ONLY_FINAL))
 
-        # no start the actual work
+        # now start the actual work
         if cfg[PDB_TPL_FILE]:
             pdb_tpl_content = process_pdb_file(cfg[PDB_TPL_FILE])
         else:
