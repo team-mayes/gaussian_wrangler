@@ -115,3 +115,4 @@ ethylrad.sh
 tests/test_data/run_gauss/ethylrad.sh
 /tests/test_data/goodvibes_helper/aea_out.csv
 tests/test_data/goodvibes_helper/aea_out_vibes.dat
+ethylrad_opt.sh

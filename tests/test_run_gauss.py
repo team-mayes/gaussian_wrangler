@@ -25,6 +25,9 @@ GOOD_ONE_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_one.sh')
 
 MISSING_TPL_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_missing_tpl.ini')
 ONE_NEW_JOB_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_one.ini')
+OPT_LOG_OUT = os.path.join(PARENT_DIR, 'ethylrad_opt.log')
+OPT_SH_OUT = os.path.join(PARENT_DIR, 'ethylrad_opt.sh')
+GOOD_OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt.sh')
 
 
 class TestRunGaussBDENoOut(unittest.TestCase):
@@ -51,6 +54,13 @@ class TestRunGaussBDENoOut(unittest.TestCase):
         with capture_stderr(main, test_input) as output:
             self.assertTrue("could not find a template file" in output)
 
+    def testMissingComFileIni(self):
+        test_input = ["ghost", "-c", DEF_INI]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("Problems reading file" in output)
+
 
 class TestRunGaussBDE(unittest.TestCase):
     # These test/demonstrate different options
@@ -74,4 +84,14 @@ class TestRunGaussBDE(unittest.TestCase):
         finally:
             silent_remove(DEF_SH_OUT, disable=DISABLE_REMOVE)
             silent_remove(DEF_LOG_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testOneNewJobIni(self):
+        test_input = ["tests/test_data/run_gauss/ethylrad", "-c", ONE_NEW_JOB_INI]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(OPT_SH_OUT, GOOD_OPT_SH_OUT))
+        finally:
+            silent_remove(OPT_SH_OUT, disable=DISABLE_REMOVE)
+            silent_remove(OPT_LOG_OUT, disable=DISABLE_REMOVE)
             pass

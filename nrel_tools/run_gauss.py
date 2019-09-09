@@ -84,7 +84,7 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
             main_proc[TPL_DICT][job] = tpl_name
         else:
             raise InvalidDataError("For job '{}', could not find a template file '{}'\n"
-                                   "You may specify the template to use (including path) using {} as a key in the "\
+                                   "You may specify the template to use (including path) using {} as a key in the "
                                    "config file.".format(job, tpl_name, job))
 
     for file in [main_proc[REMAINING_JOB_SUBMIT_TPL], main_proc[FIRST_SUBMIT_TPL]]:
