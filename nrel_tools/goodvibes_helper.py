@@ -64,8 +64,8 @@ DELTA_G_TS = '\u0394G\u2021 (kcal/mol)'
 DELTA_G_RXN = '\u0394G_rxn (kcal/mol)'
 QH_A = 'qh_A (1/s if uni)'
 QH_EA = 'qh_Ea (kcal/mol)'
-QH_DELTA_G_TS = '\u0394G\u2021 (kcal/mol)'
-QH_DELTA_G_RXN = '\u0394G_rxn (kcal/mol)'
+QH_DELTA_G_TS = 'qh_\u0394G\u2021 (kcal/mol)'
+QH_DELTA_G_RXN = 'qh_\u0394G_rxn (kcal/mol)'
 
 OUTPUT_HEADERS = [FILE1, FILE2, FILE3, FILE4, FILE5, A, EA, DELTA_G_TEMP, DELTA_G_TS, DELTA_G_RXN,
                   QH_A, QH_EA, QH_DELTA_G_TS, QH_DELTA_G_RXN]
@@ -92,7 +92,7 @@ def parse_cmdline(argv):
     parser.add_argument("-l", "--list", help="The location of the list of Gaussian output files. "
                                              "The default file name.", default=None)
     parser.add_argument("--temp", help="Temperature in K for calculating \u0394G. The default is the first "
-                                       "temperature in 'temp_range' (if specified).", default=np.nan)
+                                       "temperature in 'temp_range' (if specified).", default=None)
     parser.add_argument("-ti", "--temp_range", help="Initial temp, final temp, (and optionally) step size (K) for "
                                                     "thermochemistry calculations. The default range is 300,600,30",
                         default="300,600,30")
@@ -207,7 +207,7 @@ def check_gausslog_fileset(file_set, hartree_loc, good_vibes_check):
                 if len(prod_stoich_dict) == 0:
                     prod_stoich_dict = parse_stoich(row[STOICH])
                 else:
-                    prod_stoich_dict = parse_stoich(row[STOICH], add_to_dict=react_stoich_dict)
+                    prod_stoich_dict = parse_stoich(row[STOICH], add_to_dict=prod_stoich_dict)
 
             # additional checks on all files as we go...
             multiplicities[index] = int(row[MULT])
@@ -299,8 +299,9 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
     temps = []
     for index, file in enumerate(file_set):
         if file == REACT_PROD_SEP:
-            gt[index].append(np.full([len(temps)], np.nan))
-            qh_gt[index].append(np.full([len(temps)], np.nan))
+            gt.append(np.full([len(temps)], np.nan))
+            qh_gt.append(np.full([len(temps)], np.nan))
+            continue
         vibes_input = ["python", "-m", "goodvibes", file, "--ti", temp_range]
         if solvent:
             vibes_input += ["-c", "1"]
@@ -427,7 +428,7 @@ def get_delta_g(temp, temps, delta_g_ts, delta_g_rxn):
     :return: delta_g_ts, delta_g_rxn at requested temp (default to first temp)
     """
     if temp:
-        temp_index = (np.abs(temps - temp)).argmin()
+        temp_index = (np.abs(temps - float(temp))).argmin()
     else:
         temp_index = 0
 

@@ -119,4 +119,5 @@ ethylrad_opt.sh
 tests/test_data/goodvibes_helper/ethygly2_tzvp_vibes.dat
 tests/test_data/goodvibes_helper/pdc2_eghtsct_vibes.dat
 tests/test_data/goodvibes_helper/pdc2_h_vibes.dat
-
+tests/test_data/goodvibes_helper/aea_prod.csv
+tests/test_data/goodvibes_helper/aea_prod_vibes.dat

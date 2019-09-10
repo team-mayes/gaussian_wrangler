@@ -40,6 +40,13 @@ TI_VIBES_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_vibes.dat')
 TPA_LIST = os.path.join(SUB_DATA_DIR, 'tpa_testing.txt')
 GOOD_AE_TPA_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_tpa_good.csv')
 
+PROD_LIST = os.path.join(SUB_DATA_DIR, 'list_prod.txt')
+PROD_OUT = os.path.join(SUB_DATA_DIR, 'aea_prod.csv')
+GOOD_PROD_OUT = os.path.join(SUB_DATA_DIR, 'aea_prod_good.csv')
+
+PROD_NO_TS_LIST = os.path.join(SUB_DATA_DIR, 'list_prod_no_ts.txt')
+GOOD_PROD_NO_TS_OUT = os.path.join(SUB_DATA_DIR, 'aea_prod_no_ts_good.csv')
+
 
 class TestAEaGoodVibesNoOut(unittest.TestCase):
     # These all test failure cases
@@ -161,5 +168,33 @@ class TestAEaGoodVibes(unittest.TestCase):
         finally:
             silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
             silent_remove(AE_OUT, disable=DISABLE_REMOVE)
+            silent_remove(TI_VIBES_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testReactTSProd(self):
+        # check handles it when not all atoms in are in all molecules
+        # also checks saving GoodVibes output together
+        test_input = ["-l", PROD_LIST, "-d", SUB_DATA_DIR, "-o", "aea_prod.csv", "-t",
+                      "-ti", "300,600,25", "--temp", "500"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(PROD_OUT, GOOD_PROD_OUT))
+        finally:
+            silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
+            silent_remove(PROD_OUT, disable=DISABLE_REMOVE)
+            silent_remove(TI_VIBES_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testReactProd(self):
+        # check handles it when not all atoms in are in all molecules
+        # also checks saving GoodVibes output together
+        test_input = ["-l", PROD_NO_TS_LIST, "-d", SUB_DATA_DIR, "-o", "aea_prod.csv", "-t",
+                      "-ti", "300,600,25", "--temp", "500"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(PROD_OUT, GOOD_PROD_NO_TS_OUT))
+        finally:
+            silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
+            silent_remove(PROD_OUT, disable=DISABLE_REMOVE)
             silent_remove(TI_VIBES_OUT, disable=DISABLE_REMOVE)
             pass
