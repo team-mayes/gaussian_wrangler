@@ -13,9 +13,9 @@ import argparse
 import re
 import numpy as np
 # from goodvibes import GoodVibes
-from nrel_tools.common import (InvalidDataError, warning, RG, KB, H, EHPART_TO_KCALMOL,
+from nrel_tools.common import (InvalidDataError, warning, RG, KB, H, EHPART_TO_KCAL_MOL,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                               write_csv, silent_remove, create_out_fname)
+                               write_csv, silent_remove, create_out_fname, make_fig)
 
 try:
     # noinspection PyCompatibility
@@ -92,12 +92,17 @@ def parse_cmdline(argv):
     parser.add_argument("-l", "--list", help="The location of the list of Gaussian output files. "
                                              "The default file name.", default=None)
     parser.add_argument("--temp", help="Temperature in K for calculating \u0394G. The default is the first "
-                                       "temperature in 'temp_range' (if specified).", default=None)
+                                       "temperature in 'temp_range' (if specified). If a value is given, the program "
+                                       "will use the temperature closest to it in the temp_range.", default=None)
     parser.add_argument("-ti", "--temp_range", help="Initial temp, final temp, (and optionally) step size (K) for "
                                                     "thermochemistry calculations. The default range is 300,600,30",
                         default="300,600,30")
     parser.add_argument("-o", "--output_fname", help="The name of the output file to be created. The default is {}"
                                                      "".format(DEF_OUT_FILE_NAME), default=DEF_OUT_FILE_NAME)
+    parser.add_argument("-p", "--plot", help="Make a \u0394G plot at the specified temp. The default is False.",
+                        action='store_true')
+    parser.add_argument("-pl", "--plot_labels", help="Optional labels for \u0394G plot. Enter as a list.",
+                        default=None)
     parser.add_argument("-q", "--quasiharmonic", help="Use the '-q' option in GoodVibes, which turns on turns on "
                                                       "quasi-harmonic corrections to both entropy and enthalpy in the "
                                                       "Gibbs free energy (qh-G(T)) output from GoodVibes. ",
@@ -125,6 +130,10 @@ def parse_cmdline(argv):
         if not os.path.exists(args[0].out_dir):
             os.makedirs(args[0].out_dir)
         args[0].output_fname = os.path.abspath(os.path.join(args[0].out_dir, args[0].output_fname))
+        if args[0].plot_labels:
+            args[0].plot_labels = args[0].plot_labels.split(',')
+        else:
+            args[0].plot_labels = ['']
 
     except SystemExit as e:
         if hasattr(e, 'code') and e.code == 0:
@@ -340,8 +349,8 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
     temps = np.asarray(temps)
     # for each molecule, multiply the array to convert to kcal/mol
     for index in range(len(gt)):
-        gt[index] = np.asarray(gt[index]) * EHPART_TO_KCALMOL
-        qh_gt[index] = np.asarray(qh_gt[index]) * EHPART_TO_KCALMOL
+        gt[index] = np.asarray(gt[index]) * EHPART_TO_KCAL_MOL
+        qh_gt[index] = np.asarray(qh_gt[index]) * EHPART_TO_KCAL_MOL
 
     return temps, gt, qh_gt
 
@@ -435,6 +444,43 @@ def get_delta_g(temp, temps, delta_g_ts, delta_g_rxn):
     return temps[temp_index], delta_g_ts[temp_index], delta_g_rxn[temp_index]
 
 
+def plot_delta_g(fname, g_temp, g_ts_list, g_rxn_list, labels):
+    """
+    Makes a plot of delta G at the specified temp
+    :param fname: string, to save plot
+    :param g_temp: float, temp at which delta Gs were calculated
+    :param g_ts_list: list of floats
+    :param g_rxn_list: list of floats
+    :param labels: list of strings
+    :return: nothing, just save
+    """
+    max_y_lines = 5
+    x_axis = np.array([0, 1, 3, 4, 6, 7])
+    y_axis = []
+    y_labels = []
+    # y_min = np.floor(np.array(g_rxn_list).min())
+    # y_max = np.ceil(np.array(g_ts_list).max())
+    for index in range(max_y_lines):
+        try:
+            y_axis.append(np.array([0.0, 0.0, g_ts_list[index], g_ts_list[index],
+                                    g_rxn_list[index], g_rxn_list[index]]))
+        except IndexError:
+            y_axis.append(None)
+        try:
+            y_labels.append(labels[index])
+        except IndexError:
+            y_labels.append(None)
+
+    make_fig(fname, x_axis, y_axis[0],
+             x_label='reaction coordinate', y_label='\u0394G at {} K (kcal/mol)'.format(g_temp),
+             y1_label=y_labels[0], y2_label=y_labels[1], y3_label=y_labels[2], y4_label=y_labels[3],
+             y5_label=y_labels[4], y2_array=y_axis[1], y3_array=y_axis[2], y4_array=y_axis[3], y5_array=y_axis[4],
+             ls2='-', ls3='-', ls4='-', ls5='-',
+             # y_lima=y_min, y_limb=y_max,
+             hide_x=True,
+             )
+
+
 def main(argv=None):
     # Read input
     args, ret = parse_cmdline(argv)
@@ -464,6 +510,9 @@ def main(argv=None):
         if len(missing_files) > 0:
             raise IOError(missing_files)
 
+        # only used for plotting; made empty to make IDE happy
+        g_ts_list, g_rxn_list, qh_g_ts_list, qh_g_rxn_list = [], [], [], []
+        g_temp = None
         # now the calculations and printing
         print_mode = 'w'  # for the AEa output, so only prints header once, and then appends to file
         if args[0].tog_vibes:
@@ -490,7 +539,17 @@ def main(argv=None):
             print_results(a, ea, qh_a, qh_ea, g_temp, g_ts, g_rxn, qh_g_ts, qh_g_rxn,
                           file_set, args[0].output_fname, print_mode)
             print_mode = 'a'
+            if args[0].plot:
+                g_ts_list.append(g_ts)
+                g_rxn_list.append(g_rxn)
+                qh_g_ts_list.append(qh_g_ts)
+                qh_g_rxn_list.append(qh_g_rxn)
 
+        if args[0].plot:
+            g_fname = create_out_fname(args[0].output_fname, ext='.png')
+            plot_delta_g(g_fname, g_temp, g_ts_list, g_rxn_list, args[0].plot_labels)
+            qh_g_fname = create_out_fname(args[0].output_fname, suffix='_qh', ext='.png')
+            plot_delta_g(qh_g_fname, g_temp, qh_g_ts_list, qh_g_rxn_list, args[0].plot_labels)
         # clean up GoodVibes detritus
         silent_remove(GOODVIBES_OUT_FNAME)
 

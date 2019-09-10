@@ -1,0 +1,2 @@
+tests/test_data/goodvibes_helper/ethygly2_tzvp.log tests/test_data/goodvibes_helper/pdc2_h.log tests/test_data/goodvibes_helper/pdc2_eghtsct.log tests/test_data/goodvibes_helper/pdc2_eghtsct_prodc.log tests/test_data/goodvibes_helper/water.log
+tests/test_data/goodvibes_helper/ethygly2_tzvp.log tests/test_data/goodvibes_helper/ipah_d.log tests/test_data/goodvibes_helper/ipaegh1dts_t.log tests/test_data/goodvibes_helper/water.log tests/test_data/goodvibes_helper/ipainterh_b.log

@@ -24,6 +24,10 @@ from shutil import copy2, Error, copystat
 import six
 import sys
 from contextlib import contextmanager
+# from matplotlib import rc
+import matplotlib.pyplot as plt
+from matplotlib.ticker import AutoMinorLocator
+from matplotlib.patches import Rectangle
 
 # Constants #
 
@@ -42,10 +46,16 @@ H = 6.626070e-34  # [Js]
 # Universal gas constant in kcal/mol K
 RG = 0.001985877534
 
-EHPART_TO_KCALMOL = 627.5094709  # [kcal/mol/(Eh/part)]
-
+EHPART_TO_KCAL_MOL = 627.5094709  # [kcal/mol/(Eh/part)]
 
 XYZ_ORIGIN = np.zeros(3)
+
+# for figures
+DEF_FIG_WIDTH = 10
+DEF_FIG_HEIGHT = 6
+DEF_AXIS_SIZE = 20
+DEF_TICK_SIZE = 15
+DEF_FIG_DIR = './figs/'
 
 # Tolerance initially based on double standard machine precision of 5 × 10−16 for float64 (decimal64)
 # found to be too stringent
@@ -1395,3 +1405,87 @@ def longest_common_substring(s1, s2):
             else:
                 m[x][y] = 0
     return s1[x_longest - longest: x_longest]
+
+
+# FIGURES
+
+def save_figure(name, save_fig=True):
+    """
+    Specifies where and if to save a created figure
+    :param name: Name for the file
+    :param save_fig: boolean as to whether to save fig; defaults to true (specify False if not desired)
+    :return: n/a
+    """
+    if save_fig:
+        plt.savefig(name, bbox_inches='tight')
+
+
+def make_fig(name, x_array, y1_array, y1_label="", ls1="-", color1="blue",
+             x2_array=None, y2_array=None, y2_label="", ls2='--', color2='orange',
+             x3_array=None, y3_array=None, y3_label="", ls3=':',
+             x4_array=None, y4_array=None, y4_label="", ls4='-.',
+             x5_array=None, y5_array=None, y5_label="", ls5='-', color4='red',
+             x_fill=None, y_fill=None, x2_fill=None, y2_fill=None,
+             fill1_label=None, fill2_label=None,
+             fill_color_1="green", fill_color_2="blue",
+             x_label="", y_label="", x_lima=None, x_limb=None, y_lima=None, y_limb=None, loc=0,
+             fig_width=DEF_FIG_WIDTH, fig_height=DEF_FIG_HEIGHT, axis_font_size=DEF_AXIS_SIZE,
+             tick_font_size=DEF_TICK_SIZE, hide_x=False):
+    """
+    Many defaults to it is easy to adjust
+    """
+    # rc('text', usetex=True)
+    # a general purpose plotting routine; can plot between 1 and 5 curves
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+    ax.plot(x_array, y1_array, ls1, label=y1_label, linewidth=2, color=color1)
+    if y2_array is not None:
+        if x2_array is None:
+            x2_array = x_array
+        ax.plot(x2_array, y2_array, label=y2_label, ls=ls2, linewidth=2, color=color2)
+    if y3_array is not None:
+        if x3_array is None:
+            x3_array = x_array
+        ax.plot(x3_array, y3_array, label=y3_label, ls=ls3, linewidth=3, color='green')
+    if y4_array is not None:
+        if x4_array is None:
+            x4_array = x_array
+        ax.plot(x4_array, y4_array, label=y4_label, ls=ls4, linewidth=3, color=color4)
+    if y5_array is not None:
+        if x5_array is None:
+            x5_array = x_array
+        ax.plot(x5_array, y5_array, label=y5_label, ls=ls5, linewidth=3, color='purple')
+    ax.set_xlabel(x_label, fontsize=axis_font_size)
+    ax.set_ylabel(y_label, fontsize=axis_font_size)
+    if x_limb is not None:
+        if x_lima is None:
+            x_lima = 0.0
+        ax.set_xlim([x_lima, x_limb])
+
+    if y_limb is not None:
+        if y_lima is None:
+            y_lima = 0.0
+        ax.set_ylim([y_lima, y_limb])
+
+    if x_fill is not None:
+        plt.fill_between(x_fill, y_fill, 0, color=fill_color_1, alpha='0.75')
+
+    if x2_fill is not None:
+        plt.fill_between(x2_fill, y2_fill, 0, color=fill_color_2, alpha='0.5')
+
+    ax.tick_params(labelsize=tick_font_size)
+    ax.xaxis.set_minor_locator(AutoMinorLocator(5))
+    ax.yaxis.set_minor_locator(AutoMinorLocator(5))
+    if len(y1_label) > 0:
+        ax.legend(loc=loc, fontsize=tick_font_size, )
+    if fill1_label and fill2_label:
+        p1 = Rectangle((0, 0), 1, 1, fc=fill_color_1, alpha=0.75)
+        p2 = Rectangle((0, 0), 1, 1, fc=fill_color_2, alpha=0.5)
+        ax.legend([p1, p2], [fill1_label, fill2_label], loc=loc, fontsize=tick_font_size, )
+    if hide_x:
+        ax.xaxis.set_visible(False)
+    else:
+        ax.xaxis.grid(True, 'minor')
+        ax.xaxis.grid(True, 'major')
+    # ax.yaxis.grid(True, 'minor')
+    # ax.yaxis.grid(True, 'major', linewidth=1)
+    save_figure(name)

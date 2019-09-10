@@ -47,6 +47,10 @@ GOOD_PROD_OUT = os.path.join(SUB_DATA_DIR, 'aea_prod_good.csv')
 PROD_NO_TS_LIST = os.path.join(SUB_DATA_DIR, 'list_prod_no_ts.txt')
 GOOD_PROD_NO_TS_OUT = os.path.join(SUB_DATA_DIR, 'aea_prod_no_ts_good.csv')
 
+PLOT_LIST = os.path.join(SUB_DATA_DIR, 'list_plot.txt')
+PLOT1 = os.path.join(SUB_DATA_DIR, 'aea_out.png')
+PLOT2 = os.path.join(SUB_DATA_DIR, 'aea_out_qh.png')
+
 
 class TestAEaGoodVibesNoOut(unittest.TestCase):
     # These all test failure cases
@@ -188,7 +192,7 @@ class TestAEaGoodVibes(unittest.TestCase):
     def testReactProd(self):
         # check handles it when not all atoms in are in all molecules
         # also checks saving GoodVibes output together
-        test_input = ["-l", PROD_NO_TS_LIST, "-d", SUB_DATA_DIR, "-o", "aea_prod.csv", "-t",
+        test_input = ["-l", PROD_NO_TS_LIST, "-d", SUB_DATA_DIR, "-o", "aea_prod.csv",
                       "-ti", "300,600,25", "--temp", "500"]
         try:
             main(test_input)
@@ -196,5 +200,22 @@ class TestAEaGoodVibes(unittest.TestCase):
         finally:
             silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
             silent_remove(PROD_OUT, disable=DISABLE_REMOVE)
-            silent_remove(TI_VIBES_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testPlot(self):
+        # check handles it when not all atoms in are in all molecules
+        # also checks saving GoodVibes output together
+        silent_remove(PLOT1)
+        silent_remove(PLOT2)
+        test_input = ["-l", PLOT_LIST, "-d", SUB_DATA_DIR, "-p", "-pl", "pdc2,ipa",
+                      "-ti", "400,500,25", "--temp", "500"]
+        try:
+            main(test_input)
+            self.assertTrue(os.path.exists(PLOT1))
+            self.assertTrue(os.path.exists(PLOT2))
+        finally:
+            silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
+            silent_remove(AE_OUT, disable=DISABLE_REMOVE)
+            silent_remove(PLOT1, disable=DISABLE_REMOVE)
+            silent_remove(PLOT2, disable=DISABLE_REMOVE)
             pass
