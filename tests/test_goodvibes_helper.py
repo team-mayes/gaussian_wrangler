@@ -51,6 +51,7 @@ class TestAEaGoodVibesNoOut(unittest.TestCase):
 
     def testHelp(self):
         test_input = ['-h']
+        # main(test_input)
         if logger.isEnabledFor(logging.DEBUG):
             main(test_input)
         with capture_stderr(main, test_input) as output:

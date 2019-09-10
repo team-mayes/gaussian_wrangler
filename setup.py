@@ -36,7 +36,7 @@ setup(
                                       'gauss_fragment = nrel_tools.gauss_fragment:main',
                                       'run_gauss = nrel_tools.run_gauss:main',
                                       'check_gauss = nrel_tools.check_gauss:main',
-                                      'aea_goodvibes = nrel_tools.aea_goodvibes:main'
+                                      'goodvibes_helper = nrel_tools.goodvibes_helper:main'
                                       ],
                   },     package_dir={'nrel_tools': 'nrel_tools'},
 
