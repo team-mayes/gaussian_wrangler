@@ -87,6 +87,14 @@ GOOD_CP_N_OUT = os.path.join(SUB_DATA_DIR, 'initrile_16_8_cp_good.com')
 F2_N_OUT = os.path.join(SUB_DATA_DIR, 'initrile_16_8_f2.com')
 GOOD_F2_N_OUT = os.path.join(SUB_DATA_DIR, 'initrile_16_8_f2_good.com')
 
+METAL_BOND_INI = os.path.join(SUB_DATA_DIR, 'gauss_frag_w_metal.ini')
+CP_METAL_OUT = os.path.join(SUB_DATA_DIR, 'tieg5ipatse_ts_ircr_optts_37_38_cp.com')
+GOOD_CP_METAL_OUT = os.path.join(SUB_DATA_DIR, 'tieg5ipatse_ts_ircr_optts_37_38_cp_good.com')
+F1_METAL_OUT = os.path.join(SUB_DATA_DIR, 'tieg5ipatse_ts_ircr_optts_37_38_f1.com')
+GOOD_F1_METAL_OUT = os.path.join(SUB_DATA_DIR, 'tieg5ipatse_ts_ircr_optts_37_38_f1_good.com')
+F2_METAL_OUT = os.path.join(SUB_DATA_DIR, 'tieg5ipatse_ts_ircr_optts_37_38_f2.com')
+GOOD_F2_METAL_OUT = os.path.join(SUB_DATA_DIR, 'tieg5ipatse_ts_ircr_optts_37_38_f2_good.com')
+
 
 class TestGausscomFragNoOut(unittest.TestCase):
     # These all test failure cases
@@ -215,4 +223,18 @@ class TestGausscomFrag(unittest.TestCase):
         finally:
             silent_remove(CP_TPA_OUT, disable=DISABLE_REMOVE)
             silent_remove(F2_TPA_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testMetalBond(self):
+        # Uses a longer bond cut-off when one of the atoms is a metal
+        test_input = ["-c", METAL_BOND_INI]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(CP_METAL_OUT, GOOD_CP_METAL_OUT))
+            self.assertFalse(diff_lines(F1_METAL_OUT, GOOD_F1_METAL_OUT))
+            self.assertFalse(diff_lines(F2_METAL_OUT, GOOD_F2_METAL_OUT))
+        finally:
+            silent_remove(CP_METAL_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F1_METAL_OUT, disable=DISABLE_REMOVE)
+            silent_remove(F2_METAL_OUT, disable=DISABLE_REMOVE)
             pass

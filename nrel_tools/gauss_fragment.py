@@ -63,7 +63,9 @@ SEC_ATOMS = 'atoms_section'
 SEC_TAIL = 'tail_section'
 FRAGMENT = 'fragment'
 MAX_BOND_DIST = 1.9  # same length units as in input and output file, here Angstroms
-MAX_HBOND_DIST = 1.5  # same length units as in input and output file, here Angstroms
+MAX_H_BOND_DIST = 1.5  # same length units as in input and output file, here Angstroms
+MAX_M_BOND_DIST = 2.2  # same length units as in input and output file, here Angstroms
+METALS = ['Ti', 'Sb', 'Ge']
 
 
 def read_cfg(f_loc, cfg_proc=process_cfg):
@@ -176,7 +178,9 @@ def fragment_molecule(atom_pair, atoms_content, ignore_max_dist):
                         continue
                     pair_dist = calc_dist(atoms_content[atom][ATOM_COORDS], atoms_content[other_atom][ATOM_COORDS])
                     if atoms_content[other_atom][ATOM_TYPE] == 'H':
-                        max_dist = MAX_HBOND_DIST
+                        max_dist = MAX_H_BOND_DIST
+                    elif atoms_content[other_atom][ATOM_TYPE] in METALS:
+                        max_dist = MAX_M_BOND_DIST
                     else:
                         max_dist = MAX_BOND_DIST
                     if pair_dist < max_dist:
@@ -210,7 +214,9 @@ def fragment_molecule(atom_pair, atoms_content, ignore_max_dist):
                 for other_atom in unassigned_atom_numbers:
                     pair_dist = calc_dist(atoms_content[atom][ATOM_COORDS], atoms_content[other_atom][ATOM_COORDS])
                     if atoms_content[other_atom][ATOM_TYPE] == 'H':
-                        max_dist = MAX_HBOND_DIST
+                        max_dist = MAX_H_BOND_DIST
+                    elif atoms_content[other_atom][ATOM_TYPE] in METALS:
+                        max_dist = MAX_M_BOND_DIST
                     else:
                         max_dist = MAX_BOND_DIST
                     if pair_dist < max_dist:
@@ -236,7 +242,9 @@ def fragment_molecule(atom_pair, atoms_content, ignore_max_dist):
         for atom in unassigned_atom_numbers:
             pair_dist = calc_dist(atoms_content[atom][ATOM_COORDS], atoms_content[f1_atom][ATOM_COORDS])
             if atoms_content[atom][ATOM_TYPE] == 'H' or atoms_content[f1_atom][ATOM_TYPE] == 'H':
-                max_dist = MAX_HBOND_DIST
+                max_dist = MAX_H_BOND_DIST
+            elif atoms_content[atom][ATOM_TYPE] in METALS or atoms_content[f1_atom][ATOM_TYPE] in METALS:
+                max_dist = MAX_M_BOND_DIST
             else:
                 max_dist = MAX_BOND_DIST
             if pair_dist < max_dist:
@@ -263,7 +271,9 @@ def add_atoms_to_fragment(atom_numbers, atoms_content, atoms_to_check, frag_list
             for atom in atom_numbers:
                 pair_dist = calc_dist(atoms_content[atom][ATOM_COORDS], atoms_content[check_atom][ATOM_COORDS])
                 if atoms_content[atom][ATOM_TYPE] == 'H' or atoms_content[check_atom][ATOM_TYPE] == 'H':
-                    max_dist = MAX_HBOND_DIST
+                    max_dist = MAX_H_BOND_DIST
+                elif atoms_content[atom][ATOM_TYPE] in METALS or atoms_content[check_atom][ATOM_TYPE] in METALS:
+                    max_dist = MAX_M_BOND_DIST
                 else:
                     max_dist = MAX_BOND_DIST
                 if pair_dist < max_dist:
