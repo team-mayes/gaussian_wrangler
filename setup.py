@@ -37,7 +37,7 @@ setup(
                                       'run_gauss = nrel_tools.run_gauss:main',
                                       'check_gauss = nrel_tools.check_gauss:main',
                                       'goodvibes_helper = nrel_tools.goodvibes_helper:main',
-                                      'plot_delta_g = nrel_tools.plot_delta_g:main'
+                                      'plot_steps = nrel_tools.plot_steps:main'
                                       ],
                   },     package_dir={'nrel_tools': 'nrel_tools'},
 

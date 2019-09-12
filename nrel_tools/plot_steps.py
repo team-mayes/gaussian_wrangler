@@ -27,6 +27,7 @@ __author__ = 'hmayes'
 
 
 # Config keys
+DEF_Y_LABEL = '\u0394G at {} K (kcal/mol)'
 
 
 def parse_cmdline(argv):
@@ -38,7 +39,8 @@ def parse_cmdline(argv):
         argv = sys.argv[1:]
 
     # initialize the parser object:
-    parser = argparse.ArgumentParser(description='Creates a  \u0394G from given values.')
+    parser = argparse.ArgumentParser(description='Creates a plot showing given values as horizontal lines, connected '
+                                                 'by diagonal lines, as in a \u0394G or \u0394H plot.')
     parser.add_argument("-c", "--conv", help="Flag to convert values from a.u. to kcal/mol. The default is False.",
                         action='store_true')
     parser.add_argument("-d", "--out_dir", help="A directory where output files should be saved. The default location "
@@ -53,6 +55,10 @@ def parse_cmdline(argv):
                                                     "The default is {} in.".format(DEF_FIG_HEIGHT), default=None)
     parser.add_argument("-fw", "--fig_width", help="Figure width in inches. "
                                                    "The default is {} in.".format(DEF_FIG_WIDTH), default=None)
+    parser.add_argument("-y", "--y_axis_label", help="Text for the y-axis label. The default is: {}\n"
+                                                     "Be sure to include braces ({{}}) for the temperature to be "
+                                                     "filled in.".format(DEF_Y_LABEL.format("(input 'temp')")),
+                        default=None)
 
     args = None
     try:
@@ -75,7 +81,7 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def plot_delta_g(fname, g_temp, data_list, convert_flag, fig_width, fig_height):
+def plot_delta_g(fname, g_temp, data_list, convert_flag, fig_width, fig_height, y_label):
     """
     Makes a plot of delta G at the specified temp
     :param fname: string, to save plot
@@ -119,8 +125,11 @@ def plot_delta_g(fname, g_temp, data_list, convert_flag, fig_width, fig_height):
     else:
         fig_height = DEF_FIG_HEIGHT
 
+    if not y_label:
+        y_label = DEF_Y_LABEL
+
     make_fig(fname, x_axis, y_axis[0],
-             x_label='reaction coordinate', y_label='\u0394G at {} K (kcal/mol)'.format(g_temp),
+             x_label='reaction coordinate', y_label=y_label.format(g_temp),
              y1_label=y_labels[0], y2_label=y_labels[1], y3_label=y_labels[2], y4_label=y_labels[3],
              y5_label=y_labels[4], y2_array=y_axis[1], y3_array=y_axis[2], y4_array=y_axis[3], y5_array=y_axis[4],
              ls2='-', ls3='-', ls4='-', ls5='-',
@@ -146,7 +155,7 @@ def main(argv=None):
             plot_fname = create_out_fname(args.output_fname, ext='.png')
         else:
             plot_fname = create_out_fname(args.list, base_dir=args.out_dir, ext='.png')
-        plot_delta_g(plot_fname, args.temp, row_list, args.conv, args.fig_width, args.fig_height)
+        plot_delta_g(plot_fname, args.temp, row_list, args.conv, args.fig_width, args.fig_height, args.y_axis_label)
 
     except IOError as e:
         warning("Problems reading file:", e)
