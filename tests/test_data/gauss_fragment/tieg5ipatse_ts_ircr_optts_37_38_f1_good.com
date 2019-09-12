@@ -1,8 +1,8 @@
 # m062x/Def2TZVP nosymm scf=xqc opt freq=NoRaman CPHF=Grid=Fine SCRF=(Solvent=1,2-EthaneDiol,Read)
 
-radical calculation of fragment 1 from fragment pair [37, 38] and tests/test_data/gauss_fragment/tieg5ipatse_ts_ircr_optts.com
+optimization of fragment 1 from fragment pair [37, 38] and tests/test_data/gauss_fragment/tieg5ipatse_ts_ircr_optts.com
 
-0 2
+0 1
 O       0.299612   -1.445353   -3.050893
 C       1.660347   -1.800017   -3.286952
 C       2.461036   -2.104668   -2.035056
@@ -28,5 +28,7 @@ H       3.431681   -2.498464   -2.351070
 H       1.598029   -2.686490   -3.916577
 H      -3.257960    2.812417   -3.148916
 H      -0.895784    2.108601   -2.827928
+
+PDENS=7.0
 
 

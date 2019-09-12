@@ -2,7 +2,7 @@
 
 cp calculation from fragment pair [1, 2] and tests/test_data/gauss_fragment/tpaegh1ats_ts_ircf_opt.com
 
-0 1   0 2    0 2
+0 1   0 1    0 1
 H(Fragment=1)      -1.210355    0.721563   -2.341881
 H(Fragment=2)      -1.802218   -2.980202    0.108404
 C(Fragment=1)      -1.016549    0.817156   -1.283661
