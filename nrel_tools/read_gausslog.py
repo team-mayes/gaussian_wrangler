@@ -6,10 +6,7 @@ Creates pdb files from Gaussian log files
 from __future__ import print_function
 import sys
 import argparse
-from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file, process_pdb_file,
-                               SEC_HEAD, SEC_ATOMS, SEC_TAIL, ATOM_NUM_DICT,
-                               GAU_E_PAT,
-                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, silent_remove)
+from nrel_tools.common import (InvalidDataError, warning, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA)
 
 try:
     # noinspection PyCompatibility
@@ -35,8 +32,6 @@ JOB_TYPES = [CP_JOB, STABILITY_JOB]
 FILE_NAME = "File Name"
 SOLVENT = "Solvent type"
 STOICH = "Stoichiometry"
-CHARGE = "Charge"
-MULT = "Mult"
 FUNC = "Functional"
 BASIS = "Basis Set"
 ENERGY = "Energy (Hartrees)"
@@ -83,7 +78,7 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def process_gausscom_files(gausslog_file, gausslog_file_list, job_type):
+def process_gausscom_files(gausslog_file, gausslog_file_list):
     log_file_list = []
     if gausslog_file:
         log_file_list.append(gausslog_file)
@@ -133,7 +128,7 @@ def main(argv=None):
 
     # Read template and data files
     try:
-        process_gausscom_files(args.file, args.list, args.job_type)
+        process_gausscom_files(args.file, args.list)
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR

@@ -2,7 +2,7 @@
 
 cp calculation from fragment pair [16, 8] and tests/test_data/gauss_fragment/initrile.com
 
-0 1   0 4    0 4
+0 1   0 4   0 4
 C(Fragment=2)      51.099712   20.356653   13.925115
 C(Fragment=2)      50.167641   20.380328   15.146632
 C(Fragment=2)      48.756059   20.840975   14.740329

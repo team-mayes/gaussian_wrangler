@@ -2,7 +2,7 @@
 
 optimization of fragment 2 from fragment pair [1, 2] and tests/test_data/gauss_fragment/tpaegh1ats_ts_ircf_opt.com
 
-0 1
+1 1
 H      -1.210355    0.721563   -2.341881
 C      -1.016549    0.817156   -1.283661
 H      -0.127304   -1.117851   -1.121365

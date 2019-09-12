@@ -86,6 +86,9 @@ GAU_COORD_PAT = re.compile(r"Center     Atomic      Atomic             Coordinat
 GAU_SEP_PAT = re.compile(r"---------------------------------------------------------------------.*")
 GAU_E_PAT = re.compile(r"SCF Done:.*")
 GAU_CHARGE_PAT = re.compile(r"Charge =.*")
+CHARGE = 'Charge'
+MULT = 'Mult'
+MULTIPLICITY = 'Multiplicity'
 
 # From template files
 NUM_ATOMS = 'num_atoms'
@@ -1366,6 +1369,9 @@ def process_gausscom_file(gausscom_file):
                     lines_after_header -= 1
                     if lines_after_header == 0:
                         section = SEC_ATOMS
+                        split_line = line.split()
+                        gausscom_content[CHARGE] = int(split_line[0])
+                        gausscom_content[MULT] = int(split_line[1])
                     continue
 
             elif section == SEC_ATOMS:

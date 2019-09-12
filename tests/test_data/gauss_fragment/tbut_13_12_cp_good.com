@@ -2,7 +2,7 @@
 
 cp calculation from fragment pair [13, 12] and tests/test_data/gauss_fragment/tbut.com
 
-0 1   0 2    0 2
+0 1   0 2   0 2
 C(Fragment=2)       8.817788   10.934479    3.720782
 C(Fragment=2)       6.865348   10.920899    8.146709
 C(Fragment=2)       8.809950   10.588761    5.176411

@@ -34,8 +34,6 @@ SEC_HEAD = 'head_section'
 SEC_ATOMS = 'atoms_section'
 SEC_TAIL = 'tail_section'
 COM_TYPE = 'com_type'
-CHARGE = 'charge'
-MULTIPLICITY = 'multiplicity'
 
 
 def str2bool(v):

@@ -15,7 +15,7 @@ import numpy as np
 # from goodvibes import GoodVibes
 from nrel_tools.common import (InvalidDataError, warning, RG, KB, H, EHPART_TO_KCAL_MOL,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                               write_csv, silent_remove, create_out_fname, make_fig)
+                               write_csv, silent_remove, create_out_fname, make_fig, CHARGE, MULT)
 
 try:
     # noinspection PyCompatibility
@@ -40,8 +40,6 @@ FUNCTIONAL = 'Functional'
 BASIS_SET = 'Basis Set'
 STOICH = 'Stoichiometry'
 SOLV = 'Solvent type'
-CHARGE = 'Charge'
-MULT = 'Mult'
 FREQ1 = 'Freq 1'
 FREQ2 = 'Freq 2'
 AWK_GRAB_GAUSS_VER = ['awk', '/\*\*\*/{getline; print; exit}']

@@ -11,7 +11,7 @@ import numpy as np
 from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                ATOM_TYPE, ATOM_COORDS, process_gausscom_file,
-                               )
+                               CHARGE, MULT)
 
 try:
     # noinspection PyCompatibility
@@ -293,7 +293,7 @@ def add_atoms_to_fragment(atom_numbers, atoms_content, atoms_to_check, frag_list
 
 
 def write_com_file(com_file_name, gauss_command, gauss_end, for_comment_line, atoms_content, broke_double_bond,
-                   broke_triple_bond, ignore_max_dist, frag_num=None, frag_list=None):
+                   broke_triple_bond, ignore_max_dist, charge, mult, frag_num=None, frag_list=None):
     """
     After figuring out the fragments, make Gaussian input files to calculate the counterpoint correction (if a non-zero
     list is passed to "frag_list". Otherwise, make a Gaussian input file to optimize any fragments with len > 1.
@@ -309,36 +309,33 @@ def write_com_file(com_file_name, gauss_command, gauss_end, for_comment_line, at
     :param frag_list: optional list that will be used to make a Gaussian input file with only the atoms in that fragment
     :return: nothing
     """
-    # Don't bother making a separate file if just one atom; there would be lots of repeat calculations that way
+    main_charge = str(charge) + ' ' + str(mult)
+    if broke_double_bond:
+        frag_charge = str(charge) + ' ' + str(mult + 2)
+    elif broke_triple_bond:
+        frag_charge = str(charge) + ' ' + str(mult + 3)
+    elif ignore_max_dist:
+        frag_charge = str(charge) + ' ' + str(mult)
+    else:
+        frag_charge = str(charge) + ' ' + str(mult + 1)
     if frag_list is None:
         frag_list = []
     if frag_num:
+        # Don't bother making a separate file if just a few atoms; it would re
         if len(frag_list) < 7:
             element_list = []
             for atom_num in frag_list:
                 element_list.append(atoms_content[atom_num][ATOM_TYPE])
             print("Fragment {} is only {}".format(os.path.basename(com_file_name), element_list))
             return
-        comment_begin = 'radical calculation of fragment {} '.format(frag_num)
-        if broke_double_bond:
-            charge_mult = '0 3'
-        elif broke_triple_bond:
-            charge_mult = '0 4'
-        elif ignore_max_dist:
-            charge_mult = '0 1'
+        charge_mult = frag_charge
+        if ignore_max_dist:
             comment_begin = 'optimization of fragment {} '.format(frag_num)
         else:
-            charge_mult = '0 2'
+            comment_begin = 'radical calculation of fragment {} '.format(frag_num)
     else:
         comment_begin = 'cp calculation '
-        if broke_double_bond:
-            charge_mult = '0 1   0 3    0 3'
-        elif broke_triple_bond:
-            charge_mult = '0 1   0 4    0 4'
-        elif ignore_max_dist:
-            charge_mult = '0 1   0 1    0 1'
-        else:
-            charge_mult = '0 1   0 2    0 2'
+        charge_mult = main_charge + '   ' + frag_charge + '   ' + frag_charge
         frag_list = range(1, len(atoms_content)+1)
     print_list = [[gauss_command], [], [comment_begin + for_comment_line], [], [charge_mult]]
     for atom_num in frag_list:
@@ -359,20 +356,20 @@ def write_com_file(com_file_name, gauss_command, gauss_end, for_comment_line, at
 
 
 def print_com_files(atom_pair, atoms_content, gausscom_file, cfg, frag1, frag2, broke_double_bond, broke_triple_bond,
-                    ignore_max_dist):
+                    ignore_max_dist, charge, mult):
     for_comment_line = 'from fragment pair {} and {}'.format(atom_pair, gausscom_file)
     # First print template for CP calc (the coordinates should later be replaced by further optimized coordinates,
     # if desired)
     cp_file_name = create_out_fname(gausscom_file, suffix='_{}_{}_cp'.format(*atom_pair),
                                     ext='.com', base_dir=cfg[OUT_BASE_DIR])
     write_com_file(cp_file_name, cfg[GAUSS_CP_COMMAND], '', for_comment_line, atoms_content, broke_double_bond,
-                   broke_triple_bond, ignore_max_dist)
+                   broke_triple_bond, ignore_max_dist, charge, mult)
     frag1_file_name = create_out_fname(gausscom_file, suffix='_{}_{}_f1'.format(*atom_pair), base_dir=cfg[OUT_BASE_DIR])
     write_com_file(frag1_file_name, cfg[GAUSS_COMMAND], cfg[GAUSS_END], for_comment_line, atoms_content,
-                   broke_double_bond, broke_triple_bond, ignore_max_dist, 1, frag1)
+                   broke_double_bond, broke_triple_bond, ignore_max_dist, charge, mult, 1, frag1)
     frag2_file_name = create_out_fname(gausscom_file, suffix='_{}_{}_f2'.format(*atom_pair), base_dir=cfg[OUT_BASE_DIR])
     write_com_file(frag2_file_name, cfg[GAUSS_COMMAND], cfg[GAUSS_END], for_comment_line, atoms_content,
-                   broke_double_bond, broke_triple_bond, ignore_max_dist, 2, frag2)
+                   broke_double_bond, broke_triple_bond, ignore_max_dist, charge, mult, 2, frag2)
 
 
 def main(argv=None):
@@ -404,7 +401,7 @@ def main(argv=None):
             frag1, frag2, broke_double_bond, broke_triple_bond = fragment_molecule(atom_pair, atom_data,
                                                                                    cfg[IGNORE_MAX_DIST])
             print_com_files(atom_pair, atom_data, gauss_file, cfg, frag1, frag2, broke_double_bond, broke_triple_bond,
-                            cfg[IGNORE_MAX_DIST])
+                            cfg[IGNORE_MAX_DIST], gausscom_content[CHARGE], gausscom_content[MULT])
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR
