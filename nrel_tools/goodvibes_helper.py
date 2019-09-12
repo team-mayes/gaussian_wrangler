@@ -240,14 +240,15 @@ def check_gausslog_fileset(file_set, hartree_loc, good_vibes_check):
 
     if len(ts_stoich_dict) > 0:
         if react_stoich_dict != ts_stoich_dict:
-            raise InvalidDataError("Check stoichiometries of reactant(s) and transition state for "
-                                   "set: {}".format(file_set))
+            raise InvalidDataError("Check stoichiometries of reactant(s) and transition state for set: {}\n "
+                                   "reactants: {}, products: {}".format(file_set, react_stoich_dict, ts_stoich_dict))
         if total_react_charge != ts_charge:
             raise InvalidDataError("Check charge of reactant(s) and transition state for "
                                    "set: {}".format(file_set))
     if len(prod_stoich_dict) > 0:
         if react_stoich_dict != prod_stoich_dict:
-            raise InvalidDataError("Check stoichiometries of reactant(s) and product(s) for set: {}".format(file_set))
+            raise InvalidDataError("Check stoichiometries of reactant(s) and product(s) for set: {}\n "
+                                   "reactants: {}, products: {}".format(file_set, react_stoich_dict, prod_stoich_dict))
         if total_react_charge != total_product_charge:
             raise InvalidDataError("Check charge of reactant(s) and product(s) for set: {}".format(file_set))
 
@@ -506,7 +507,7 @@ def main(argv=None):
                 if not os.path.isfile(file) and file != REACT_PROD_SEP:
                     missing_files.append(file)
         if len(missing_files) > 0:
-            raise IOError(missing_files)
+            raise IOError(set(missing_files))
 
         # only used for plotting; made empty to make IDE happy
         g_ts_list, g_rxn_list, qh_g_ts_list, qh_g_rxn_list = [], [], [], []
