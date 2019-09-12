@@ -12,7 +12,7 @@ import numpy as np
 # from goodvibes import GoodVibes
 from nrel_tools.common import (InvalidDataError, warning,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                               create_out_fname, make_fig, EHPART_TO_KCAL_MOL)
+                               create_out_fname, make_fig, EHPART_TO_KCAL_MOL, DEF_FIG_HEIGHT, DEF_FIG_WIDTH)
 
 try:
     # noinspection PyCompatibility
@@ -49,6 +49,10 @@ def parse_cmdline(argv):
     parser.add_argument("-o", "--output_fname", help="The name of the output file to be created. The default is the "
                                                      "same base name as the list, with the '.png' extension.",
                         default=None)
+    parser.add_argument("-h", "--height", help="Figure height in inches. The default is {} in.".format(DEF_FIG_HEIGHT),
+                        default=None)
+    parser.add_argument("-w", "--width", help="Figure width in inches. The default is {} in.".format(DEF_FIG_WIDTH),
+                        default=None)
 
     args = None
     try:
@@ -71,13 +75,15 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def plot_delta_g(fname, g_temp, data_list, convert_flag):
+def plot_delta_g(fname, g_temp, data_list, convert_flag, fig_width, fig_height):
     """
     Makes a plot of delta G at the specified temp
     :param fname: string, to save plot
     :param g_temp: float, temp at which delta Gs were calculated
     :param data_list: list of data, starting with the label
     :param convert_flag: Boolean on whether to convert from a.u. to kcal/mol
+    :param fig_width: None or string; if none use default, otherwise make is a float
+    :param fig_height: None or string; if none use default, otherwise make is a float
     :return: nothing, just save
     """
     max_y_lines = 5
@@ -103,11 +109,22 @@ def plot_delta_g(fname, g_temp, data_list, convert_flag):
             y_labels.append(None)
             y_axis.append(None)
 
+    if fig_width:
+        fig_width = float(fig_width)
+    else:
+        fig_width = DEF_FIG_WIDTH
+
+    if fig_height:
+        fig_height = float(fig_height)
+    else:
+        fig_height = DEF_FIG_HEIGHT
+
     make_fig(fname, x_axis, y_axis[0],
              x_label='reaction coordinate', y_label='\u0394G at {} K (kcal/mol)'.format(g_temp),
              y1_label=y_labels[0], y2_label=y_labels[1], y3_label=y_labels[2], y4_label=y_labels[3],
              y5_label=y_labels[4], y2_array=y_axis[1], y3_array=y_axis[2], y4_array=y_axis[3], y5_array=y_axis[4],
              ls2='-', ls3='-', ls4='-', ls5='-',
+             fig_width=fig_width, fig_height=fig_height,
              # y_lima=y_min, y_limb=y_max,
              hide_x=True,
              )
@@ -129,7 +146,7 @@ def main(argv=None):
             plot_fname = create_out_fname(args.output_fname, ext='.png')
         else:
             plot_fname = create_out_fname(args.list, base_dir=args.out_dir, ext='.png')
-        plot_delta_g(plot_fname, args.temp, row_list, args.conv)
+        plot_delta_g(plot_fname, args.temp, row_list, args.conv, args.width, args.height)
 
     except IOError as e:
         warning("Problems reading file:", e)
