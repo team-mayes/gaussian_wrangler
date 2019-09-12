@@ -1,7 +1,7 @@
 import unittest
 import os
 from nrel_tools.plot_delta_g import main
-from nrel_tools.common import diff_lines, silent_remove, capture_stdout, capture_stderr
+from nrel_tools.common import capture_stdout, capture_stderr, silent_remove
 import logging
 
 # logging.basicConfig(level=logging.DEBUG)
@@ -51,7 +51,15 @@ class TestPlotDeltaG(unittest.TestCase):
         try:
             main(test_input)
             self.assertTrue(os.path.exists(FIVE_VALS_PLOT))
-            # self.assertFalse(diff_lines(AE_OUT, GOOD_AE_OUT))
+        finally:
+            silent_remove(FIVE_VALS_PLOT, disable=DISABLE_REMOVE)
+            pass
+
+    def testChangePlotDimensions(self):
+        test_input = ["-l", FIVE_VALS_LIST, "-d", SUB_DATA_DIR, "-t", "460", "-c", "-fh", "5", "-fw", "12"]
+        try:
+            main(test_input)
+            self.assertTrue(os.path.exists(FIVE_VALS_PLOT))
         finally:
             silent_remove(FIVE_VALS_PLOT, disable=DISABLE_REMOVE)
             pass

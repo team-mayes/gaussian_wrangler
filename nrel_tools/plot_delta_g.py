@@ -49,10 +49,10 @@ def parse_cmdline(argv):
     parser.add_argument("-o", "--output_fname", help="The name of the output file to be created. The default is the "
                                                      "same base name as the list, with the '.png' extension.",
                         default=None)
-    parser.add_argument("-h", "--height", help="Figure height in inches. The default is {} in.".format(DEF_FIG_HEIGHT),
-                        default=None)
-    parser.add_argument("-w", "--width", help="Figure width in inches. The default is {} in.".format(DEF_FIG_WIDTH),
-                        default=None)
+    parser.add_argument("-fh", "--fig_height", help="Figure height in inches. "
+                                                    "The default is {} in.".format(DEF_FIG_HEIGHT), default=None)
+    parser.add_argument("-fw", "--fig_width", help="Figure width in inches. "
+                                                   "The default is {} in.".format(DEF_FIG_WIDTH), default=None)
 
     args = None
     try:
@@ -146,7 +146,7 @@ def main(argv=None):
             plot_fname = create_out_fname(args.output_fname, ext='.png')
         else:
             plot_fname = create_out_fname(args.list, base_dir=args.out_dir, ext='.png')
-        plot_delta_g(plot_fname, args.temp, row_list, args.conv, args.width, args.height)
+        plot_delta_g(plot_fname, args.temp, row_list, args.conv, args.fig_width, args.fig_height)
 
     except IOError as e:
         warning("Problems reading file:", e)
