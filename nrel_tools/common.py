@@ -1423,7 +1423,7 @@ def save_figure(name, save_fig=True):
     :return: n/a
     """
     if save_fig:
-        plt.savefig(name, bbox_inches='tight')
+        plt.savefig(name, bbox_inches='tight', transparent=True)
 
 
 def make_fig(name, x_array, y1_array, y1_label="", ls1="-", color1="blue",

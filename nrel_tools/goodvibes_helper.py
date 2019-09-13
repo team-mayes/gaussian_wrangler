@@ -290,7 +290,7 @@ def parse_stoich(stoich_string, add_to_dict=None):
     return stoich_dict
 
 
-def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_output_fname, qs_h_s):
+def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_output_fname, qh_h_opt):
     """
     Calls GoodVibes to get thermochem at a range of temps
     :param file_set: list of reactant file(s), TS file (or separator), and optionally products
@@ -299,25 +299,31 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
     :param save_vibes: boolean to determine whether to save each GoodVibes output separately
     :param out_dir: directory to save GoodVibes output files (if requested)
     :param tog_output_fname: None or string (file name) if saving each GoodVibes output together
-    :param qs_h_s: boolean to use the '-q' option in GoodVibes (corrections to both entropy and enthalpy)
+    :param qh_h_opt: boolean to use the '-q' option in GoodVibes (corrections to both entropy and enthalpy)
     :return: nothing
     """
+    h = []
+    qh_h = []
     gt = []
     qh_gt = []
     temps = []
     for index, file in enumerate(file_set):
         if file == REACT_PROD_SEP:
+            h.append(np.full([len(temps)], np.nan))
+            qh_h.append(np.full([len(temps)], np.nan))
             gt.append(np.full([len(temps)], np.nan))
             qh_gt.append(np.full([len(temps)], np.nan))
             continue
         vibes_input = ["python", "-m", "goodvibes", file, "--ti", temp_range]
         if solvent:
             vibes_input += ["-c", "1"]
-        if qs_h_s:
+        if qh_h_opt:
             vibes_input += ["-q"]
         vibes_out = subprocess.check_output(vibes_input).decode("utf-8").strip().split("\n")
         found_structure = False
         skip_line = True
+        h.append([])
+        qh_h.append([])
         gt.append([])
         qh_gt.append([])
         # we know the last line should be dropped, and at least the first 10
@@ -335,6 +341,9 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
                 vals = line.split()
                 if index == 0:
                     temps.append(float(vals[2]))
+                h[index].append(float(vals[3]))
+                if qh_h_opt:
+                    qh_h[index].append(float(vals[4]))
                 gt[index].append(float(vals[-2]))
                 qh_gt[index].append(float(vals[-1]))
         if save_vibes:
@@ -348,39 +357,42 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
     temps = np.asarray(temps)
     # for each molecule, multiply the array to convert to kcal/mol
     for index in range(len(gt)):
+        h[index] = np.asarray(h[index]) * EHPART_TO_KCAL_MOL
+        if qh_h_opt:
+            qh_h[index] = np.asarray(qh_h[index]) * EHPART_TO_KCAL_MOL
         gt[index] = np.asarray(gt[index]) * EHPART_TO_KCAL_MOL
         qh_gt[index] = np.asarray(qh_gt[index]) * EHPART_TO_KCAL_MOL
 
-    return temps, gt, qh_gt
+    return temps, h, qh_h, gt, qh_gt
 
 
-def get_delta_gibbs(temps, gt, ts_index):
+def get_deltas(temps, vals, ts_index):
     """
-    Calculate the difference in Gibbs free energy at each temperature in temps
+    Calculate the difference in values (e.g. Gibbs free energy) at each temperature in temps
     :param temps: np array of temperatures (in K) to be evaluated
-    :param gt: list of np arrays with quasi-harmonic treatment of G(T) for each output file at each temp
+    :param vals: list of np arrays with quasi-harmonic treatment of G(T) for each output file at each temp
     :param ts_index: int, index of array with values for ts
-    :return: delta_gibbs_ts, delta_gibbs_rxn: np arrays of delta_gibbs
+    :return: delta_ts, delta_rxn: np arrays of delta_gibbs
     """
     nan_array = np.full([len(temps)], np.nan)
-    gibbs_react = nan_array
-    gibbs_ts = nan_array
-    gibbs_prod = nan_array
+    vals_react = nan_array
+    vals_ts = nan_array
+    vals_prod = nan_array
     # any files before the ts will be a reactant file
-    for index in range(len(gt)):
+    for index in range(len(vals)):
         if index == 0:
-            gibbs_react = gt[index]
+            vals_react = vals[index]
         elif index < ts_index:
-            gibbs_react += gt[index]
+            vals_react += vals[index]
         elif index == ts_index:
-            gibbs_ts = gt[index]
+            vals_ts = vals[index]
         elif index == ts_index + 1:
-            gibbs_prod = gt[index]
+            vals_prod = vals[index]
         else:
-            gibbs_prod += gt[index]
-    delta_gibbs_ts = gibbs_ts - gibbs_react
-    delta_gibbs_rxn = gibbs_prod - gibbs_react
-    return delta_gibbs_ts, delta_gibbs_rxn
+            vals_prod += vals[index]
+    delta_ts = vals_ts - vals_react
+    delta_rxn = vals_prod - vals_react
+    return delta_ts, delta_rxn
 
 
 def get_kt(temps, delta_gibbs_ts):
@@ -426,13 +438,13 @@ def print_results(a, ea, qh_a, qh_ea, g_temp, g_ts, g_rxn, qh_g_ts, qh_g_rxn, fi
               print_message=False)
 
 
-def get_delta_g(temp, temps, delta_g_ts, delta_g_rxn):
+def get_delta_at_temp(temp, temps, delta_ts, delta_rxn):
     """
-    Grab delta G's at given temp
-    :param temp: float, temp in K to calculate delta G
+    Grab delta's of given lists at given temp
+    :param temp: float, temp in K to calculate delta values
     :param temps: list of floats, temps for which we have G values
-    :param  delta_g_ts: np_array, delta Gibbs free energies between react(s) and TS (kcal/mol) at temps
-    :param delta_g_rxn: np_array, delta Gibbs free energies between react(s) and prod(s) (kcal/mol) at temps
+    :param  delta_ts: np_array, delta Gibbs free energies between react(s) and TS (kcal/mol) at temps
+    :param delta_rxn: np_array, delta Gibbs free energies between react(s) and prod(s) (kcal/mol) at temps
     :return: delta_g_ts, delta_g_rxn at requested temp (default to first temp)
     """
     if temp:
@@ -440,17 +452,18 @@ def get_delta_g(temp, temps, delta_g_ts, delta_g_rxn):
     else:
         temp_index = 0
 
-    return temps[temp_index], delta_g_ts[temp_index], delta_g_rxn[temp_index]
+    return temps[temp_index], delta_ts[temp_index], delta_rxn[temp_index]
 
 
-def plot_delta_g(fname, g_temp, g_ts_list, g_rxn_list, labels):
+def plot_delta(fname, temp, delta_ts_list, delta_rxn_list, labels, var='G'):
     """
     Makes a plot of delta G at the specified temp
     :param fname: string, to save plot
-    :param g_temp: float, temp at which delta Gs were calculated
-    :param g_ts_list: list of floats
-    :param g_rxn_list: list of floats
+    :param temp: float, temp at which delta Gs were calculated
+    :param delta_ts_list: list of floats
+    :param delta_rxn_list: list of floats
     :param labels: list of strings
+    :param var: string, which Delta variable is being plotted
     :return: nothing, just save
     """
     max_y_lines = 5
@@ -461,8 +474,8 @@ def plot_delta_g(fname, g_temp, g_ts_list, g_rxn_list, labels):
     # y_max = np.ceil(np.array(g_ts_list).max())
     for index in range(max_y_lines):
         try:
-            y_axis.append(np.array([0.0, 0.0, g_ts_list[index], g_ts_list[index],
-                                    g_rxn_list[index], g_rxn_list[index]]))
+            y_axis.append(np.array([0.0, 0.0, delta_ts_list[index], delta_ts_list[index],
+                                    delta_rxn_list[index], delta_rxn_list[index]]))
         except IndexError:
             y_axis.append(None)
         try:
@@ -471,7 +484,7 @@ def plot_delta_g(fname, g_temp, g_ts_list, g_rxn_list, labels):
             y_labels.append(None)
 
     make_fig(fname, x_axis, y_axis[0],
-             x_label='reaction coordinate', y_label='\u0394G at {} K (kcal/mol)'.format(g_temp),
+             x_label='reaction coordinate', y_label='\u0394' + var + ' at {} K (kcal/mol)'.format(temp),
              y1_label=y_labels[0], y2_label=y_labels[1], y3_label=y_labels[2], y4_label=y_labels[3],
              y5_label=y_labels[4], y2_array=y_axis[1], y3_array=y_axis[2], y4_array=y_axis[3], y5_array=y_axis[4],
              ls2='-', ls3='-', ls4='-', ls5='-',
@@ -512,6 +525,8 @@ def main(argv=None):
         # only used for plotting; made empty to make IDE happy
         g_ts_list, g_rxn_list, qh_g_ts_list, qh_g_rxn_list = [], [], [], []
         g_temp = None
+        h_ts_list, h_rxn_list, qh_h_ts_list, qh_h_rxn_list = [], [], [], []
+        qh_delta_h_ts, qh_delta_h_rxn, qh_h_ts, qh_h_rxn = 0, 0, 0, 0
         # now the calculations and printing
         print_mode = 'w'  # for the AEa output, so only prints header once, and then appends to file
         if args[0].tog_vibes:
@@ -522,10 +537,13 @@ def main(argv=None):
             tog_fname = None
         for file_set in row_list:
             solvent, ts_index = check_gausslog_fileset(file_set, args[0].hartree_location, args[0].vibes_check)
-            temps, gt, qh_gt = get_thermochem(file_set, args[0].temp_range, solvent, args[0].save_vibes,
-                                              args[0].out_dir, tog_fname, args[0].quasiharmonic)
-            delta_gibbs_ts, delta_gibbs_rxn = get_delta_gibbs(temps, gt, ts_index)
-            qh_delta_gibbs_ts, qh_delta_gibbs_rxn = get_delta_gibbs(temps, qh_gt, ts_index)
+            temps, h, qh_h, gt, qh_gt = get_thermochem(file_set, args[0].temp_range, solvent, args[0].save_vibes,
+                                                       args[0].out_dir, tog_fname, args[0].quasiharmonic)
+            delta_h_ts, delta_h_rxn = get_deltas(temps, h, ts_index)
+            if args[0].quasiharmonic:
+                qh_delta_h_ts, qh_delta_h_rxn = get_deltas(temps, qh_h, ts_index)
+            delta_gibbs_ts, delta_gibbs_rxn = get_deltas(temps, gt, ts_index)
+            qh_delta_gibbs_ts, qh_delta_gibbs_rxn = get_deltas(temps, qh_gt, ts_index)
             if REACT_PROD_SEP in file_set:
                 a, ea, qh_a, qh_ea = '', '', '', ''
             else:
@@ -533,8 +551,11 @@ def main(argv=None):
                 qh_kt = get_kt(temps, qh_delta_gibbs_ts)
                 a, ea = fit_arrhenius(temps, kt)
                 qh_a, qh_ea = fit_arrhenius(temps, qh_kt)
-            g_temp, g_ts, g_rxn = get_delta_g(args[0].temp, temps, delta_gibbs_ts, delta_gibbs_rxn)
-            g_temp, qh_g_ts, qh_g_rxn = get_delta_g(args[0].temp, temps, qh_delta_gibbs_ts, qh_delta_gibbs_rxn)
+            g_temp, g_ts, g_rxn = get_delta_at_temp(args[0].temp, temps, delta_gibbs_ts, delta_gibbs_rxn)
+            g_temp, qh_g_ts, qh_g_rxn = get_delta_at_temp(args[0].temp, temps, qh_delta_gibbs_ts, qh_delta_gibbs_rxn)
+            g_temp, h_ts, h_rxn = get_delta_at_temp(args[0].temp, temps, delta_h_ts, delta_h_rxn)
+            if args[0].quasiharmonic:
+                g_temp, qh_h_ts, qh_h_rxn = get_delta_at_temp(args[0].temp, temps, qh_delta_h_ts, qh_delta_h_rxn)
             print_results(a, ea, qh_a, qh_ea, g_temp, g_ts, g_rxn, qh_g_ts, qh_g_rxn,
                           file_set, args[0].output_fname, print_mode)
             print_mode = 'a'
@@ -543,12 +564,22 @@ def main(argv=None):
                 g_rxn_list.append(g_rxn)
                 qh_g_ts_list.append(qh_g_ts)
                 qh_g_rxn_list.append(qh_g_rxn)
+                h_ts_list.append(h_ts)
+                h_rxn_list.append(h_rxn)
+                if args[0].quasiharmonic:
+                    qh_h_ts_list.append(qh_h_ts)
+                    qh_h_rxn_list.append(qh_h_rxn)
 
         if args[0].plot:
-            g_fname = create_out_fname(args[0].output_fname, ext='.png')
-            plot_delta_g(g_fname, g_temp, g_ts_list, g_rxn_list, args[0].plot_labels)
-            qh_g_fname = create_out_fname(args[0].output_fname, suffix='_qh', ext='.png')
-            plot_delta_g(qh_g_fname, g_temp, qh_g_ts_list, qh_g_rxn_list, args[0].plot_labels)
+            g_fname = create_out_fname(args[0].output_fname, suffix='_g', ext='.png')
+            plot_delta(g_fname, g_temp, g_ts_list, g_rxn_list, args[0].plot_labels)
+            qh_g_fname = create_out_fname(args[0].output_fname, suffix='_g_qh', ext='.png')
+            plot_delta(qh_g_fname, g_temp, qh_g_ts_list, qh_g_rxn_list, args[0].plot_labels)
+            h_fname = create_out_fname(args[0].output_fname, suffix='_h', ext='.png')
+            plot_delta(h_fname, g_temp, h_ts_list, h_rxn_list, args[0].plot_labels, var='H')
+            if args[0].quasiharmonic:
+                qh_h_fname = create_out_fname(args[0].output_fname, suffix='_h_qh', ext='.png')
+                plot_delta(qh_h_fname, g_temp, qh_h_ts_list, qh_h_rxn_list, args[0].plot_labels, var='H')
         # clean up GoodVibes detritus
         silent_remove(GOODVIBES_OUT_FNAME)
 

@@ -55,7 +55,7 @@ def parse_cmdline(argv):
                                                     "The default is {} in.".format(DEF_FIG_HEIGHT), default=None)
     parser.add_argument("-fw", "--fig_width", help="Figure width in inches. "
                                                    "The default is {} in.".format(DEF_FIG_WIDTH), default=None)
-    parser.add_argument("-y", "--y_axis_label", help="Text for the y-axis label. The default is: {}\n"
+    parser.add_argument("-y", "--y_axis_label", help="Text for the y-axis label. The default is: {}.\n"
                                                      "Be sure to include braces ({{}}) for the temperature to be "
                                                      "filled in.".format(DEF_Y_LABEL.format("(input 'temp')")),
                         default=None)
@@ -90,6 +90,7 @@ def plot_delta_g(fname, g_temp, data_list, convert_flag, fig_width, fig_height, 
     :param convert_flag: Boolean on whether to convert from a.u. to kcal/mol
     :param fig_width: None or string; if none use default, otherwise make is a float
     :param fig_height: None or string; if none use default, otherwise make is a float
+    :param y_label: None or string; if none use default
     :return: nothing, just save
     """
     max_y_lines = 5

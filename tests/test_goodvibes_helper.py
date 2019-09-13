@@ -48,8 +48,10 @@ PROD_NO_TS_LIST = os.path.join(SUB_DATA_DIR, 'list_prod_no_ts.txt')
 GOOD_PROD_NO_TS_OUT = os.path.join(SUB_DATA_DIR, 'aea_prod_no_ts_good.csv')
 
 PLOT_LIST = os.path.join(SUB_DATA_DIR, 'list_plot.txt')
-PLOT1 = os.path.join(SUB_DATA_DIR, 'aea_out.png')
-PLOT2 = os.path.join(SUB_DATA_DIR, 'aea_out_qh.png')
+PLOT1 = os.path.join(SUB_DATA_DIR, 'aea_out_g.png')
+PLOT2 = os.path.join(SUB_DATA_DIR, 'aea_out_g_qh.png')
+PLOT3 = os.path.join(SUB_DATA_DIR, 'aea_out_h.png')
+PLOT4 = os.path.join(SUB_DATA_DIR, 'aea_out_h_qh.png')
 
 
 class TestAEaGoodVibesNoOut(unittest.TestCase):
@@ -205,17 +207,18 @@ class TestAEaGoodVibes(unittest.TestCase):
     def testPlot(self):
         # check handles it when not all atoms in are in all molecules
         # also checks saving GoodVibes output together
-        silent_remove(PLOT1)
-        silent_remove(PLOT2)
+        plot_list = [PLOT1, PLOT2, PLOT3, PLOT4]
+        for fname in plot_list:
+            silent_remove(fname)
         test_input = ["-l", PLOT_LIST, "-d", SUB_DATA_DIR, "-p", "-pl", "pdc2,ipa",
-                      "-ti", "400,500,25", "--temp", "500"]
+                      "-ti", "400,500,25", "--temp", "500", "-q"]
         try:
             main(test_input)
-            self.assertTrue(os.path.exists(PLOT1))
-            self.assertTrue(os.path.exists(PLOT2))
+            for fname in plot_list:
+                self.assertTrue(os.path.exists(fname))
         finally:
             silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
             silent_remove(AE_OUT, disable=DISABLE_REMOVE)
-            silent_remove(PLOT1, disable=DISABLE_REMOVE)
-            silent_remove(PLOT2, disable=DISABLE_REMOVE)
+            for fname in plot_list:
+                silent_remove(fname)
             pass

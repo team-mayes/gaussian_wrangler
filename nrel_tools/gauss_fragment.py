@@ -29,7 +29,7 @@ __author__ = 'hmayes'
 MAIN_SEC = 'main'
 
 # Config keys
-GAUSSCOM_FILE = 'input_com_or_pdb_file'
+GAUSSCOM_FILE = 'input_com_file'
 OUT_BASE_DIR = 'output_directory'
 CUT_ATOMS = 'cut_atoms'
 GAUSS_COMMAND = 'gaussian_options_line'
@@ -64,7 +64,7 @@ SEC_TAIL = 'tail_section'
 FRAGMENT = 'fragment'
 MAX_BOND_DIST = 1.9  # same length units as in input and output file, here Angstroms
 MAX_H_BOND_DIST = 1.5  # same length units as in input and output file, here Angstroms
-MAX_M_BOND_DIST = 2.2  # same length units as in input and output file, here Angstroms
+MAX_M_BOND_DIST = 2.3  # same length units as in input and output file, here Angstroms
 METALS = ['Ti', 'Sb', 'Ge']
 
 
@@ -305,6 +305,8 @@ def write_com_file(com_file_name, gauss_command, gauss_end, for_comment_line, at
     :param broke_double_bond: flag to change multiplicity
     :param broke_triple_bond: flag to change multiplicity
     :param ignore_max_dist: flag if not making radicals
+    :param charge: int read from com file
+    :param mult: int read from com file
     :param frag_num: optional integer that will be used to name the file
     :param frag_list: optional list that will be used to make a Gaussian input file with only the atoms in that fragment
     :return: nothing
@@ -388,12 +390,9 @@ def main(argv=None):
         if ext == '.com':
             gausscom_content = process_gausscom_file(gauss_file)
             atom_data = gausscom_content[SEC_ATOMS]
-        elif ext == '.pdb':
-            pdb_content = process_gausscom_file(gauss_file)
-            atom_data = pdb_content[SEC_ATOMS]
         else:
-            raise InvalidDataError("This program expects to read a Gaussian input file with extension '.com' or a "
-                                   "pdb file with extension '.pdb', but input file is {}".format(gauss_file))
+            raise InvalidDataError("This program expects to read a Gaussian input file with extension '.com' "
+                                   "but input file is {}".format(gauss_file))
         # Before making files, check that atom numbers are valid
         for atom_pair in cfg[CUT_PAIR_LIST]:
             validate_atom_num(atom_pair, atom_data, gauss_file, cfg[IGNORE_MAX_DIST])
