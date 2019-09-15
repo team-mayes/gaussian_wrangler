@@ -29,6 +29,8 @@ OPT_LOG_OUT = os.path.join(PARENT_DIR, 'ethylrad_opt.log')
 OPT_SH_OUT = os.path.join(PARENT_DIR, 'ethylrad_opt.sh')
 GOOD_OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt.sh')
 
+SPAWN_INI = os.path.join(SUB_DATA_DIR, 'run_spawn.ini')
+
 
 class TestRunGaussBDENoOut(unittest.TestCase):
     # These all test failure cases
@@ -94,4 +96,14 @@ class TestRunGaussBDE(unittest.TestCase):
         finally:
             silent_remove(OPT_SH_OUT, disable=DISABLE_REMOVE)
             silent_remove(OPT_LOG_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testSpawn(self):
+        test_input = ["tests/test_data/run_gauss/ethylrad", "-c", SPAWN_INI]
+        try:
+            main(test_input)
+            # self.assertFalse(diff_lines(OPT_SH_OUT, GOOD_OPT_SH_OUT))
+        finally:
+            # silent_remove(OPT_SH_OUT, disable=DISABLE_REMOVE)
+            # silent_remove(OPT_LOG_OUT, disable=DISABLE_REMOVE)
             pass

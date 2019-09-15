@@ -134,6 +134,42 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
+def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg):
+    # Determine if it will run fresh or from an old checkpoint
+    if job == '':
+        new_job_name = tpl_dict[JOB_NAME]
+        tpl_dict[INPUT_FILE] = job_name_perhaps_with_dir + ".com"
+        if cfg[FIRST_JOB_CHK]:
+            tpl_dict[OLD_JOB_NAME] = cfg[FIRST_JOB_CHK]
+            tpl_file = cfg[REMAINING_JOB_SUBMIT_TPL]
+        else:
+            tpl_file = cfg[FIRST_SUBMIT_TPL]
+    else:
+        new_job_name = tpl_dict[JOB_NAME] + '_' + job
+        tpl_file = cfg[REMAINING_JOB_SUBMIT_TPL]
+        tpl_dict[OLD_JOB_NAME] = tpl_dict[JOB_NAME]
+        tpl_dict[INPUT_FILE] = cfg[TPL_DICT][job]
+    if not os.path.isfile(tpl_dict[INPUT_FILE]):
+        raise IOError(tpl_dict[INPUT_FILE])
+
+    filled_tpl_name = create_out_fname(new_job_name, ext=".sh", base_dir=cfg[OUT_DIR])
+    print("Running {}".format(new_job_name))
+
+    tpl_dict[JOB_NAME] = new_job_name
+    tpl_str = read_tpl(tpl_file)
+    fill_save_tpl(cfg, tpl_str, tpl_dict, tpl_file, filled_tpl_name)
+    subprocess.call(["chmod", "+x", filled_tpl_name])
+    p1 = subprocess.Popen(filled_tpl_name)
+    p1.wait()
+    out_file = tpl_dict[JOB_NAME] + ".log"
+    last_line = subprocess.check_output(["tail", "-1",  out_file]).strip().decode("utf-8")
+    if GAU_GOOD_PAT.match(last_line):
+        print("Successfully completed {}".format(out_file))
+        os.remove(filled_tpl_name)
+    else:
+        raise InvalidDataError('Job failed: {}'.format(out_file))
+
+
 def main(argv=None):
     # Read input
     args, ret = parse_cmdline(argv)
@@ -145,47 +181,25 @@ def main(argv=None):
     job_name = os.path.basename(args.job_name)
 
     if cfg[FOLLOW_JOBS_LIST]:
-        follow_threads = cfg[FOLLOW_JOBS_LIST].split(';').strip
+        follow_threads = [job_list.split(',') for job_list in cfg[FOLLOW_JOBS_LIST].split(';')]
+    else:
+        follow_threads = []
 
     # Read template and data files
     try:
         tpl_dict = {JOB_NAME: job_name}
 
-        # First job often has different options than later jobs
         for job in cfg[JOB_LIST]:
-            if job == '':
-                new_job_name = tpl_dict[JOB_NAME]
-                tpl_dict[INPUT_FILE] = job_name_perhaps_with_dir + ".com"
-                if cfg[FIRST_JOB_CHK]:
-                    tpl_dict[OLD_JOB_NAME] = cfg[FIRST_JOB_CHK]
-                    tpl_file = cfg[REMAINING_JOB_SUBMIT_TPL]
-                else:
-                    tpl_file = cfg[FIRST_SUBMIT_TPL]
-            else:
-                new_job_name = tpl_dict[JOB_NAME] + '_' + job
-                tpl_file = cfg[REMAINING_JOB_SUBMIT_TPL]
-                tpl_dict[OLD_JOB_NAME] = tpl_dict[JOB_NAME]
-                tpl_dict[INPUT_FILE] = cfg[TPL_DICT][job]
-            if not os.path.isfile(tpl_dict[INPUT_FILE]):
-                raise IOError(tpl_dict[INPUT_FILE])
+            run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg)
 
-            filled_tpl_name = create_out_fname(new_job_name, ext=".sh", base_dir=cfg[OUT_DIR])
-            print("Running {}".format(new_job_name))
+        if len(follow_threads) > 1:
+            for thread in follow_threads[1:]:
+                print("need to send job to slurm {}".format(thread))
+                # TODO: add spawn
 
-            tpl_dict[JOB_NAME] = new_job_name
-            tpl_str = read_tpl(tpl_file)
-            fill_save_tpl(cfg, tpl_str, tpl_dict, tpl_file, filled_tpl_name)
-            subprocess.call(["chmod", "+x", filled_tpl_name])
-            p1 = subprocess.Popen(filled_tpl_name)
-            p1.wait()
-            out_file = tpl_dict[JOB_NAME] + ".log"
-            last_line = subprocess.check_output(["tail", "-1",  out_file]).strip().decode("utf-8")
-            if GAU_GOOD_PAT.match(last_line):
-                print("Successfully completed {}".format(out_file))
-                # os.remove('infile_' + job_name)
-                os.remove(filled_tpl_name)
-            else:
-                return INVALID_DATA
+        if len(follow_threads) > 0:
+            for job in follow_threads[0]:
+                run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg)
 
     except IOError as e:
         warning("Problems reading file:", e)
