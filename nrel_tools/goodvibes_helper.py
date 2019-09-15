@@ -30,7 +30,7 @@ __author__ = 'hmayes'
 
 
 # Config keys
-DEF_HARTREE_LOC = '/Users/hmayes/.local/bin/hartree-cli-1.2.4.jar'
+DEF_HARTREE_LOC = '/Users/hmayes/.local/bin/hartree-cli-1.2.5.jar'
 DEF_OUT_FILE_NAME = 'aea_out.csv'
 
 # For data processing; standard hartree fieldnames below
@@ -95,8 +95,9 @@ def parse_cmdline(argv):
     parser.add_argument("-ti", "--temp_range", help="Initial temp, final temp, (and optionally) step size (K) for "
                                                     "thermochemistry calculations. The default range is 300,600,30",
                         default="300,600,30")
-    parser.add_argument("-o", "--output_fname", help="The name of the output file to be created. The default is {}"
-                                                     "".format(DEF_OUT_FILE_NAME), default=DEF_OUT_FILE_NAME)
+    parser.add_argument("-o", "--output_fname", help="The name of the output file to be created. The default is the "
+                                                     "list name with the extension '.csv', or '{}' if no list name "
+                                                     "provided.".format(DEF_OUT_FILE_NAME), default=None)
     parser.add_argument("-p", "--plot", help="Make a \u0394G plot at the specified temp. The default is False.",
                         action='store_true')
     parser.add_argument("-pl", "--plot_labels", help="Optional labels for \u0394G plot. Enter as a list.",
@@ -127,7 +128,14 @@ def parse_cmdline(argv):
         # user can define a new directory as the output directory
         if not os.path.exists(args[0].out_dir):
             os.makedirs(args[0].out_dir)
-        args[0].output_fname = os.path.abspath(os.path.join(args[0].out_dir, args[0].output_fname))
+
+        if args[0].output_fname:
+            args[0].output_fname = os.path.abspath(os.path.join(args[0].out_dir, args[0].output_fname))
+        elif args[0].list:
+            args[0].output_fname = create_out_fname(args[0].list, ext='.csv', base_dir=args[0].out_dir)
+        else:
+            args[0].output_fname = create_out_fname(DEF_OUT_FILE_NAME, ext='.csv', base_dir=args[0].out_dir)
+
         if args[0].plot_labels:
             args[0].plot_labels = args[0].plot_labels.split(',')
         else:
@@ -173,6 +181,20 @@ def check_gausslog_fileset(file_set, hartree_loc, good_vibes_check):
     ts_stoich_dict = {}  # empty dict to make IDE happy
     prod_stoich_dict = {}  # empty dict to make IDE happy
     reading_reactants = True
+
+    # first, run through Hartree
+    hartree_input = ["java", "-jar", hartree_loc, "snap"]
+    for index, fname in enumerate(file_set):
+        if fname == REACT_PROD_SEP:
+            continue
+        hartree_input += ["-f", fname]
+
+    # now start checks by getting info from hartree
+    hartree_output = subprocess.check_output(hartree_input).decode("utf-8").strip().split("\n")
+    hartree_list = list(csv.DictReader(hartree_output, quoting=csv.QUOTE_NONNUMERIC))
+
+    # index here instead of using loop index because a row might need to be skipped if "TS" is included
+    hartree_index = 0
     for index, fname in enumerate(file_set):
         if fname == REACT_PROD_SEP:
             ts_index = index
@@ -186,75 +208,76 @@ def check_gausslog_fileset(file_set, hartree_loc, good_vibes_check):
             continue
 
         # now start checks by getting info from hartree
-        hartree_output = subprocess.check_output(["java", "-jar", hartree_loc,
-                                                  "snap", "-f", fname]).decode("utf-8").strip().split("\n")
-        hartree_list = list(csv.DictReader(hartree_output, quoting=csv.QUOTE_NONNUMERIC))
-        for row in hartree_list:
-            # exclude any crazy two imaginary frequency files
-            if float(row[FREQ1]) < 0 and float(row[FREQ2]) < 0:
-                raise InvalidDataError("The first two frequencies are both imaginary in file: {}".format(fname))
-            # First see if it is the TS
-            if float(row[FREQ1]) < 0:
-                if not reading_reactants:
-                    raise InvalidDataError("Expected only one file with an imaginary frequency (or none if "
-                                           "reactant/product separator is used). Unexpectedly found an imaginary "
-                                           "frequency in file: {}".format(fname))
-                reading_reactants = False
-                ts_index = index
-                ts_charge = int(row[CHARGE])
-                ts_stoich_dict = parse_stoich(row[STOICH])
-            elif reading_reactants:
-                total_react_charge += int(row[CHARGE])
-                if len(react_stoich_dict) == 0:
-                    react_stoich_dict = parse_stoich(row[STOICH])
-                else:
-                    react_stoich_dict = parse_stoich(row[STOICH], add_to_dict=react_stoich_dict)
+        row = hartree_list[hartree_index]
+        # exclude any crazy two imaginary frequency files
+        if float(row[FREQ1]) < 0 and float(row[FREQ2]) < 0:
+            raise InvalidDataError("The first two frequencies are both imaginary in file: {}".format(fname))
+        # First see if it is the TS
+        if float(row[FREQ1]) < 0:
+            if not reading_reactants:
+                raise InvalidDataError("In set of filed, only one file with an imaginary frequency is expected (or "
+                                       "none if reactant/product separator is used). Unexpectedly found an imaginary "
+                                       "frequency in file: {}\n after already finding the TS to be: "
+                                       "{}".format(fname, file_set[ts_index]))
+            reading_reactants = False
+            ts_index = index
+            ts_charge = int(row[CHARGE])
+            ts_stoich_dict = parse_stoich(row[STOICH])
+        elif reading_reactants:
+            total_react_charge += int(row[CHARGE])
+            if len(react_stoich_dict) == 0:
+                react_stoich_dict = parse_stoich(row[STOICH])
             else:
-                total_product_charge += int(row[CHARGE])
-                if len(prod_stoich_dict) == 0:
-                    prod_stoich_dict = parse_stoich(row[STOICH])
-                else:
-                    prod_stoich_dict = parse_stoich(row[STOICH], add_to_dict=prod_stoich_dict)
-
-            # additional checks on all files as we go...
-            multiplicities[index] = int(row[MULT])
-            file_gauss_ver = subprocess.check_output(AWK_GRAB_GAUSS_VER + [fname]).strip().split()[:3]
-            if index == 0:
-                solvent = row[SOLV]
-                func = row[FUNCTIONAL]
-                basis = row[BASIS_SET]
-                gauss_ver = file_gauss_ver
+                react_stoich_dict = parse_stoich(row[STOICH], add_to_dict=react_stoich_dict)
+        else:
+            total_product_charge += int(row[CHARGE])
+            if len(prod_stoich_dict) == 0:
+                prod_stoich_dict = parse_stoich(row[STOICH])
             else:
-                if row[SOLV] != solvent:
-                    raise InvalidDataError("Different solvents ({}, {}) found for file set: "
-                                           "{}".format(solvent, row[SOLV], file_set))
-                if row[FUNCTIONAL] != func:
-                    raise InvalidDataError("Different functionals ({}, {}) found for file set: "
-                                           "{}".format(func, row[FUNCTIONAL], file_set))
-                if row[BASIS_SET] != basis:
-                    raise InvalidDataError("Different basis sets ({}, {}) found for file set: "
-                                           "{}".format(basis, row[BASIS_SET], file_set))
-                if gauss_ver != file_gauss_ver:
-                    raise InvalidDataError("Different Gaussian versions ({}, {}) found for file set: "
-                                           "{}".format(gauss_ver, file_gauss_ver, file_set))
+                prod_stoich_dict = parse_stoich(row[STOICH], add_to_dict=prod_stoich_dict)
 
+        # additional checks on all files as we go...
+        multiplicities[index] = int(row[MULT])
+        file_gauss_ver = subprocess.check_output(AWK_GRAB_GAUSS_VER + [fname]).strip().split()[:3]
+        if index == 0:
+            solvent = row[SOLV]
+            func = row[FUNCTIONAL]
+            basis = row[BASIS_SET]
+            gauss_ver = file_gauss_ver
+        else:
+            if row[SOLV] != solvent:
+                raise InvalidDataError("Different solvents ({}, {}) found for file set: "
+                                       "{}".format(solvent, row[SOLV], file_set))
+            if row[FUNCTIONAL] != func:
+                raise InvalidDataError("Different functionals ({}, {}) found for file set: "
+                                       "{}".format(func, row[FUNCTIONAL], file_set))
+            if row[BASIS_SET] != basis:
+                raise InvalidDataError("Different basis sets ({}, {}) found for file set: "
+                                       "{}".format(basis, row[BASIS_SET], file_set))
+            if gauss_ver != file_gauss_ver:
+                raise InvalidDataError("Different Gaussian versions ({}, {}) found for file set: "
+                                       "{}".format(gauss_ver, file_gauss_ver, file_set))
+        hartree_index += 1
+
+    # Now overall checks
     if len(ts_stoich_dict) > 0:
         if react_stoich_dict != ts_stoich_dict:
-            raise InvalidDataError("Check stoichiometries of reactant(s) and transition state for set: {}\n "
+            raise InvalidDataError("Check stoichiometries of reactant(s) and transition state for set: {}\n"
                                    "reactants: {}, products: {}".format(file_set, react_stoich_dict, ts_stoich_dict))
         if total_react_charge != ts_charge:
-            raise InvalidDataError("Check charge of reactant(s) and transition state for "
-                                   "set: {}".format(file_set))
+            raise InvalidDataError("Check charge of reactant(s) and transition state for set: {}\n"
+                                   "Found {} and {}, respectively".format(file_set, total_react_charge, ts_charge))
     if len(prod_stoich_dict) > 0:
         if react_stoich_dict != prod_stoich_dict:
-            raise InvalidDataError("Check stoichiometries of reactant(s) and product(s) for set: {}\n "
+            raise InvalidDataError("Check stoichiometries of reactant(s) and product(s) for set: {}\n"
                                    "reactants: {}, products: {}".format(file_set, react_stoich_dict, prod_stoich_dict))
         if total_react_charge != total_product_charge:
-            raise InvalidDataError("Check charge of reactant(s) and product(s) for set: {}".format(file_set))
+            raise InvalidDataError("Check charge of reactant(s) and product(s) for set: {}\nFound {} and {}, "
+                                   "respectively".format(file_set, total_react_charge, total_product_charge))
 
     mult_check = np.sum(multiplicities - multiplicities[0])
     if mult_check != 0:
-        raise InvalidDataError("Check multiplicities in set: {}".format(file_set))
+        raise InvalidDataError("Check multiplicities in set: {}\nFound: {}".format(file_set, multiplicities))
 
     if good_vibes_check:
         if solvent:
@@ -349,10 +372,13 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
         if save_vibes:
             vibes_out_fname = create_out_fname(file, suffix='_vibes', base_dir=out_dir, ext='.dat')
             os.rename(GOODVIBES_OUT_FNAME, vibes_out_fname)
+            print('Saved GoodVibes output as: {}'.format(vibes_out_fname))
         if tog_output_fname:
             with open(tog_output_fname, 'a') as f:
                 with open(GOODVIBES_OUT_FNAME) as infile:
                     f.write(infile.read())
+            if index == 0:
+                print("Added GoodVibes output to: {}".format(tog_output_fname))
 
     temps = np.asarray(temps)
     # for each molecule, multiply the array to convert to kcal/mol
@@ -423,7 +449,8 @@ def fit_arrhenius(temps, kt):
     return a, ea
 
 
-def print_results(a, ea, qh_a, qh_ea, g_temp, g_ts, g_rxn, qh_g_ts, qh_g_rxn, file_set, out_fname, print_mode):
+def print_results(a, ea, qh_a, qh_ea, g_temp, g_ts, g_rxn, qh_g_ts, qh_g_rxn, file_set, out_fname, print_mode,
+                  print_message=False):
     file_names = []
     for index in range(-5, 0):
         try:
@@ -435,7 +462,7 @@ def print_results(a, ea, qh_a, qh_ea, g_temp, g_ts, g_rxn, qh_g_ts, qh_g_rxn, fi
                    A: a, EA: ea, QH_A: qh_a, QH_EA: qh_ea, DELTA_G_TEMP: g_temp, DELTA_G_TS: g_ts,
                    DELTA_G_RXN: g_rxn, QH_DELTA_G_TS: qh_g_ts, QH_DELTA_G_RXN: qh_g_rxn}
     write_csv([output_dict], out_fname, OUTPUT_HEADERS, extrasaction="ignore", mode=print_mode,
-              print_message=False)
+              print_message=print_message)
 
 
 def get_delta_at_temp(temp, temps, delta_ts, delta_rxn):
@@ -529,6 +556,7 @@ def main(argv=None):
         qh_delta_h_ts, qh_delta_h_rxn, qh_h_ts, qh_h_rxn = 0, 0, 0, 0
         # now the calculations and printing
         print_mode = 'w'  # for the AEa output, so only prints header once, and then appends to file
+        print_message = True
         if args[0].tog_vibes:
             tog_fname = create_out_fname(args[0].output_fname, suffix='_vibes', ext='.dat')
             # delete if exits because program always appends to it
@@ -557,8 +585,9 @@ def main(argv=None):
             if args[0].quasiharmonic:
                 g_temp, qh_h_ts, qh_h_rxn = get_delta_at_temp(args[0].temp, temps, qh_delta_h_ts, qh_delta_h_rxn)
             print_results(a, ea, qh_a, qh_ea, g_temp, g_ts, g_rxn, qh_g_ts, qh_g_rxn,
-                          file_set, args[0].output_fname, print_mode)
+                          file_set, args[0].output_fname, print_mode, print_message=print_message)
             print_mode = 'a'
+            print_message = False
             if args[0].plot:
                 g_ts_list.append(g_ts)
                 g_rxn_list.append(g_rxn)

@@ -34,11 +34,14 @@ BI_VIBES_OUT2 = os.path.join(SUB_DATA_DIR, 'pdc2_h_vibes.dat')
 BI_VIBES_OUT3 = os.path.join(SUB_DATA_DIR, 'pdc2_eghtsct_vibes.dat')
 
 TI_LIST = os.path.join(SUB_DATA_DIR, 'list_ti.txt')
+TI_OUT = os.path.join(SUB_DATA_DIR, 'list_ti.csv')
 GOOD_AE_TI_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_ti_good.csv')
-TI_VIBES_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_vibes.dat')
+AEA_VIBES_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_vibes.dat')
 
 TPA_LIST = os.path.join(SUB_DATA_DIR, 'tpa_testing.txt')
-GOOD_AE_TPA_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_tpa_good.csv')
+TPA_OUT = os.path.join(SUB_DATA_DIR, 'tpa_testing.csv')
+TPA_VIBES_OUT = os.path.join(SUB_DATA_DIR, 'tpa_testing_vibes.dat')
+GOOD_TPA_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_tpa_good.csv')
 
 PROD_LIST = os.path.join(SUB_DATA_DIR, 'list_prod.txt')
 PROD_OUT = os.path.join(SUB_DATA_DIR, 'aea_prod.csv')
@@ -122,7 +125,7 @@ class TestAEaGoodVibesInputError(unittest.TestCase):
 class TestAEaGoodVibes(unittest.TestCase):
     # These test/demonstrate different options
     def testTwoUni(self):
-        test_input = ["-l", FILE_LIST, "-d", SUB_DATA_DIR, "-q"]
+        test_input = ["-l", FILE_LIST, "-d", SUB_DATA_DIR, "-q", "-o", AE_OUT]
         try:
             main(test_input)
             self.assertFalse(diff_lines(AE_OUT, GOOD_AE_OUT))
@@ -133,7 +136,7 @@ class TestAEaGoodVibes(unittest.TestCase):
 
     def testBiomol(self):
         # checks a bimolecular reaction and also saving GoodVibes output for each file
-        test_input = ["-l", BI_LIST, "-d", SUB_DATA_DIR, "-s"]
+        test_input = ["-l", BI_LIST, "-d", SUB_DATA_DIR, "-s", "-o", AE_OUT]
         # make sure files not left from a previous run
         for fname in [BI_VIBES_OUT1, BI_VIBES_OUT2, BI_VIBES_OUT3]:
             silent_remove(fname)
@@ -152,16 +155,16 @@ class TestAEaGoodVibes(unittest.TestCase):
     def testTi(self):
         # check handles it when not all atoms in are in all molecules
         # also checks saving GoodVibes output together
-        test_input = ["-l", TI_LIST, "-d", SUB_DATA_DIR, "-t"]
-        silent_remove(TI_VIBES_OUT)
+        test_input = ["-l", TI_LIST, "-d", SUB_DATA_DIR, "-t", "-o", AE_OUT]
+        silent_remove(AEA_VIBES_OUT)
         try:
             main(test_input)
             self.assertFalse(diff_lines(AE_OUT, GOOD_AE_TI_OUT))
-            self.assertTrue(os.path.exists(TI_VIBES_OUT))
+            self.assertTrue(os.path.exists(AEA_VIBES_OUT))
         finally:
             silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
             silent_remove(AE_OUT, disable=DISABLE_REMOVE)
-            silent_remove(TI_VIBES_OUT, disable=DISABLE_REMOVE)
+            silent_remove(AEA_VIBES_OUT, disable=DISABLE_REMOVE)
             pass
 
     def testTPA(self):
@@ -170,11 +173,11 @@ class TestAEaGoodVibes(unittest.TestCase):
         test_input = ["-l", TPA_LIST, "-d", SUB_DATA_DIR, "-t"]
         try:
             main(test_input)
-            self.assertFalse(diff_lines(AE_OUT, GOOD_AE_TPA_OUT))
+            self.assertFalse(diff_lines(TPA_OUT, GOOD_TPA_OUT))
         finally:
             silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
-            silent_remove(AE_OUT, disable=DISABLE_REMOVE)
-            silent_remove(TI_VIBES_OUT, disable=DISABLE_REMOVE)
+            silent_remove(TPA_OUT, disable=DISABLE_REMOVE)
+            silent_remove(TPA_VIBES_OUT, disable=DISABLE_REMOVE)
             pass
 
     def testReactTSProd(self):
@@ -188,7 +191,7 @@ class TestAEaGoodVibes(unittest.TestCase):
         finally:
             silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
             silent_remove(PROD_OUT, disable=DISABLE_REMOVE)
-            silent_remove(TI_VIBES_OUT, disable=DISABLE_REMOVE)
+            silent_remove(AEA_VIBES_OUT, disable=DISABLE_REMOVE)
             pass
 
     def testReactProd(self):
@@ -210,7 +213,7 @@ class TestAEaGoodVibes(unittest.TestCase):
         plot_list = [PLOT1, PLOT2, PLOT3, PLOT4]
         for fname in plot_list:
             silent_remove(fname)
-        test_input = ["-l", PLOT_LIST, "-d", SUB_DATA_DIR, "-p", "-pl", "pdc2,ipa",
+        test_input = ["-l", PLOT_LIST, "-d", SUB_DATA_DIR, "-p", "-pl", "pdc2,ipa", "-o", AE_OUT,
                       "-ti", "400,500,25", "--temp", "500", "-q"]
         try:
             main(test_input)

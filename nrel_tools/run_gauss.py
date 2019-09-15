@@ -29,6 +29,7 @@ __author__ = 'hmayes'
 # Config keys
 CONFIG_FILE = 'config_file_name'
 JOB_LIST = 'job_list'
+FOLLOW_JOBS_LIST = 'follow_job_list'
 TPL_DICT = 'dictionary of tpls for jobs'
 FIRST_SUBMIT_TPL = "first_submit_tpl"
 REMAINING_JOB_SUBMIT_TPL = "rest_submit_tpl"
@@ -45,6 +46,7 @@ DEF_CFG_VALS = {CONFIG_FILE: DEF_CFG_FILE,
                 FIRST_SUBMIT_TPL: DEF_SLURM_NO_CHK_TPL,
                 REMAINING_JOB_SUBMIT_TPL: DEF_SLURM_FROM_CHK_TPL,
                 JOB_LIST: DEF_JOB_LIST,
+                FOLLOW_JOBS_LIST: None,
                 FIRST_JOB_CHK: None,
                 }
 REQ_KEYS = {
@@ -142,11 +144,14 @@ def main(argv=None):
     job_name_perhaps_with_dir = args.job_name
     job_name = os.path.basename(args.job_name)
 
+    if cfg[FOLLOW_JOBS_LIST]:
+        follow_threads = cfg[FOLLOW_JOBS_LIST].split(';').strip
+
     # Read template and data files
     try:
         tpl_dict = {JOB_NAME: job_name}
 
-        # First job often has different options svp than later jobs
+        # First job often has different options than later jobs
         for job in cfg[JOB_LIST]:
             if job == '':
                 new_job_name = tpl_dict[JOB_NAME]
