@@ -18,4 +18,4 @@ correct files.
 
 ## Manifest
 
-* `look_and_say.dat`: first entries of the "Look and Say" integer series, sequence [A005150](https://oeis.org/A005150)
+* `run_gauss_ini.tpl`: a default template for running "spawned" run_gauss jobs

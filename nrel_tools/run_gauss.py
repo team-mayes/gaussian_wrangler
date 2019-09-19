@@ -34,20 +34,42 @@ TPL_DICT = 'dictionary of tpls for jobs'
 FIRST_SUBMIT_TPL = "first_submit_tpl"
 REMAINING_JOB_SUBMIT_TPL = "rest_submit_tpl"
 FIRST_JOB_CHK = 'chk_for_first_job'
+# config keys for spawning additional jobs
+SBATCH_TPL = 'sbatch_tpl'
+INI_TPL = 'ini_tpl'
+PARTITION = 'partition'
+RUN_TIME = 'run_time'
+ACCOUNT = 'account'
+EMAIL = 'email'
+ALL_NEW = 'all_new'
+OPT_OLD_JOB_NAME = 'opt_old_name'
+RUN_GAUSS_INI = 'run_gauss_ini'
 
-DEF_CFG_FILE = 'run_gauss_bde.ini'
+DEF_CFG_FILE = 'run_gauss.ini'
 DEF_SLURM_NO_CHK_TPL = 'run_gauss_no_old_chk.tpl'
 DEF_SLURM_FROM_CHK_TPL = 'run_gauss_from_old_chk.tpl'
 DEF_JOB_LIST = ['', 'opt', 'stable', 'freq', 'pfb', 'fb']
+DEF_PARTITION = 'short'
+DEF_RUN_TIME = '4:00:00'
+DEF_ACCOUNT = 'bpms'
+DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
+DEF_SBATCH_TPL = os.path.join(DATA_DIR, 'sbatch.tpl')
+DEF_INI_TPL = os.path.join(DATA_DIR, 'run_gauss_ini.tpl')
 
 # Set notation
-DEF_CFG_VALS = {CONFIG_FILE: DEF_CFG_FILE,
-                OUT_DIR: None,
+DEF_CFG_VALS = {OUT_DIR: None,
                 FIRST_SUBMIT_TPL: DEF_SLURM_NO_CHK_TPL,
                 REMAINING_JOB_SUBMIT_TPL: DEF_SLURM_FROM_CHK_TPL,
                 JOB_LIST: DEF_JOB_LIST,
                 FOLLOW_JOBS_LIST: None,
                 FIRST_JOB_CHK: None,
+                PARTITION: DEF_PARTITION,
+                RUN_TIME: DEF_RUN_TIME,
+                ACCOUNT: DEF_ACCOUNT,
+                EMAIL: None,
+                ALL_NEW: False,
+                SBATCH_TPL: DEF_SBATCH_TPL,
+                INI_TPL: DEF_INI_TPL,
                 }
 REQ_KEYS = {
             }
@@ -74,8 +96,22 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
         raise IOError('Could not read file {}'.format(f_loc))
     main_proc = cfg_proc(dict(config.items(MAIN_SEC)), DEF_CFG_VALS, REQ_KEYS, int_list=False, store_extra_keys=True)
 
+    main_proc[CONFIG_FILE] = f_loc
     main_proc[TPL_DICT] = {}
-    for job in main_proc[JOB_LIST]:
+
+    all_job_types = main_proc[JOB_LIST].copy()
+    follow_jobs_list = []
+    if main_proc[FOLLOW_JOBS_LIST]:
+        threads = [thread.split(',') for thread in main_proc[FOLLOW_JOBS_LIST].split(';')]
+        for thread in threads:
+            thread = [job.strip() for job in thread]
+            follow_jobs_list.append(thread)
+            all_job_types += thread
+        main_proc[FOLLOW_JOBS_LIST] = follow_jobs_list
+    else:
+        main_proc[FOLLOW_JOBS_LIST] = []
+
+    for job in all_job_types:
         if job == '':
             continue
         if job in main_proc:
@@ -109,17 +145,23 @@ def parse_cmdline(argv):
                                                  'for normal termination.')
     parser.add_argument("job_name", help="The job name to run")
     parser.add_argument("-c", "--config", help="The location of the configuration file in ini format. "
-                                               "The default file name is {}, located in the "
-                                               "base directory where the program as run.".format(DEF_CFG_FILE),
+                                               "The default file name is {}, located in the base directory "
+                                               "where the program as run.".format(DEF_CFG_FILE),
                         default=DEF_CFG_FILE, type=read_cfg)
     parser.add_argument("-o", "--old_chk_file", help="The base name of the checkpoint file (do not include '.chk')"
                                                      "to be used for the first job (optional).",
                         default=None)
+    parser.add_argument("-t", "--testing", help="Run in testing mode, which will not check for normal Gaussian "
+                                                "termination before continuing. Default is False.",
+                        action="store_true", default=False)
+
     args = None
     try:
         args = parser.parse_args(argv)
         if args.old_chk_file:
             args.config[FIRST_JOB_CHK] = args.old_chk_file
+        if not args.config[OUT_DIR]:
+            args.config[OUT_DIR] = os.path.dirname(args.config[CONFIG_FILE])
     except IOError as e:
         warning("Problems reading file:", e)
         parser.print_help()
@@ -134,7 +176,7 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg):
+def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
     # Determine if it will run fresh or from an old checkpoint
     if job == '':
         new_job_name = tpl_dict[JOB_NAME]
@@ -163,11 +205,44 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg):
     p1.wait()
     out_file = tpl_dict[JOB_NAME] + ".log"
     last_line = subprocess.check_output(["tail", "-1",  out_file]).strip().decode("utf-8")
-    if GAU_GOOD_PAT.match(last_line):
-        print("Successfully completed {}".format(out_file))
-        os.remove(filled_tpl_name)
+    if testing_flag:
+        print("Testing mode; did not check for normal Gaussian termination.")
     else:
-        raise InvalidDataError('Job failed: {}'.format(out_file))
+        if GAU_GOOD_PAT.match(last_line):
+            print("Successfully completed {}".format(out_file))
+            os.remove(filled_tpl_name)
+        else:
+            raise InvalidDataError('Job failed: {}'.format(out_file))
+
+
+def create_sbatch_dict(cfg, tpl_dict, new_ini_fname):
+    sbatch_dict = {PARTITION: cfg[PARTITION], RUN_TIME: cfg[RUN_TIME], ACCOUNT: cfg[ACCOUNT],
+                   JOB_NAME: tpl_dict[JOB_NAME], OPT_OLD_JOB_NAME: '-o ' + tpl_dict[JOB_NAME],
+                   RUN_GAUSS_INI: new_ini_fname,
+                   }
+    if cfg[EMAIL]:
+        sbatch_dict[EMAIL] = '#SBATCH --mail-type=FAIL\n#SBATCH --mail-type=END\n' \
+                             '#SBATCH --mail-user={}'.format(cfg[EMAIL])
+    else:
+        sbatch_dict[EMAIL] = ''
+
+    return sbatch_dict
+
+
+def add_to_ini(filled_tpl_name, thread, cfg):
+    with open(filled_tpl_name, 'a') as f:
+        f.write('\n')
+        for job in thread:
+            f.write('{} = {}\n'.format(job, cfg[job]))
+
+
+def create_ini_dict(cfg, thread):
+    ini_dict = {FIRST_SUBMIT_TPL: cfg[REMAINING_JOB_SUBMIT_TPL],
+                REMAINING_JOB_SUBMIT_TPL: cfg[REMAINING_JOB_SUBMIT_TPL],
+                JOB_LIST: ','.join(thread),
+                }
+
+    return ini_dict
 
 
 def main(argv=None):
@@ -180,26 +255,37 @@ def main(argv=None):
     job_name_perhaps_with_dir = args.job_name
     job_name = os.path.basename(args.job_name)
 
-    if cfg[FOLLOW_JOBS_LIST]:
-        follow_threads = [job_list.split(',') for job_list in cfg[FOLLOW_JOBS_LIST].split(';')]
-    else:
-        follow_threads = []
-
     # Read template and data files
     try:
         tpl_dict = {JOB_NAME: job_name}
 
         for job in cfg[JOB_LIST]:
-            run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg)
+            run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, args.testing)
 
-        if len(follow_threads) > 1:
-            for thread in follow_threads[1:]:
-                print("need to send job to slurm {}".format(thread))
-                # TODO: add spawn
+        if len(cfg[FOLLOW_JOBS_LIST]) > 1:
+            for index, thread in enumerate(cfg[FOLLOW_JOBS_LIST]):
+                if index == 0 and not cfg[ALL_NEW]:
+                    continue
+                ini_dict = create_ini_dict(cfg, thread)
+                tpl_str = read_tpl(cfg[INI_TPL])
+                new_ini_fname = create_out_fname(cfg[CONFIG_FILE], suffix=str(index), ext='.ini', base_dir=cfg[OUT_DIR])
+                fill_save_tpl(cfg, tpl_str, ini_dict, cfg[INI_TPL], new_ini_fname)
+                add_to_ini(new_ini_fname, thread, cfg)
 
-        if len(follow_threads) > 0:
-            for job in follow_threads[0]:
-                run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg)
+                tpl_str = read_tpl(cfg[SBATCH_TPL])
+                sbatch_dict = create_sbatch_dict(cfg, tpl_dict, new_ini_fname)
+                new_sbatch_fname = create_out_fname(cfg[CONFIG_FILE], suffix=str(index), ext='.slurm',
+                                                    base_dir=cfg[OUT_DIR])
+                fill_save_tpl(cfg, tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
+                try:
+                    sbatch_result = subprocess.check_output(["sbatch", new_sbatch_fname]).strip().decode("utf-8")
+                    print(sbatch_result)
+                except IOError as e:
+                    print(e)
+
+        if len(cfg[FOLLOW_JOBS_LIST]) > 0 and not cfg[ALL_NEW]:
+            for job in cfg[FOLLOW_JOBS_LIST][0]:
+                run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, args.testing)
 
     except IOError as e:
         warning("Problems reading file:", e)
