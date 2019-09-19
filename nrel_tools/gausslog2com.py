@@ -68,9 +68,14 @@ def parse_cmdline(argv):
                                                    "The default is {}.".format(False),
                         action="store_true", default=False)
     parser.add_argument("-c", "--charge_from_tpl", help="Flag to take the charge and multiplicity from the tpl file "
-                                                        "rather than from the template file. "
+                                                        "rather than from the output file. "
                                                         "The default is {}.".format(False),
                         action="store_true", default=False)
+    parser.add_argument("-d", "--out_dir", help="A directory where output files should be saved. The default location "
+                                                "is the directory of the output file.", default=None)
+    parser.add_argument("-o", "--output_fname", help="The name of the output file to be created. The default is the "
+                                                     "output file name with the template base name added to it, and the"
+                                                     " '.com' extension.", default=None)
     args = None
     try:
         args = parser.parse_args(argv)
@@ -84,12 +89,13 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def process_gausscom_files(gausslog_files, com_tpl_content, charge_from_log_flag, find_low_energy):
+def process_gausscom_files(gausslog_files, com_tpl_content, charge_from_log_flag, find_low_energy, base_dir, out_fname):
     for gausslog_file in gausslog_files:
-        process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, find_low_energy)
+        process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, find_low_energy,
+                              base_dir, out_fname)
 
 
-def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, find_low_energy):
+def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, find_low_energy, base_dir, out_fname):
     with open(gausslog_file) as d:
         if find_low_energy:
             com_tpl_content[SEC_HEAD][-3] = "Low energy conformation from file {}".format(gausslog_file)
@@ -177,9 +183,14 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
 
     if len(final_atoms_section) == 0:
         raise InvalidDataError("Check that the following log file has coordinates to use: {}".format(gausslog_file))
-    f_name = create_out_fname(gausslog_file, ext='_' + com_tpl_content[COM_TYPE] + '.com')
-    list_to_file(com_tpl_content[SEC_HEAD] + final_atoms_section + com_tpl_content[SEC_TAIL],
-                 f_name)
+    if out_fname:
+        if not base_dir:
+            base_dir = os.path.dirname(gausslog_file)
+        f_name = create_out_fname(out_fname, base_dir=base_dir)
+
+    else:
+        f_name = create_out_fname(gausslog_file, ext='_' + com_tpl_content[COM_TYPE] + '.com', base_dir=base_dir)
+    list_to_file(com_tpl_content[SEC_HEAD] + final_atoms_section + com_tpl_content[SEC_TAIL], f_name)
 
     # Now that finished reading the file, first make sure didn't  exit before reaching the desired number of atoms
 
@@ -244,7 +255,8 @@ def main(argv=None):
 
         # Read template and data files
         com_tpl_content = process_gausscom_tpl(args.tpl)
-        process_gausscom_files(gausslog_files, com_tpl_content, args.charge_from_tpl, args.low_energy)
+        process_gausscom_files(gausslog_files, com_tpl_content, args.charge_from_tpl, args.low_energy, args.out_dir,
+                               args.output_fname)
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR
