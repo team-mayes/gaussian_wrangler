@@ -6,6 +6,7 @@
 #SBATCH --output=ethylrad_opt.out
 #SBATCH --error=ethylrad_opt.err
 #SBATCH --account=bpms
+#SBATCH --qos=high
 
 
 # Load Gaussian module to set environment

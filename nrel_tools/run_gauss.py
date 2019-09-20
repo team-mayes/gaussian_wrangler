@@ -44,6 +44,7 @@ EMAIL = 'email'
 ALL_NEW = 'all_new'
 OPT_OLD_JOB_NAME = 'opt_old_name'
 RUN_GAUSS_INI = 'run_gauss_ini'
+QOS = 'qos'
 
 DEF_CFG_FILE = 'run_gauss.ini'
 DEF_JOB_RUN_TPL = 'run_gauss_job.tpl'
@@ -69,6 +70,7 @@ DEF_CFG_VALS = {OUT_DIR: None,
                 ALL_NEW: False,
                 SBATCH_TPL: DEF_SBATCH_TPL,
                 INI_TPL: DEF_INI_TPL,
+                QOS: 'normal',
                 }
 REQ_KEYS = {
             }
@@ -192,14 +194,14 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
         raise IOError(tpl_dict[INPUT_FILE])
 
     tpl_file = cfg[JOB_RUN_TPL]
-    filled_tpl_name = create_out_fname(new_job_name, ext=".sh", base_dir=cfg[OUT_DIR])
+    job_runner_fname = create_out_fname(new_job_name, ext=".sh", base_dir=cfg[OUT_DIR])
     print("Running {}".format(new_job_name))
 
     tpl_dict[JOB_NAME] = new_job_name
     tpl_str = read_tpl(tpl_file)
-    fill_save_tpl(cfg, tpl_str, tpl_dict, tpl_file, filled_tpl_name)
-    subprocess.call(["chmod", "+x", filled_tpl_name])
-    p1 = subprocess.Popen(filled_tpl_name)
+    fill_save_tpl(cfg, tpl_str, tpl_dict, tpl_file, job_runner_fname)
+    subprocess.call(["chmod", "+x", job_runner_fname])
+    p1 = subprocess.Popen(job_runner_fname)
     p1.wait()
     if testing_flag:
         print("Testing mode; did not check for normal Gaussian termination.")
@@ -208,7 +210,7 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
         last_line = subprocess.check_output(["tail", "-1",  out_file]).strip().decode("utf-8")
         if GAU_GOOD_PAT.match(last_line):
             print("Successfully completed {}".format(out_file))
-            os.remove(filled_tpl_name)
+            os.remove(job_runner_fname)
         else:
             raise InvalidDataError('Job failed: {}'.format(out_file))
 
@@ -216,7 +218,7 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
 def create_sbatch_dict(cfg, tpl_dict, new_ini_fname):
     sbatch_dict = {PARTITION: cfg[PARTITION], RUN_TIME: cfg[RUN_TIME], ACCOUNT: cfg[ACCOUNT],
                    JOB_NAME: tpl_dict[JOB_NAME], OPT_OLD_JOB_NAME: '-o ' + tpl_dict[JOB_NAME],
-                   RUN_GAUSS_INI: new_ini_fname,
+                   RUN_GAUSS_INI: new_ini_fname, QOS: cfg[QOS]
                    }
     if cfg[EMAIL]:
         sbatch_dict[EMAIL] = '#SBATCH --mail-type=FAIL\n#SBATCH --mail-type=END\n' \

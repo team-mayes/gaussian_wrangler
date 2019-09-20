@@ -6,6 +6,7 @@
 #SBATCH --output=ethylrad_opt.out
 #SBATCH --error=ethylrad_opt.err
 #SBATCH --account=bpms
+#SBATCH --qos=normal
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-type=END
 #SBATCH --mail-user=heather.mayes@nrel.gov

@@ -6,6 +6,7 @@
 #SBATCH --output={job_name}.out
 #SBATCH --error={job_name}.err
 #SBATCH --account={account}
+#SBATCH --qos={qos}
 {email}
 
 # Load Gaussian module to set environment
