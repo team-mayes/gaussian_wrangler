@@ -27,16 +27,13 @@ else
     cat $INPUT_FILE >> $INFILE
 fi
 
-#
 # Run gaussian Peregrine script (performs much of the Gaussian setup)
 g16_eagle
 
-#
 # Set required Gaussian environment variables
-#
 if [ $SLURM_JOB_NUM_NODES -gt 1 ]; then
-export GAUSS_LFLAGS='-vv -opt "Tsnet.Node.lindarsharg: ssh"'
-export GAUSS_EXEDIR=$g16root/g16/linda-exe:$GAUSS_EXEDIR
+    export GAUSS_LFLAGS='-vv -opt "Tsnet.Node.lindarsharg: ssh"'
+    export GAUSS_EXEDIR=$g16root/g16/linda-exe:$GAUSS_EXEDIR
 fi
 export GAUSS_SCRDIR=$SCRATCH2
 #
@@ -45,14 +42,11 @@ export GAUSS_SCRDIR=$SCRATCH2
 # on-node memory by other jobs that terminated incorrectly
 # so clean these to make sure there is enough space.
 #
-
-mkdir $SCRATCH
-rm $SCRATCH2/*
+# rm $SCRATCH2/*
 
 # Run Gaussian job
 $GAUSSIAN_EXEC < $INFILE >& $INPUT_BASENAME.log
 rm $INFILE
 cp $SCRATCH2/$INPUT_BASENAME.chk .
 
-rm $SCRATCH/*
-rmdir $SCRATCH
+# rm $SCRATCH/*

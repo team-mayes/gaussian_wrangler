@@ -31,9 +31,9 @@ CONFIG_FILE = 'config_file_name'
 JOB_LIST = 'job_list'
 FOLLOW_JOBS_LIST = 'follow_job_list'
 TPL_DICT = 'dictionary of tpls for jobs'
-FIRST_SUBMIT_TPL = "first_submit_tpl"
-REMAINING_JOB_SUBMIT_TPL = "rest_submit_tpl"
+JOB_RUN_TPL = "job_run_tpl"
 FIRST_JOB_CHK = 'chk_for_first_job'
+OLD_CHECK_ECHO = 'old_check_echo'
 # config keys for spawning additional jobs
 SBATCH_TPL = 'sbatch_tpl'
 INI_TPL = 'ini_tpl'
@@ -46,7 +46,7 @@ OPT_OLD_JOB_NAME = 'opt_old_name'
 RUN_GAUSS_INI = 'run_gauss_ini'
 
 DEF_CFG_FILE = 'run_gauss.ini'
-DEF_SLURM_NO_CHK_TPL = 'run_gauss_no_old_chk.tpl'
+DEF_JOB_RUN_TPL = 'run_gauss_job.tpl'
 DEF_SLURM_FROM_CHK_TPL = 'run_gauss_from_old_chk.tpl'
 DEF_JOB_LIST = ['', 'opt', 'stable', 'freq', 'pfb', 'fb']
 DEF_PARTITION = 'short'
@@ -58,8 +58,7 @@ DEF_INI_TPL = os.path.join(DATA_DIR, 'run_gauss_ini.tpl')
 
 # Set notation
 DEF_CFG_VALS = {OUT_DIR: None,
-                FIRST_SUBMIT_TPL: DEF_SLURM_NO_CHK_TPL,
-                REMAINING_JOB_SUBMIT_TPL: DEF_SLURM_FROM_CHK_TPL,
+                JOB_RUN_TPL: DEF_JOB_RUN_TPL,
                 JOB_LIST: DEF_JOB_LIST,
                 FOLLOW_JOBS_LIST: None,
                 FIRST_JOB_CHK: None,
@@ -125,9 +124,8 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
                                    "You may specify the template to use (including path) using {} as a key in the "
                                    "config file.".format(job, tpl_name, job))
 
-    for file in [main_proc[REMAINING_JOB_SUBMIT_TPL], main_proc[FIRST_SUBMIT_TPL]]:
-        if not os.path.isfile(file):
-            raise InvalidDataError("Could not find the submit template '{}'".format(file))
+    if not os.path.isfile(main_proc[JOB_RUN_TPL]):
+        raise InvalidDataError("Could not find the submit template '{}'".format(main_proc[JOB_RUN_TPL]))
 
     return main_proc
 
@@ -182,18 +180,18 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
         new_job_name = tpl_dict[JOB_NAME]
         tpl_dict[INPUT_FILE] = job_name_perhaps_with_dir + ".com"
         if cfg[FIRST_JOB_CHK]:
-            tpl_dict[OLD_JOB_NAME] = cfg[FIRST_JOB_CHK]
-            tpl_file = cfg[REMAINING_JOB_SUBMIT_TPL]
+            tpl_dict[OLD_CHECK_ECHO] = 'echo "%OldChk={}.chk" >> $INFILE'.format(cfg[FIRST_JOB_CHK])
         else:
-            tpl_file = cfg[FIRST_SUBMIT_TPL]
+            tpl_dict[OLD_CHECK_ECHO] = ''
     else:
         new_job_name = tpl_dict[JOB_NAME] + '_' + job
-        tpl_file = cfg[REMAINING_JOB_SUBMIT_TPL]
         tpl_dict[OLD_JOB_NAME] = tpl_dict[JOB_NAME]
+        tpl_dict[OLD_CHECK_ECHO] = 'echo "%OldChk={}.chk" >> $INFILE'.format(tpl_dict[OLD_JOB_NAME])
         tpl_dict[INPUT_FILE] = cfg[TPL_DICT][job]
     if not os.path.isfile(tpl_dict[INPUT_FILE]):
         raise IOError(tpl_dict[INPUT_FILE])
 
+    tpl_file = cfg[JOB_RUN_TPL]
     filled_tpl_name = create_out_fname(new_job_name, ext=".sh", base_dir=cfg[OUT_DIR])
     print("Running {}".format(new_job_name))
 
@@ -203,11 +201,11 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
     subprocess.call(["chmod", "+x", filled_tpl_name])
     p1 = subprocess.Popen(filled_tpl_name)
     p1.wait()
-    out_file = tpl_dict[JOB_NAME] + ".log"
-    last_line = subprocess.check_output(["tail", "-1",  out_file]).strip().decode("utf-8")
     if testing_flag:
         print("Testing mode; did not check for normal Gaussian termination.")
     else:
+        out_file = tpl_dict[JOB_NAME] + ".log"
+        last_line = subprocess.check_output(["tail", "-1",  out_file]).strip().decode("utf-8")
         if GAU_GOOD_PAT.match(last_line):
             print("Successfully completed {}".format(out_file))
             os.remove(filled_tpl_name)
@@ -237,8 +235,7 @@ def add_to_ini(filled_tpl_name, thread, cfg):
 
 
 def create_ini_dict(cfg, thread):
-    ini_dict = {FIRST_SUBMIT_TPL: cfg[REMAINING_JOB_SUBMIT_TPL],
-                REMAINING_JOB_SUBMIT_TPL: cfg[REMAINING_JOB_SUBMIT_TPL],
+    ini_dict = {JOB_RUN_TPL: cfg[JOB_RUN_TPL],
                 JOB_LIST: ','.join(thread),
                 }
 
