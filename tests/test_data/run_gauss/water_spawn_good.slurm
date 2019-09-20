@@ -1,15 +1,13 @@
 #!/bin/bash
-#SBATCH --partition=short
-#SBATCH --time=4:00:00
+#SBATCH --partition=standard
+#SBATCH --time=24:00:00
 #SBATCH --nodes=1
-#SBATCH --job-name=ethylrad_opt
-#SBATCH --output=ethylrad_opt.out
-#SBATCH --error=ethylrad_opt.err
+#SBATCH --job-name=water
+#SBATCH --output=water.out
+#SBATCH --error=water.err
 #SBATCH --account=bpms
 #SBATCH --qos=normal
-#SBATCH --mail-type=FAIL
-#SBATCH --mail-type=END
-#SBATCH --mail-user=heather.mayes@nrel.gov
+
 
 # Load Gaussian module to set environment
 module load gaussian/G16B
@@ -23,7 +21,7 @@ mkdir $SCRATCH
 
 cd $SLURM_SUBMIT_DIR
 
-run_gauss ethylrad_opt  -c /Users/hmayes/bee/code/python/nrel_tools/tests/test_data/run_gauss/run_spawn2.ini
+run_gauss water -o water -c /Users/hmayes/bee/code/python/nrel_tools/tests/test_data/run_gauss/water.ini
 
 rm $SCRATCH2/*
 rmdir $SCRATCH

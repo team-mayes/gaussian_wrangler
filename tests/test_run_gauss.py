@@ -16,6 +16,7 @@ MAIN_DIR = os.path.dirname(TEST_DIR)
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
 SUB_DATA_DIR = os.path.join(DATA_DIR, 'run_gauss')
 
+ETHYLRAD = 'tests/test_data/run_gauss/ethylrad'
 DEF_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde.ini')
 DEF_SH_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad.sh')
 GOOD_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad.sh')
@@ -54,6 +55,22 @@ GOOD_SPAWN0_NEW_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new0_good.slur
 GOOD_SPAWN1_NEW_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new1_good.slurm')
 GOOD_SPAWN2_NEW_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new2_good.slurm')
 
+SETUP_SUBMIT_INI = os.path.join(SUB_DATA_DIR, 'set_up_submit.ini')
+SETUP_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad.ini')
+SETUP_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad.slurm')
+GOOD_SETUP_INI_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad.ini')
+GOOD_SETUP_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad.slurm')
+WATER_INI_OUT = os.path.join(SUB_DATA_DIR, 'water.ini')
+WATER_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'water.slurm')
+GOOD_WATER_INI_OUT = os.path.join(SUB_DATA_DIR, 'water_good.ini')
+GOOD_WATER_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'water_good.slurm')
+
+LIST = os.path.join(SUB_DATA_DIR, "list.txt")
+SETUP_SUBMIT_SPAWN_INI = os.path.join(SUB_DATA_DIR, 'set_up_submit_w_spawn.ini')
+GOOD_ETHYL_SPAWN_INI_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_spawn.ini')
+GOOD_ETHYL_SPAWN_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_spawn.slurm')
+GOOD_WATER_SPAWN_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'water_spawn_good.slurm')
+
 
 class TestRunGaussNoOut(unittest.TestCase):
     # These all test failure cases
@@ -73,7 +90,7 @@ class TestRunGaussNoOut(unittest.TestCase):
             self.assertTrue("optional arguments" in output)
 
     def testMissingListIni(self):
-        test_input = ["tests/test_data/run_gauss/ethylrad", "-c", MISSING_TPL_INI]
+        test_input = [ETHYLRAD, "-c", MISSING_TPL_INI]
         if logger.isEnabledFor(logging.DEBUG):
             main(test_input)
         with capture_stderr(main, test_input) as output:
@@ -90,17 +107,17 @@ class TestRunGaussNoOut(unittest.TestCase):
 class TestRunGaussBDE(unittest.TestCase):
     # These test/demonstrate different options
     def testDefIni(self):
-        test_input = ["tests/test_data/run_gauss/ethylrad", "-c", DEF_INI]
+        test_input = [ETHYLRAD, "-c", DEF_INI]
         try:
             main(test_input)
             self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_SH_OUT))
         finally:
-            silent_remove(DEF_SH_OUT, disable=DISABLE_REMOVE)
-            silent_remove(DEF_LOG_OUT, disable=DISABLE_REMOVE)
+            # silent_remove(DEF_SH_OUT, disable=DISABLE_REMOVE)
+            # silent_remove(DEF_LOG_OUT, disable=DISABLE_REMOVE)
             pass
 
     def testOneJobIni(self):
-        test_input = ["tests/test_data/run_gauss/ethylrad", "-c", ONE_JOB_INI, "-t"]
+        test_input = [ETHYLRAD, "-c", ONE_JOB_INI, "-t"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_ONE_SH_OUT))
@@ -110,7 +127,7 @@ class TestRunGaussBDE(unittest.TestCase):
             pass
 
     def testOneNewJobIni(self):
-        test_input = ["tests/test_data/run_gauss/ethylrad", "-c", ONE_NEW_JOB_INI, "-t"]
+        test_input = [ETHYLRAD, "-c", ONE_NEW_JOB_INI, "-t"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(OPT_SH_OUT, GOOD_OPT_SH_OUT))
@@ -120,7 +137,7 @@ class TestRunGaussBDE(unittest.TestCase):
             pass
 
     def testSpawn(self):
-        test_input = ["tests/test_data/run_gauss/ethylrad", "-c", SPAWN_INI, "-t"]
+        test_input = [ETHYLRAD, "-c", SPAWN_INI, "-t"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(OPT_STABLE_SH_OUT, GOOD_OPT_STABLE_SH_OUT))
@@ -135,7 +152,7 @@ class TestRunGaussBDE(unittest.TestCase):
             pass
 
     def testSpawnAllNew(self):
-        test_input = ["tests/test_data/run_gauss/ethylrad", "-c", SPAWN_ALL_NEW_INI, "-t"]
+        test_input = [ETHYLRAD, "-c", SPAWN_ALL_NEW_INI, "-t"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(SPAWN0_NEW_INI, GOOD_SPAWN0_NEW_INI))
@@ -150,3 +167,41 @@ class TestRunGaussBDE(unittest.TestCase):
                           SPAWN0_NEW_SLURM, SPAWN1_NEW_SLURM, SPAWN2_NEW_SLURM]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
+
+    def testSetupSubmit(self):
+        test_input = [ETHYLRAD, "-s", "-c", SETUP_SUBMIT_INI]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(SETUP_INI_OUT, GOOD_SETUP_INI_OUT))
+            self.assertFalse(diff_lines(SETUP_SLURM_OUT, GOOD_SETUP_SLURM_OUT))
+        finally:
+            for fname in [SETUP_INI_OUT, SETUP_SLURM_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testSetupSubmitList(self):
+        test_input = [LIST, "-l", "-c", SETUP_SUBMIT_INI]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(SETUP_INI_OUT, GOOD_SETUP_INI_OUT))
+            self.assertFalse(diff_lines(SETUP_SLURM_OUT, GOOD_SETUP_SLURM_OUT))
+            self.assertFalse(diff_lines(WATER_INI_OUT, GOOD_WATER_INI_OUT))
+            self.assertFalse(diff_lines(WATER_SLURM_OUT, GOOD_WATER_SLURM_OUT))
+        finally:
+            for fname in [SETUP_INI_OUT, SETUP_SLURM_OUT, WATER_INI_OUT, WATER_SLURM_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testSetupSubmitListSpawn(self):
+        test_input = [LIST, "-l", "-c", SETUP_SUBMIT_SPAWN_INI]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(SETUP_INI_OUT, GOOD_ETHYL_SPAWN_INI_OUT))
+            self.assertFalse(diff_lines(SETUP_SLURM_OUT, GOOD_ETHYL_SPAWN_SLURM_OUT))
+            self.assertFalse(diff_lines(WATER_INI_OUT, GOOD_ETHYL_SPAWN_INI_OUT))
+            self.assertFalse(diff_lines(WATER_SLURM_OUT, GOOD_WATER_SPAWN_SLURM_OUT))
+        finally:
+            for fname in [SETUP_INI_OUT, SETUP_SLURM_OUT, WATER_INI_OUT, WATER_SLURM_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+

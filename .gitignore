@@ -133,3 +133,7 @@ tests/test_data/goodvibes_helper/aea_prod_vibes.dat
 /tests/test_data/run_gauss/run_spawn_all_new1.slurm
 /tests/test_data/run_gauss/run_spawn_all_new2.ini
 /tests/test_data/run_gauss/run_spawn_all_new2.slurm
+/tests/test_data/run_gauss/ethylrad.ini
+/tests/test_data/run_gauss/ethylrad.slurm
+/tests/test_data/run_gauss/water.ini
+/tests/test_data/run_gauss/water.slurm
