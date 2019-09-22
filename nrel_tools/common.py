@@ -511,7 +511,10 @@ def silent_remove(filename, disable=False):
     """
     if not disable:
         try:
-            os.remove(filename)
+            if os.path.isdir(filename):
+                os.rmdir(filename)
+            else:
+                os.remove(filename)
         except OSError as e:
             if e.errno != errno.ENOENT:
                 raise

@@ -36,6 +36,7 @@ class TestCheckGaussNoOut(unittest.TestCase):
         # main(test_input)
         with capture_stderr(main, test_input) as output:
             self.assertTrue("Could not find files" in output)
+        silent_remove(FOR_HARTREE_DIR, disable=DISABLE_REMOVE)
 
     def testHelp(self):
         test_input = ['-h']
@@ -76,4 +77,5 @@ class TestCheckGauss(unittest.TestCase):
             self.assertFalse(diff_lines(MOVED_FILE, NORM_TERM_LOG))
         finally:
             silent_remove(MOVED_FILE, disable=DISABLE_REMOVE)
+            silent_remove(FOR_HARTREE_DIR, disable=DISABLE_REMOVE)
             pass
