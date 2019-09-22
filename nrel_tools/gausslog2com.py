@@ -72,7 +72,7 @@ def parse_cmdline(argv):
                                                         "The default is {}.".format(False),
                         action="store_true", default=False)
     parser.add_argument("-d", "--out_dir", help="A directory where output files should be saved. The default location "
-                                                "is the directory of the output file.", default=None)
+                                                "is the current directory.", default=None)
     parser.add_argument("-o", "--output_fname", help="The name of the output file to be created. The default is the "
                                                      "output file name with the template base name added to it, and the"
                                                      " '.com' extension.", default=None)
@@ -184,8 +184,6 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
     if len(final_atoms_section) == 0:
         raise InvalidDataError("Check that the following log file has coordinates to use: {}".format(gausslog_file))
     if out_fname:
-        if not base_dir:
-            base_dir = os.path.dirname(gausslog_file)
         f_name = create_out_fname(out_fname, base_dir=base_dir)
 
     else:

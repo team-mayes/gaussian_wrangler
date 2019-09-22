@@ -37,7 +37,7 @@ TYPE_MATCH_OUT = os.path.join(SUB_DATA_DIR, 's12but_17_84_f2_s12but_17_84_f2.com
 GOOD_TYPE_MATCH_OUT = os.path.join(SUB_DATA_DIR, 's12but_17_84_f2_good.com')
 
 TYPE_NUM_MATCH_TPL = os.path.join(SUB_DATA_DIR, 's12but_17_84_f2_tpl.com')
-TYPE_NUM_MATCH_OUT = os.path.join(SUB_DATA_DIR, 's12but_17_84_f2_t.com')
+TYPE_NUM_MATCH_OUT = os.path.join(MAIN_DIR, 's12but_17_84_f2_t.com')
 GOOD_TYPE_NUM_MATCH_OUT = os.path.join(SUB_DATA_DIR, 's12but_17_84_f2_tpl_good.com')
 
 
