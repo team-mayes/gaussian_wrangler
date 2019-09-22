@@ -138,7 +138,7 @@ tests/test_data/goodvibes_helper/aea_prod_vibes.dat
 /tests/test_data/run_gauss/water.ini
 /tests/test_data/run_gauss/water.slurm
 /ts.tpl
-/ethylrad.ini
-/ethylrad.slurm
+/tests/test_data/run_gauss/ethylrad.ini
+/tests/test_data/run_gauss/ethylrad.slurm
 /f.tpl
 /s12but_17_84_f2_t.com

@@ -182,7 +182,9 @@ def parse_cmdline(argv):
                 raise IOError("When using the 'list_of_jobs' option, the first positional argument ('job_name') must "
                               "be the name of the file with the list of jobs. Could not read: {}".format(args.job_name))
         if args.old_chk_file:
-            args.config[FIRST_JOB_CHK] = args.old_chk_file
+            args.config[FIRST_JOB_CHK] = os.path.splitext(args.old_chk_file)[0]
+
+        # commenting below makes the current directory the default
         # if not args.config[OUT_DIR]:
         #     args.config[OUT_DIR] = os.path.dirname(args.config[CONFIG_FILE])
     except IOError as e:
@@ -243,7 +245,9 @@ def create_sbatch_dict(cfg, tpl_dict, new_ini_fname, start_from_job_name_chk=Tru
                    JOB_NAME: tpl_dict[JOB_NAME], RUN_GAUSS_INI: new_ini_fname, QOS: cfg[QOS]
                    }
 
-    if start_from_job_name_chk:
+    if cfg[FIRST_JOB_CHK]:
+        sbatch_dict[OPT_OLD_JOB_NAME] = '-o ' + cfg[FIRST_JOB_CHK]
+    elif start_from_job_name_chk:
         sbatch_dict[OPT_OLD_JOB_NAME] = '-o ' + tpl_dict[JOB_NAME]
     else:
         sbatch_dict[OPT_OLD_JOB_NAME] = ''

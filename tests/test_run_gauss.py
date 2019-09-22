@@ -71,7 +71,12 @@ GOOD_ETHYL_SPAWN_INI_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_spawn.ini')
 GOOD_ETHYL_SPAWN_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_spawn.slurm')
 GOOD_WATER_SPAWN_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'water_spawn_good.slurm')
 
-SETUP_SUBMIT_MISSING_TPL_INI = os.path.join(SUB_DATA_DIR, 'submit_current_f_ts.ini')
+SETUP_DEF_TPL_INI = os.path.join(SUB_DATA_DIR, 'submit_current_f_ts.ini')
+SETUP_INI_DEF_DIR_OUT = os.path.join(MAIN_DIR, 'ethylrad.ini')
+SETUP_SLURM_DEF_DIR_OUT = os.path.join(MAIN_DIR, 'ethylrad.slurm')
+GOOD_DEF_DIR_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_default_dir_good.ini')
+GOOD_DEF_DIR_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_default_dir_good.slurm')
+GOOD_SHORT_DEF_DIR_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_short_def_dir_good.slurm')
 
 
 class TestRunGaussNoOut(unittest.TestCase):
@@ -104,14 +109,6 @@ class TestRunGaussNoOut(unittest.TestCase):
             main(test_input)
         with capture_stderr(main, test_input) as output:
             self.assertTrue("Problems reading file" in output)
-
-    # def testSubmitMissingTplIni(self):
-    #     test_input = [ETHYLRAD, "-c", SETUP_SUBMIT_MISSING_TPL_INI, "-s"]
-    #     main(test_input)
-        # if logger.isEnabledFor(logging.DEBUG):
-        #     main(test_input)
-        # with capture_stderr(main, test_input) as output:
-        #     self.assertTrue("could not find a template file" in output)
 
 
 class TestRunGaussBDE(unittest.TestCase):
@@ -212,5 +209,40 @@ class TestRunGaussBDE(unittest.TestCase):
             self.assertFalse(diff_lines(WATER_SLURM_OUT, GOOD_WATER_SPAWN_SLURM_OUT))
         finally:
             for fname in [SETUP_INI_OUT, SETUP_SLURM_OUT, WATER_INI_OUT, WATER_SLURM_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testSubmitWithChkDefDirIni(self):
+        # since this assumes a f.tpl and ts.tpl file in the main directory, create them, and delete at the end
+        temp_file_list = ['f.tpl', 'ts.tpl']
+        for fname in temp_file_list:
+            with open(fname, 'w') as f:
+                f.write("# for test only")
+
+        test_input = ['tests/test_data/run_gauss/ethylrad.com', "-c", SETUP_DEF_TPL_INI, "-s",
+                      "-o", 'tests/test_data/run_gauss/ethyl.chk']
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(SETUP_INI_DEF_DIR_OUT, GOOD_DEF_DIR_INI_OUT))
+            self.assertFalse(diff_lines(SETUP_SLURM_DEF_DIR_OUT, GOOD_DEF_DIR_SLURM_OUT))
+        finally:
+            for fname in temp_file_list + [SETUP_INI_DEF_DIR_OUT, SETUP_SLURM_DEF_DIR_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testSubmitDefDirIni(self):
+        # Checking alternate input from above
+        temp_file_list = ['ethylrad.com', 'f.tpl', 'ts.tpl']
+        for fname in temp_file_list:
+            with open(fname, 'w') as f:
+                f.write("# for test only")
+
+        test_input = ['ethylrad', "-c", SETUP_DEF_TPL_INI, "-s", "-o", 'ethyl']
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(SETUP_INI_DEF_DIR_OUT, GOOD_DEF_DIR_INI_OUT))
+            self.assertFalse(diff_lines(SETUP_SLURM_DEF_DIR_OUT, GOOD_SHORT_DEF_DIR_SLURM_OUT))
+        finally:
+            for fname in temp_file_list + [SETUP_INI_DEF_DIR_OUT, SETUP_SLURM_DEF_DIR_OUT]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
