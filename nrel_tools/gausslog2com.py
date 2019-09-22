@@ -99,10 +99,11 @@ def process_gausslog_files(gausslog_files, com_tpl_content, charge_from_log_flag
 
 def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, find_low_energy, base_dir, out_fname):
     with open(gausslog_file) as d:
+        rel_path_fname = os.path.relpath(gausslog_file)
         if find_low_energy:
-            com_tpl_content[SEC_HEAD][-3] = "Low energy conformation from file {}".format(gausslog_file)
+            com_tpl_content[SEC_HEAD][-3] = "Low energy conformation from file {}".format(rel_path_fname)
         else:
-            com_tpl_content[SEC_HEAD][-3] = "Last conformation from file {}".format(gausslog_file)
+            com_tpl_content[SEC_HEAD][-3] = "Last conformation from file {}".format(rel_path_fname)
         lowest_energy_found = 0.0
         final_atoms_section = []
         atom_type_list = []

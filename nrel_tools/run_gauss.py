@@ -320,7 +320,8 @@ def setup_and_submit(cfg, suffix, thread, tpl_dict):
     fill_save_tpl(cfg, tpl_str, ini_dict, cfg[INI_TPL], new_ini_fname)
     add_to_ini(new_ini_fname, thread, cfg[TPL_DICT])
     tpl_str = read_tpl(cfg[SBATCH_TPL])
-    sbatch_dict = create_sbatch_dict(cfg, tpl_dict, new_ini_fname, start_from_job_name_chk=cfg[START_FROM_SAME_CHK])
+    sbatch_dict = create_sbatch_dict(cfg, tpl_dict, os.path.relpath(new_ini_fname),
+                                     start_from_job_name_chk=cfg[START_FROM_SAME_CHK])
     new_sbatch_fname = create_out_fname(base_name, suffix=str(suffix), ext='.slurm', base_dir=cfg[OUT_DIR])
     fill_save_tpl(cfg, tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
     if not cfg[NO_SUBMIT]:

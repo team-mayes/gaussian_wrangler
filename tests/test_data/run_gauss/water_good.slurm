@@ -21,7 +21,7 @@ mkdir $SCRATCH
 
 cd $SLURM_SUBMIT_DIR
 
-run_gauss water  -c /Users/hmayes/bee/code/python/nrel_tools/water.ini
+run_gauss water  -c water.ini
 
 rm $SCRATCH2/*
 rmdir $SCRATCH

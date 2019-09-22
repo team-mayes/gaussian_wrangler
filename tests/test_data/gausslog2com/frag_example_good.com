@@ -1,6 +1,6 @@
 # m062x/Def2TZVP nosymm scf=xqc opt=CalcFC freq=NoRaman SCRF=(Solvent=PerFluoroBenzene)
 
-Last conformation from file /Users/hmayes/bee/code/python/nrel_tools/tests/test_data/gausslog2com/frag_example.log
+Last conformation from file tests/test_data/gausslog2com/frag_example.log
 
 -2  1   3  6   -2  1   3  -6   -2  1   -1  1   -1  1   -1  1   -1  1
 H(Fragment=7)     -6.669461    -3.839679    -1.871242

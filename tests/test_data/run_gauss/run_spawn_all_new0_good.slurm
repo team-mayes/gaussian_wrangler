@@ -21,7 +21,7 @@ mkdir $SCRATCH
 
 cd $SLURM_SUBMIT_DIR
 
-run_gauss ethylrad_opt -o ethylrad_opt -c /Users/hmayes/bee/code/python/nrel_tools/tests/test_data/run_gauss/run_spawn_all_new0.ini
+run_gauss ethylrad_opt -o ethylrad_opt -c tests/test_data/run_gauss/run_spawn_all_new0.ini
 
 rm $SCRATCH2/*
 rmdir $SCRATCH

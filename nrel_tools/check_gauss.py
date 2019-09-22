@@ -119,11 +119,11 @@ def main(argv=None):
         if len(likely_failed_list) > 0:
             print("The following files may have failed:")
             for file in likely_failed_list:
-                print("    {}".format(file))
+                print("    {}".format(os.path.relpath(file)))
         if len(perhaps_running_list) > 0:
             print("The following files may still be running:")
             for file in perhaps_running_list:
-                print("    {}".format(file))
+                print("    {}".format(os.path.relpath(file)))
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR

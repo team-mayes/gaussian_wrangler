@@ -23,7 +23,7 @@ mkdir $SCRATCH
 
 cd $SLURM_SUBMIT_DIR
 
-run_gauss ethylrad -o tests/test_data/run_gauss/ethyl -c /Users/hmayes/bee/code/python/nrel_tools/ethylrad.ini
+run_gauss ethylrad -o tests/test_data/run_gauss/ethyl -c ethylrad.ini
 
 rm $SCRATCH2/*
 rmdir $SCRATCH

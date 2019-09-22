@@ -1,6 +1,6 @@
 # m062x/Def2TZVP nosymm scf=xqc opt=CalcFC freq=NoRaman SCRF=(Solvent=PerFluoroBenzene)
 
-Low energy conformation from file /Users/hmayes/bee/code/python/nrel_tools/tests/test_data/gausslog2com/nylon66_dimer_49_69_f2_fb.log
+Low energy conformation from file tests/test_data/gausslog2com/nylon66_dimer_49_69_f2_fb.log
 
 0  2
 C             -0.309357    0.404399    1.298126

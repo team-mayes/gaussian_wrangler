@@ -21,7 +21,7 @@ mkdir $SCRATCH
 
 cd $SLURM_SUBMIT_DIR
 
-run_gauss ethylrad -o ethylrad -c /Users/hmayes/bee/code/python/nrel_tools/ethylrad1.ini
+run_gauss ethylrad -o ethylrad -c ethylrad1.ini
 
 rm $SCRATCH2/*
 rmdir $SCRATCH

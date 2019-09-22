@@ -1,6 +1,6 @@
 # m062x/Def2TZVP nosymm Counterpoise=2
 
-Last conformation from file /Users/hmayes/bee/code/python/nrel_tools/tests/test_data/gausslog2com/pet_mono_1_tzvp.log
+Last conformation from file tests/test_data/gausslog2com/pet_mono_1_tzvp.log
 
 0 1   0 2    0 2
 O(Fragment=1)        3.601135    6.855796    0.997706

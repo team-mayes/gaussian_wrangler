@@ -927,10 +927,11 @@ def list_to_file(list_to_print, fname, list_format=None, delimiter=' ', mode='w'
                 else:
                     w_file.write(list_format.format(*line) + '\n')
     if print_message:
+        rel_path_fname = os.path.relpath(fname)
         if mode == 'w':
-            print("Wrote file: {}".format(fname))
+            print("Wrote file: {}".format(rel_path_fname))
         elif mode == 'a':
-            print("  Appended: {}".format(fname))
+            print("  Appended: {}".format(rel_path_fname))
 
 
 def print_qm_kind(int_list, element_name, fname, mode='w'):

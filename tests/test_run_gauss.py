@@ -211,8 +211,8 @@ class TestRunGaussBDE(unittest.TestCase):
             self.assertFalse(diff_lines(SETUP_INI_OUT, GOOD_SETUP_INI_OUT))
             self.assertFalse(diff_lines(SETUP_SLURM_OUT, GOOD_SETUP_SLURM_OUT))
         finally:
-            for fname in [SETUP_INI_OUT, SETUP_SLURM_OUT]:
-                silent_remove(fname, disable=DISABLE_REMOVE)
+            # for fname in [SETUP_INI_OUT, SETUP_SLURM_OUT]:
+            #     silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
     def testSetupSubmitList(self):
