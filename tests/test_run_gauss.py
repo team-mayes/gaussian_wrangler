@@ -105,9 +105,9 @@ class TestRunGaussNoOut(unittest.TestCase):
         with capture_stderr(main, test_input) as output:
             self.assertTrue("Problems reading file" in output)
 
-    def testSubmitMissingTplIni(self):
-        test_input = [ETHYLRAD, "-c", SETUP_SUBMIT_MISSING_TPL_INI, "-s"]
-        main(test_input)
+    # def testSubmitMissingTplIni(self):
+    #     test_input = [ETHYLRAD, "-c", SETUP_SUBMIT_MISSING_TPL_INI, "-s"]
+    #     main(test_input)
         # if logger.isEnabledFor(logging.DEBUG):
         #     main(test_input)
         # with capture_stderr(main, test_input) as output:
@@ -214,4 +214,3 @@ class TestRunGaussBDE(unittest.TestCase):
             for fname in [SETUP_INI_OUT, SETUP_SLURM_OUT, WATER_INI_OUT, WATER_SLURM_OUT]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
-

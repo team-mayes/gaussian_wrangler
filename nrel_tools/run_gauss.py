@@ -183,8 +183,8 @@ def parse_cmdline(argv):
                               "be the name of the file with the list of jobs. Could not read: {}".format(args.job_name))
         if args.old_chk_file:
             args.config[FIRST_JOB_CHK] = args.old_chk_file
-        if not args.config[OUT_DIR]:
-            args.config[OUT_DIR] = os.path.dirname(args.config[CONFIG_FILE])
+        # if not args.config[OUT_DIR]:
+        #     args.config[OUT_DIR] = os.path.dirname(args.config[CONFIG_FILE])
     except IOError as e:
         warning("Problems reading file:", e)
         parser.print_help()
