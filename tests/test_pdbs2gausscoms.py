@@ -70,8 +70,6 @@ class TestPdbs2Gausscoms(unittest.TestCase):
     # These test/demonstrate different options
     def testDefIni(self):
         test_input = ["-c", DEF_INI]
-        if logger.isEnabledFor(logging.DEBUG):
-            main(test_input)
         try:
             main(test_input)
             self.assertFalse(diff_lines(GAU_OUT1, GOOD_GAU_OUT1))
@@ -84,8 +82,6 @@ class TestPdbs2Gausscoms(unittest.TestCase):
 
     def testRemoveH(self):
         test_input = ["-c", REMOVE_H_INI]
-        if logger.isEnabledFor(logging.DEBUG):
-            main(test_input)
         try:
             main(test_input)
             self.assertFalse(diff_lines(REMOVE_H_OUT1, GOOD_REMOVE_H_OUT1))
@@ -98,8 +94,6 @@ class TestPdbs2Gausscoms(unittest.TestCase):
 
     def testFirstOnly(self):
         test_input = ["-c", MULTI_FIRST_ONLY_INI]
-        if logger.isEnabledFor(logging.DEBUG):
-            main(test_input)
         try:
             main(test_input)
             self.assertFalse(diff_lines(REMOVE_H_OUT1, GOOD_KEEP_H_OUT1))
@@ -110,8 +104,6 @@ class TestPdbs2Gausscoms(unittest.TestCase):
 
     def testAltIni(self):
         test_input = ["-c", ALT_INI]
-        if logger.isEnabledFor(logging.DEBUG):
-            main(test_input)
         try:
             main(test_input)
             self.assertFalse(diff_lines(ALT_OUT, GOOD_ALT_OUT))

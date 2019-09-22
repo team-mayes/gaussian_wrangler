@@ -1355,6 +1355,13 @@ def process_pdb_file(pdb_file, atom_info_only=False):
 
 
 def process_gausscom_file(gausscom_file):
+    # Grabs and stores in gausscom_content as a dictionary with the keys:
+    #    SEC_HEAD: header (route section, blank lines, comments, and full charge and multiplicity line)
+    #    CHARGE: overall charge (only) as int
+    #    MULT: overall multiplicity (only) as int
+    #    SEC_ATOMS: atoms as a dict of dicts, with atom_id as key to dict with
+    #        ATOM_TYPE: atom_type (str), ATOM_COORDS: (np array)
+    #    SEC_TAIL: everything including and after the blank line following SEC_ATOMS
     with open(gausscom_file) as d:
         gausscom_content = {SEC_HEAD: [], SEC_ATOMS: {}, SEC_TAIL: []}
         section = SEC_HEAD
@@ -1372,6 +1379,8 @@ def process_gausscom_file(gausscom_file):
                     blank_header_lines += 1
                     if blank_header_lines == 2:
                         section = SEC_ATOMS
+                        line = next(d).strip()
+                        gausscom_content[SEC_HEAD].append(line)
                         split_line = line.split()
                         gausscom_content[CHARGE] = int(split_line[0])
                         gausscom_content[MULT] = int(split_line[1])
@@ -1395,6 +1404,13 @@ def process_gausscom_file(gausscom_file):
 
 
 def process_gausslog_file(gausslog_file):
+    # Grabs and stores in gausslog_content as a dictionary with the keys:
+    #    (fyi: unlike process_gausscom_file, no SEC_HEAD is collected)
+    #    CHARGE: overall charge (only) as int
+    #    MULT: overall multiplicity (only) as int
+    #    SEC_ATOMS: atoms as a dict of dicts, with atom_id as key to dict with
+    #        ATOM_TYPE: atom_type (str), ATOM_COORDS: (np array)
+    #    SEC_TAIL: everything including and after the blank line following SEC_ATOMS
     with open(gausslog_file) as d:
         gausslog_content = {SEC_ATOMS: {}}
         section = SEC_HEAD

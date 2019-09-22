@@ -46,6 +46,7 @@ class TestCheckGaussNoOut(unittest.TestCase):
             self.assertFalse(output)
         with capture_stdout(main, test_input) as output:
             self.assertTrue("optional arguments" in output)
+        silent_remove(FOR_HARTREE_DIR, disable=DISABLE_REMOVE)
 
     def testWrongKey(self):
         test_input = ['-ghost']
@@ -55,6 +56,7 @@ class TestCheckGaussNoOut(unittest.TestCase):
             self.assertTrue("unrecognized arguments" in output)
         with capture_stdout(main, test_input) as output:
             self.assertTrue("optional arguments" in output)
+        silent_remove(FOR_HARTREE_DIR, disable=DISABLE_REMOVE)
 
     def testWrongDir(self):
         test_input = ["-d", "ghost"]
@@ -62,6 +64,7 @@ class TestCheckGaussNoOut(unittest.TestCase):
             main(test_input)
         with capture_stderr(main, test_input) as output:
             self.assertTrue("Could not find" in output)
+        silent_remove(FOR_HARTREE_DIR, disable=DISABLE_REMOVE)
 
 
 class TestCheckGauss(unittest.TestCase):

@@ -30,11 +30,13 @@ MAIN_SEC = 'main'
 
 # Config keys
 GAUSSCOM_FILE = 'input_com_file'
+GAUSSLOG_FILE = 'input_log_file'
 OUT_BASE_DIR = 'output_directory'
 CUT_ATOMS = 'cut_atoms'
 GAUSS_COMMAND = 'gaussian_options_line'
 GAUSS_END = 'gaussian_options_end'
 GAUSS_CP_COMMAND = 'gaussian_cp_options_line'
+GAUSS_CP_END = 'gaussian_cp_options_end'
 IGNORE_MAX_DIST = 'ignore_max_distance'
 
 
@@ -48,9 +50,11 @@ DEF_GAUSS_CP_COMMAND = '# m062x/Def2TZVP nosymm Counterpoise=2 CPHF=Grid=Fine'
 # Set notation
 DEF_CFG_VALS = {OUT_BASE_DIR: None,
                 GAUSSCOM_FILE: None,
+                GAUSSLOG_FILE: None,
                 GAUSS_COMMAND: DEF_GAUSS_COMMAND,
                 GAUSS_END: '',
                 GAUSS_CP_COMMAND: DEF_GAUSS_CP_COMMAND,
+                GAUSS_CP_END: '',
                 IGNORE_MAX_DIST: False,
                 }
 REQ_KEYS = {CUT_ATOMS: str,
@@ -138,13 +142,13 @@ def calc_dist(a, b):
     return np.linalg.norm(np.subtract(a, b))
 
 
-def validate_atom_num(atom_pair, atoms_content, gausscom_file, ignore_max_dist):
+def validate_atom_num(atom_pair, atoms_content, gauss_in_fname, ignore_max_dist):
     # check that both atom numbers are not larger than the total number of atoms,
     # and that they are close enough to be bonded
     for atom_num in atom_pair:
         if atom_num not in atoms_content:
             raise InvalidDataError("Found atom id {} in '{}', but there are only {} atoms in the file {}"
-                                   "".format(atom_num, CUT_ATOMS, len(atoms_content), gausscom_file))
+                                   "".format(atom_num, CUT_ATOMS, len(atoms_content), gauss_in_fname))
     pair_dist = calc_dist(atoms_content[atom_pair[0]][ATOM_COORDS], atoms_content[atom_pair[1]][ATOM_COORDS])
     if pair_dist > MAX_BOND_DIST and not ignore_max_dist:
         raise InvalidDataError("Atom ids {} and {} are {:.2f} Angstroms apart, which is greater than "
@@ -357,19 +361,21 @@ def write_com_file(com_file_name, gauss_command, gauss_end, for_comment_line, at
     list_to_file(print_list, com_file_name)
 
 
-def print_com_files(atom_pair, atoms_content, gausscom_file, cfg, frag1, frag2, broke_double_bond, broke_triple_bond,
+def print_com_files(atom_pair, atoms_content, gauss_in_fname, cfg, frag1, frag2, broke_double_bond, broke_triple_bond,
                     ignore_max_dist, charge, mult):
-    for_comment_line = 'from fragment pair {} and {}'.format(atom_pair, gausscom_file)
+    for_comment_line = 'from fragment pair {} and {}'.format(atom_pair, gauss_in_fname)
     # First print template for CP calc (the coordinates should later be replaced by further optimized coordinates,
     # if desired)
-    cp_file_name = create_out_fname(gausscom_file, suffix='_{}_{}_cp'.format(*atom_pair),
+    cp_file_name = create_out_fname(gauss_in_fname, suffix='_{}_{}_cp'.format(*atom_pair),
                                     ext='.com', base_dir=cfg[OUT_BASE_DIR])
-    write_com_file(cp_file_name, cfg[GAUSS_CP_COMMAND], '', for_comment_line, atoms_content, broke_double_bond,
-                   broke_triple_bond, ignore_max_dist, charge, mult)
-    frag1_file_name = create_out_fname(gausscom_file, suffix='_{}_{}_f1'.format(*atom_pair), base_dir=cfg[OUT_BASE_DIR])
+    write_com_file(cp_file_name, cfg[GAUSS_CP_COMMAND], cfg[GAUSS_CP_END], for_comment_line, atoms_content,
+                   broke_double_bond, broke_triple_bond, ignore_max_dist, charge, mult)
+    frag1_file_name = create_out_fname(gauss_in_fname, suffix='_{}_{}_f1'.format(*atom_pair),
+                                       base_dir=cfg[OUT_BASE_DIR])
     write_com_file(frag1_file_name, cfg[GAUSS_COMMAND], cfg[GAUSS_END], for_comment_line, atoms_content,
                    broke_double_bond, broke_triple_bond, ignore_max_dist, charge, mult, 1, frag1)
-    frag2_file_name = create_out_fname(gausscom_file, suffix='_{}_{}_f2'.format(*atom_pair), base_dir=cfg[OUT_BASE_DIR])
+    frag2_file_name = create_out_fname(gauss_in_fname, suffix='_{}_{}_f2'.format(*atom_pair),
+                                       base_dir=cfg[OUT_BASE_DIR])
     write_com_file(frag2_file_name, cfg[GAUSS_COMMAND], cfg[GAUSS_END], for_comment_line, atoms_content,
                    broke_double_bond, broke_triple_bond, ignore_max_dist, charge, mult, 2, frag2)
 
@@ -381,18 +387,21 @@ def main(argv=None):
         return ret
 
     cfg = args.config
-    gauss_file = cfg[GAUSSCOM_FILE]
-    file_name = os.path.basename(gauss_file)
-    ext = os.path.splitext(file_name)[1]
 
     # Read template and data files
     try:
-        if ext == '.com':
-            gausscom_content = process_gausscom_file(gauss_file)
-            atom_data = gausscom_content[SEC_ATOMS]
+        if cfg[GAUSSCOM_FILE]:
+            gauss_file = cfg[GAUSSCOM_FILE]
+            gauss_in_content = process_gausscom_file(gauss_file)
+            atom_data = gauss_in_content[SEC_ATOMS]
+        elif cfg[GAUSSLOG_FILE]:
+            gauss_file = cfg[GAUSSLOG_FILE]
+            gauss_in_content = []
+            atom_data = []
+            pass
         else:
-            raise InvalidDataError("This program expects to read a Gaussian input file with extension '.com' "
-                                   "but input file is {}".format(gauss_file))
+            raise InvalidDataError("This program requires either a valid Gaussian input file ('{}') or Gaussian "
+                                   "output file ('{}') from which to extract atoms with their coordinates.")
         # Before making files, check that atom numbers are valid
         for atom_pair in cfg[CUT_PAIR_LIST]:
             validate_atom_num(atom_pair, atom_data, gauss_file, cfg[IGNORE_MAX_DIST])
@@ -400,7 +409,7 @@ def main(argv=None):
             frag1, frag2, broke_double_bond, broke_triple_bond = fragment_molecule(atom_pair, atom_data,
                                                                                    cfg[IGNORE_MAX_DIST])
             print_com_files(atom_pair, atom_data, gauss_file, cfg, frag1, frag2, broke_double_bond, broke_triple_bond,
-                            cfg[IGNORE_MAX_DIST], gausscom_content[CHARGE], gausscom_content[MULT])
+                            cfg[IGNORE_MAX_DIST], gauss_in_content[CHARGE], gauss_in_content[MULT])
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR
