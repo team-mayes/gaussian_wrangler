@@ -18,7 +18,7 @@ SUB_DATA_DIR = os.path.join(DATA_DIR, 'run_gauss')
 
 ETHYLRAD = 'tests/test_data/run_gauss/ethylrad'
 DEF_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde.ini')
-DEF_SH_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad.sh')
+DEF_SH_OUT = os.path.join(MAIN_DIR, 'ethylrad.sh')
 GOOD_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad.sh')
 DEF_LOG_OUT = os.path.join(PARENT_DIR, 'ethylrad.log')
 ONE_JOB_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde_one_job.ini')
@@ -27,9 +27,9 @@ GOOD_ONE_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_one.sh')
 MISSING_TPL_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_missing_tpl.ini')
 ONE_NEW_JOB_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_one.ini')
 OPT_LOG_OUT = os.path.join(PARENT_DIR, 'ethylrad_opt.log')
-OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_opt.sh')
+OPT_SH_OUT = os.path.join(MAIN_DIR, 'ethylrad_opt.sh')
 OPT_STABLE_LOG_OUT = os.path.join(PARENT_DIR, 'ethylrad_opt_stable.log')
-OPT_STABLE_SH_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_opt_stable.sh')
+OPT_STABLE_SH_OUT = os.path.join(MAIN_DIR, 'ethylrad_opt_stable.sh')
 GOOD_OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt.sh')
 GOOD_OPT_STABLE_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt_stable.sh')
 
@@ -56,12 +56,12 @@ GOOD_SPAWN1_NEW_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new1_good.slur
 GOOD_SPAWN2_NEW_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new2_good.slurm')
 
 SETUP_SUBMIT_INI = os.path.join(SUB_DATA_DIR, 'set_up_submit.ini')
-SETUP_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad.ini')
-SETUP_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad.slurm')
+SETUP_INI_OUT = os.path.join(MAIN_DIR, 'ethylrad.ini')
+SETUP_SLURM_OUT = os.path.join(MAIN_DIR, 'ethylrad.slurm')
 GOOD_SETUP_INI_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad.ini')
 GOOD_SETUP_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad.slurm')
-WATER_INI_OUT = os.path.join(SUB_DATA_DIR, 'water.ini')
-WATER_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'water.slurm')
+WATER_INI_OUT = os.path.join(MAIN_DIR, 'water.ini')
+WATER_SLURM_OUT = os.path.join(MAIN_DIR, 'water.slurm')
 GOOD_WATER_INI_OUT = os.path.join(SUB_DATA_DIR, 'water_good.ini')
 GOOD_WATER_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'water_good.slurm')
 
@@ -119,8 +119,8 @@ class TestRunGaussBDE(unittest.TestCase):
             main(test_input)
             self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_SH_OUT))
         finally:
-            # silent_remove(DEF_SH_OUT, disable=DISABLE_REMOVE)
-            # silent_remove(DEF_LOG_OUT, disable=DISABLE_REMOVE)
+            silent_remove(DEF_SH_OUT, disable=DISABLE_REMOVE)
+            silent_remove(DEF_LOG_OUT, disable=DISABLE_REMOVE)
             pass
 
     def testOneJobIni(self):
@@ -239,10 +239,28 @@ class TestRunGaussBDE(unittest.TestCase):
 
         test_input = ['ethylrad', "-c", SETUP_DEF_TPL_INI, "-s", "-o", 'ethyl']
         try:
-            main(test_input)
+            with capture_stdout(main, test_input) as output:
+                self.assertTrue("sbatch" in output)
             self.assertFalse(diff_lines(SETUP_INI_DEF_DIR_OUT, GOOD_DEF_DIR_INI_OUT))
             self.assertFalse(diff_lines(SETUP_SLURM_DEF_DIR_OUT, GOOD_SHORT_DEF_DIR_SLURM_OUT))
         finally:
             for fname in temp_file_list + [SETUP_INI_DEF_DIR_OUT, SETUP_SLURM_DEF_DIR_OUT]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testNoSubmitDefDirIni(self):
+        # Checking alternate input from above
+        temp_file_list = ['ethylrad.com', 'f.tpl', 'ts.tpl']
+        for fname in temp_file_list:
+            with open(fname, 'w') as f:
+                f.write("# for test only")
+        test_input = ['ethylrad', "-c", SETUP_DEF_TPL_INI, "-s", "-o", 'ethyl', '-n']
+        try:
+            with capture_stdout(main, test_input) as output:
+                self.assertFalse("sbatch" in output)
+            self.assertFalse(diff_lines(SETUP_INI_DEF_DIR_OUT, GOOD_DEF_DIR_INI_OUT))
+            self.assertFalse(diff_lines(SETUP_SLURM_DEF_DIR_OUT, GOOD_SHORT_DEF_DIR_SLURM_OUT))
+        finally:
+            # for fname in temp_file_list + [SETUP_INI_DEF_DIR_OUT, SETUP_SLURM_DEF_DIR_OUT]:
+            #     silent_remove(fname, disable=DISABLE_REMOVE)
             pass

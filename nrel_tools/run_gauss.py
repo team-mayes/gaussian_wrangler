@@ -48,6 +48,7 @@ QOS = 'qos'
 LIST_OF_JOBS = 'list_of_jobs'
 SETUP_SUBMIT = 'setup_submit'
 START_FROM_SAME_CHK = 'start_from_job_name_chk'
+NO_SUBMIT = 'no_submit'
 
 DEF_CFG_FILE = 'run_gauss.ini'
 DEF_JOB_RUN_TPL = 'run_gauss_job.tpl'
@@ -155,6 +156,8 @@ def parse_cmdline(argv):
                                                "The default file name is {}, located in the base directory "
                                                "where the program as run.".format(DEF_CFG_FILE),
                         default=DEF_CFG_FILE, type=read_cfg)
+    parser.add_argument("-n", "--no_submit", help="Set up jobs without submitting them.", action="store_true",
+                        default=False)
     parser.add_argument("-o", "--old_chk_file", help="The base name of the checkpoint file (do not include '.chk')"
                                                      "to be used for the first job (optional).", default=None)
     parser.add_argument("-s", "--setup_submit", help="The script will setup and submit, rather than run, the provided "
@@ -309,11 +312,12 @@ def setup_and_submit(cfg, index, thread, tpl_dict):
     sbatch_dict = create_sbatch_dict(cfg, tpl_dict, new_ini_fname, start_from_job_name_chk=cfg[START_FROM_SAME_CHK])
     new_sbatch_fname = create_out_fname(base_name, suffix=str(index), ext='.slurm', base_dir=cfg[OUT_DIR])
     fill_save_tpl(cfg, tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
-    try:
-        sbatch_result = subprocess.check_output(["sbatch", new_sbatch_fname]).strip().decode("utf-8")
-        print(sbatch_result)
-    except IOError as e:
-        print(e)
+    if not cfg[NO_SUBMIT]:
+        try:
+            sbatch_result = subprocess.check_output(["sbatch", new_sbatch_fname]).strip().decode("utf-8")
+            print(sbatch_result)
+        except IOError as e:
+            print(e)
 
 
 def main(argv=None):
@@ -326,6 +330,7 @@ def main(argv=None):
     # to keep these values handy
     cfg[LIST_OF_JOBS] = args.list_of_jobs
     cfg[SETUP_SUBMIT] = args.setup_submit
+    cfg[NO_SUBMIT] = args.no_submit
 
     # Read template and data files
     try:
