@@ -142,3 +142,11 @@ tests/test_data/goodvibes_helper/aea_prod_vibes.dat
 /tests/test_data/run_gauss/ethylrad.slurm
 /f.tpl
 /s12but_17_84_f2_t.com
+/tests/test_data/gausslog2com/frag_example_fresh_fb.com
+/ethylrad.com
+/ethylrad.ini
+/ethylrad.slurm
+/ethylrad0.ini
+/ethylrad0.slurm
+/ethylrad1.ini
+/ethylrad1.slurm

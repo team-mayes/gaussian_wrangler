@@ -53,7 +53,7 @@ NO_SUBMIT = 'no_submit'
 DEF_CFG_FILE = 'run_gauss.ini'
 DEF_JOB_RUN_TPL = 'run_gauss_job.tpl'
 DEF_SLURM_FROM_CHK_TPL = 'run_gauss_from_old_chk.tpl'
-DEF_JOB_LIST = ['', 'opt', 'stable', 'freq', 'pfb', 'fb']
+DEF_JOB_LIST = None
 DEF_PARTITION = 'short'
 DEF_RUN_TIME = '4:00:00'
 DEF_ACCOUNT = 'bpms'
@@ -65,7 +65,7 @@ DEF_FOLLOW_JOBS_LIST = None
 # Set notation
 DEF_CFG_VALS = {OUT_DIR: None,
                 JOB_RUN_TPL: DEF_JOB_RUN_TPL,
-                JOB_LIST: DEF_JOB_LIST,
+                JOB_LIST: None,
                 FOLLOW_JOBS_LIST: DEF_FOLLOW_JOBS_LIST,
                 FIRST_JOB_CHK: None,
                 PARTITION: DEF_PARTITION,
@@ -106,17 +106,20 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
     main_proc[CONFIG_FILE] = f_loc
     main_proc[TPL_DICT] = {}
 
-    all_job_types = main_proc[JOB_LIST].copy()
-    follow_jobs_list = []
-    if main_proc[FOLLOW_JOBS_LIST]:
-        threads = [thread.split(',') for thread in main_proc[FOLLOW_JOBS_LIST].split(';')]
-        for thread in threads:
-            thread = [job.strip() for job in thread]
-            follow_jobs_list.append(thread)
-            all_job_types += thread
-        main_proc[FOLLOW_JOBS_LIST] = follow_jobs_list
-    else:
-        main_proc[FOLLOW_JOBS_LIST] = []
+    all_job_types = []
+    for job_list_key in [JOB_LIST, FOLLOW_JOBS_LIST]:
+        job_list = main_proc[job_list_key]
+        jobs_list = []
+        # need to distinguish between NoneType and ''
+        if job_list is not None:
+            threads = [thread.split(',') for thread in job_list.split(';')]
+            for thread in threads:
+                thread = [job.strip() for job in thread]
+                jobs_list.append(thread)
+                all_job_types += thread
+            main_proc[job_list_key] = jobs_list
+        else:
+            main_proc[job_list_key] = []
 
     for job in all_job_types:
         if job == '':
@@ -156,8 +159,8 @@ def parse_cmdline(argv):
                                                "The default file name is {}, located in the base directory "
                                                "where the program as run.".format(DEF_CFG_FILE),
                         default=DEF_CFG_FILE, type=read_cfg)
-    parser.add_argument("-n", "--no_submit", help="Set up jobs without submitting them.", action="store_true",
-                        default=False)
+    parser.add_argument("-n", "--no_submit", help="Set up jobs without submitting them. This flag only effects the "
+                                                  "'-s' and '-l' options.", action="store_true", default=False)
     parser.add_argument("-o", "--old_chk_file", help="The base name of the checkpoint file (do not include '.chk')"
                                                      "to be used for the first job (optional).", default=None)
     parser.add_argument("-s", "--setup_submit", help="The script will setup and submit, rather than run, the provided "
@@ -187,7 +190,15 @@ def parse_cmdline(argv):
         if args.old_chk_file:
             args.config[FIRST_JOB_CHK] = os.path.splitext(args.old_chk_file)[0]
 
-        # commenting below makes the current directory the default
+        if not (args.list_of_jobs or args.setup_submit):
+            if len(args.config[JOB_LIST]) > 1:
+                raise InvalidDataError("Found ';' in the '{}'. This option (setting up multiple job threads) is "
+                                       "currently only supported for setting up (and optionally submitting) jobs "
+                                       "(using the '-s' or '-l' options).".format(JOB_LIST))
+            elif len(args.config[JOB_LIST]) == 1:
+                args.config[JOB_LIST] = args.config[JOB_LIST][0]
+
+        # commenting below made the current directory the default
         # if not args.config[OUT_DIR]:
         #     args.config[OUT_DIR] = os.path.dirname(args.config[CONFIG_FILE])
     except IOError as e:
@@ -296,7 +307,7 @@ def create_ini_dict(cfg, thread):
     return ini_dict
 
 
-def setup_and_submit(cfg, index, thread, tpl_dict):
+def setup_and_submit(cfg, suffix, thread, tpl_dict):
     ini_dict = create_ini_dict(cfg, thread)
     tpl_str = read_tpl(cfg[INI_TPL])
     if cfg[SETUP_SUBMIT]:
@@ -305,12 +316,12 @@ def setup_and_submit(cfg, index, thread, tpl_dict):
         base_name = tpl_dict[JOB_NAME]
     else:
         base_name = cfg[CONFIG_FILE]
-    new_ini_fname = create_out_fname(base_name, suffix=str(index), ext='.ini', base_dir=cfg[OUT_DIR])
+    new_ini_fname = create_out_fname(base_name, suffix=str(suffix), ext='.ini', base_dir=cfg[OUT_DIR])
     fill_save_tpl(cfg, tpl_str, ini_dict, cfg[INI_TPL], new_ini_fname)
     add_to_ini(new_ini_fname, thread, cfg[TPL_DICT])
     tpl_str = read_tpl(cfg[SBATCH_TPL])
     sbatch_dict = create_sbatch_dict(cfg, tpl_dict, new_ini_fname, start_from_job_name_chk=cfg[START_FROM_SAME_CHK])
-    new_sbatch_fname = create_out_fname(base_name, suffix=str(index), ext='.slurm', base_dir=cfg[OUT_DIR])
+    new_sbatch_fname = create_out_fname(base_name, suffix=str(suffix), ext='.slurm', base_dir=cfg[OUT_DIR])
     fill_save_tpl(cfg, tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
     if not cfg[NO_SUBMIT]:
         try:
@@ -339,7 +350,12 @@ def main(argv=None):
                 for line in f:
                     base_name = os.path.splitext(os.path.basename(line.strip()))[0]
                     tpl_dict = {JOB_NAME: base_name}
-                    setup_and_submit(cfg, '', cfg[JOB_LIST], tpl_dict)
+                    for index, thread in enumerate(cfg[JOB_LIST]):
+                        if len(cfg[JOB_LIST]) == 1:
+                            suffix = ''
+                        else:
+                            suffix = index
+                        setup_and_submit(cfg, suffix, thread, tpl_dict)
             return GOOD_RET
 
         job_name_perhaps_with_dir = args.job_name
@@ -347,7 +363,12 @@ def main(argv=None):
         tpl_dict = {JOB_NAME: job_name}
 
         if args.setup_submit:
-            setup_and_submit(cfg, '', cfg[JOB_LIST], tpl_dict)
+            for index, thread in enumerate(cfg[JOB_LIST]):
+                if len(cfg[JOB_LIST]) == 1:
+                    suffix = ''
+                else:
+                    suffix = index
+                setup_and_submit(cfg, suffix, thread, tpl_dict)
             return GOOD_RET
 
         for job in cfg[JOB_LIST]:

@@ -78,6 +78,16 @@ GOOD_DEF_DIR_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_default_dir_good.ini
 GOOD_DEF_DIR_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_default_dir_good.slurm')
 GOOD_SHORT_DEF_DIR_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_short_def_dir_good.slurm')
 
+SETUP_IRCS_INI = os.path.join(SUB_DATA_DIR, 'submit_ircs_opt.ini')
+SETUP_IRCR_INI_OUT = os.path.join(MAIN_DIR, 'ethylrad0.ini')
+SETUP_IRCR_SLM_OUT = os.path.join(MAIN_DIR, 'ethylrad0.slurm')
+SETUP_IRCF_INI_OUT = os.path.join(MAIN_DIR, 'ethylrad1.ini')
+SETUP_IRCF_SLM_OUT = os.path.join(MAIN_DIR, 'ethylrad1.slurm')
+GOOD_SETUP_IRCR_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad0_good.ini')
+GOOD_SETUP_IRCR_SLM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad0_good.slurm')
+GOOD_SETUP_IRCF_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad1_good.ini')
+GOOD_SETUP_IRCF_SLM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad1_good.slurm')
+
 
 class TestRunGaussNoOut(unittest.TestCase):
     # These all test failure cases
@@ -98,10 +108,11 @@ class TestRunGaussNoOut(unittest.TestCase):
 
     def testMissingListIni(self):
         test_input = [ETHYLRAD, "-c", MISSING_TPL_INI]
+        # main(test_input)
         if logger.isEnabledFor(logging.DEBUG):
             main(test_input)
         with capture_stderr(main, test_input) as output:
-            self.assertTrue("could not find a template file" in output)
+            self.assertTrue("not find the submit template" in output)
 
     def testMissingComFileIni(self):
         test_input = ["ghost", "-c", DEF_INI]
@@ -109,6 +120,24 @@ class TestRunGaussNoOut(unittest.TestCase):
             main(test_input)
         with capture_stderr(main, test_input) as output:
             self.assertTrue("Problems reading file" in output)
+
+    def testAttemptRunMultIni(self):
+        # Create and submit more than one ini
+        temp_file_list = ['ethylrad.com', 'ircr.tpl', 'ircf.tpl', 'opt.tpl']
+        for fname in temp_file_list:
+            with open(fname, 'w') as f:
+                f.write("# for test only")
+        test_input = ['ethylrad', "-c", SETUP_IRCS_INI, "-o", 'ethyl']
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        try:
+            # main(test_input)
+            with capture_stderr(main, test_input) as output:
+                self.assertTrue("only supported" in output)
+        finally:
+            for fname in temp_file_list + [SETUP_INI_DEF_DIR_OUT, SETUP_SLURM_DEF_DIR_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
 
 
 class TestRunGaussBDE(unittest.TestCase):
@@ -248,19 +277,21 @@ class TestRunGaussBDE(unittest.TestCase):
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
-    def testNoSubmitDefDirIni(self):
-        # Checking alternate input from above
-        temp_file_list = ['ethylrad.com', 'f.tpl', 'ts.tpl']
+    def testSubmitMultIni(self):
+        # Create and submit more than one ini
+        temp_file_list = ['ethylrad.com', 'ircr.tpl', 'ircf.tpl', 'opt.tpl']
         for fname in temp_file_list:
             with open(fname, 'w') as f:
                 f.write("# for test only")
-        test_input = ['ethylrad', "-c", SETUP_DEF_TPL_INI, "-s", "-o", 'ethyl', '-n']
+        test_input = ['ethylrad', "-c", SETUP_IRCS_INI, "-s", "-o", 'ethyl']
         try:
-            with capture_stdout(main, test_input) as output:
-                self.assertFalse("sbatch" in output)
-            self.assertFalse(diff_lines(SETUP_INI_DEF_DIR_OUT, GOOD_DEF_DIR_INI_OUT))
-            self.assertFalse(diff_lines(SETUP_SLURM_DEF_DIR_OUT, GOOD_SHORT_DEF_DIR_SLURM_OUT))
+            main(test_input)
+            self.assertFalse(diff_lines(SETUP_IRCR_INI_OUT, GOOD_SETUP_IRCR_INI_OUT))
+            self.assertFalse(diff_lines(SETUP_IRCR_SLM_OUT, GOOD_SETUP_IRCR_SLM_OUT))
+            self.assertFalse(diff_lines(SETUP_IRCF_INI_OUT, GOOD_SETUP_IRCF_INI_OUT))
+            self.assertFalse(diff_lines(SETUP_IRCF_SLM_OUT, GOOD_SETUP_IRCF_SLM_OUT))
         finally:
-            # for fname in temp_file_list + [SETUP_INI_DEF_DIR_OUT, SETUP_SLURM_DEF_DIR_OUT]:
-            #     silent_remove(fname, disable=DISABLE_REMOVE)
+            for fname in temp_file_list + [SETUP_IRCR_INI_OUT, SETUP_IRCR_SLM_OUT,
+                                           SETUP_IRCF_INI_OUT, SETUP_IRCF_SLM_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
             pass
