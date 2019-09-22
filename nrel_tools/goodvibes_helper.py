@@ -30,7 +30,6 @@ __author__ = 'hmayes'
 
 
 # Config keys
-DEF_HARTREE_LOC = '/Users/hmayes/.local/bin/hartree-cli-1.2.5.jar'
 DEF_OUT_FILE_NAME = 'aea_out.csv'
 
 # For data processing; standard hartree fieldnames below
@@ -77,6 +76,8 @@ def parse_cmdline(argv):
     if argv is None:
         argv = sys.argv[1:]
 
+    hartree_help_string = "The command to run hartree (see https://github.com/team-mayes/hartree). The program will "\
+                          "use bash to look for the program location with 'which hartree' and 'alias hartree'."
     # initialize the parser object:
     parser = argparse.ArgumentParser(description='Calculates A and Ea from Gaussian output files using GoodVibes. '
                                                  'List files to be analyzed, reactant(s) first and ending with the '
@@ -85,8 +86,7 @@ def parse_cmdline(argv):
                                                  'structure).')
     parser.add_argument("-d", "--out_dir", help="A directory where output files should be saved. The default location "
                                                 "is the current working directory.", default=None)
-    parser.add_argument("-hl", "--hartree_location", help="Optional: the call to invoke hartree. The default is: "
-                                                          "{}".format(DEF_HARTREE_LOC), default=DEF_HARTREE_LOC)
+    parser.add_argument("-hc", "--hartree_call", help=hartree_help_string, default=None)
     parser.add_argument("-l", "--list", help="The location of the list of Gaussian output files. "
                                              "The default file name.", default=None)
     parser.add_argument("--temp", help="Temperature in K for calculating \u0394G. The default is the first "
@@ -129,6 +129,21 @@ def parse_cmdline(argv):
         if not os.path.exists(args[0].out_dir):
             os.makedirs(args[0].out_dir)
 
+        if not args[0].hartree_call:
+            with open(os.devnull, 'w') as fnull:
+                hartree_bash_alias_call = ['/bin/bash', '-i', '-c', "alias hartree"]
+                hartree_bash_which_call = ['/bin/bash', '-i', '-c', "which hartree"]
+                if subprocess.call(hartree_bash_alias_call, stdout=fnull, stderr=subprocess.STDOUT) == 0:
+                    raw_hartree_call = subprocess.check_output(hartree_bash_alias_call,
+                                                               stderr=fnull).decode("utf-8").strip().split("\n")
+                    args[0].hartree_call = raw_hartree_call[0].split("'")[1].split()
+                elif subprocess.call(hartree_bash_which_call, stdout=fnull, stderr=subprocess.STDOUT) == 0:
+                    args[0].hartree_call = subprocess.check_output(hartree_bash_which_call,
+                                                                   stderr=fnull).decode("utf-8").strip().split("\n")[0]
+                else:
+                    warning("Did not find a valid 'hartree' command. {}".format(hartree_help_string))
+                    return args, INPUT_ERROR
+
         if args[0].output_fname:
             args[0].output_fname = os.path.abspath(os.path.join(args[0].out_dir, args[0].output_fname))
         elif args[0].list:
@@ -151,7 +166,7 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def check_gausslog_fileset(file_set, hartree_loc, good_vibes_check):
+def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
     """
     checks include:
        using hartree to get info to check for:
@@ -162,7 +177,7 @@ def check_gausslog_fileset(file_set, hartree_loc, good_vibes_check):
         awk for same versions of Gaussian
         made GoodVibes checks optional to save run time
     :param file_set: list of reactant file(s) and TS file
-    :param hartree_loc: location where hartree can be found to run
+    :param hartree_call: bash call to invoke hartree
     :param good_vibes_check: boolean to run goodvibes checking; will slow down calculations
     :return: reaction_type: integer for molecularity of reaction
     """
@@ -183,7 +198,7 @@ def check_gausslog_fileset(file_set, hartree_loc, good_vibes_check):
     reading_reactants = True
 
     # first, run through Hartree
-    hartree_input = ["java", "-jar", hartree_loc, "snap"]
+    hartree_input = hartree_call + ["snap"]
     for index, fname in enumerate(file_set):
         if fname == REACT_PROD_SEP:
             continue
@@ -564,7 +579,7 @@ def main(argv=None):
         else:
             tog_fname = None
         for file_set in row_list:
-            solvent, ts_index = check_gausslog_fileset(file_set, args[0].hartree_location, args[0].vibes_check)
+            solvent, ts_index = check_gausslog_fileset(file_set, args[0].hartree_call, args[0].vibes_check)
             temps, h, qh_h, gt, qh_gt = get_thermochem(file_set, args[0].temp_range, solvent, args[0].save_vibes,
                                                        args[0].out_dir, tog_fname, args[0].quasiharmonic)
             delta_h_ts, delta_h_rxn = get_deltas(temps, h, ts_index)
