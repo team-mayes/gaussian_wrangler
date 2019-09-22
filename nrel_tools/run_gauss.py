@@ -257,13 +257,13 @@ def create_sbatch_dict(cfg, tpl_dict, new_ini_fname, start_from_job_name_chk=Tru
     return sbatch_dict
 
 
-def add_to_ini(filled_tpl_name, thread, cfg):
+def add_to_ini(filled_tpl_name, thread, tpl_dict):
     with open(filled_tpl_name, 'a') as f:
         f.write('\n')
         for job in thread:
             if job == '':
                 continue
-            f.write('{} = {}\n'.format(job, cfg[job]))
+            f.write('{} = {}\n'.format(job, tpl_dict[job]))
 
 
 def create_ini_dict(cfg, thread):
@@ -300,7 +300,7 @@ def setup_and_submit(cfg, index, thread, tpl_dict):
         base_name = cfg[CONFIG_FILE]
     new_ini_fname = create_out_fname(base_name, suffix=str(index), ext='.ini', base_dir=cfg[OUT_DIR])
     fill_save_tpl(cfg, tpl_str, ini_dict, cfg[INI_TPL], new_ini_fname)
-    add_to_ini(new_ini_fname, thread, cfg)
+    add_to_ini(new_ini_fname, thread, cfg[TPL_DICT])
     tpl_str = read_tpl(cfg[SBATCH_TPL])
     sbatch_dict = create_sbatch_dict(cfg, tpl_dict, new_ini_fname, start_from_job_name_chk=cfg[START_FROM_SAME_CHK])
     new_sbatch_fname = create_out_fname(base_name, suffix=str(index), ext='.slurm', base_dir=cfg[OUT_DIR])

@@ -71,6 +71,8 @@ GOOD_ETHYL_SPAWN_INI_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_spawn.ini')
 GOOD_ETHYL_SPAWN_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_spawn.slurm')
 GOOD_WATER_SPAWN_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'water_spawn_good.slurm')
 
+SETUP_SUBMIT_MISSING_TPL_INI = os.path.join(SUB_DATA_DIR, 'submit_current_f_ts.ini')
+
 
 class TestRunGaussNoOut(unittest.TestCase):
     # These all test failure cases
@@ -102,6 +104,14 @@ class TestRunGaussNoOut(unittest.TestCase):
             main(test_input)
         with capture_stderr(main, test_input) as output:
             self.assertTrue("Problems reading file" in output)
+
+    def testSubmitMissingTplIni(self):
+        test_input = [ETHYLRAD, "-c", SETUP_SUBMIT_MISSING_TPL_INI, "-s"]
+        main(test_input)
+        # if logger.isEnabledFor(logging.DEBUG):
+        #     main(test_input)
+        # with capture_stderr(main, test_input) as output:
+        #     self.assertTrue("could not find a template file" in output)
 
 
 class TestRunGaussBDE(unittest.TestCase):
