@@ -1439,9 +1439,10 @@ def process_gausslog_file(gausslog_file):
                 while not GAU_SEP_PAT.match(line):
                     split_line = line.split()
                     atom_type = ATOM_NUM_DICT[int(split_line[1])]
-                    atom_xyz = ["{:>12}".format(x) for x in split_line[3:6]]
+                    atom_xyz = np.array(list(map(float, split_line[3:6])))
                     gausslog_content[SEC_ATOMS][atom_id] = {ATOM_TYPE: atom_type, ATOM_COORDS: atom_xyz}
                     atom_id += 1
+                    line = next(d).strip()
                 section = SEC_TAIL
                 atom_id = 1
 

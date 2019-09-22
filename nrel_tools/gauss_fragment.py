@@ -11,7 +11,7 @@ import numpy as np
 from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                ATOM_TYPE, ATOM_COORDS, process_gausscom_file,
-                               CHARGE, MULT)
+                               CHARGE, MULT, process_gausslog_file)
 
 try:
     # noinspection PyCompatibility
@@ -52,9 +52,9 @@ DEF_CFG_VALS = {OUT_BASE_DIR: None,
                 GAUSSCOM_FILE: None,
                 GAUSSLOG_FILE: None,
                 GAUSS_COMMAND: DEF_GAUSS_COMMAND,
-                GAUSS_END: '',
+                GAUSS_END: None,
                 GAUSS_CP_COMMAND: DEF_GAUSS_CP_COMMAND,
-                GAUSS_CP_END: '',
+                GAUSS_CP_END: None,
                 IGNORE_MAX_DIST: False,
                 }
 REQ_KEYS = {CUT_ATOMS: str,
@@ -102,6 +102,10 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
     if main_proc[OUT_BASE_DIR]:
         if not os.path.exists(main_proc[OUT_BASE_DIR]):
             os.makedirs(main_proc[OUT_BASE_DIR])
+
+    for convert_to_line_breaks_key in [GAUSS_END, GAUSS_CP_END]:
+        if main_proc[convert_to_line_breaks_key]:
+            main_proc[convert_to_line_breaks_key] = main_proc[convert_to_line_breaks_key].replace(';', '\n')
 
     return main_proc
 
@@ -303,7 +307,7 @@ def write_com_file(com_file_name, gauss_command, gauss_end, for_comment_line, at
     list is passed to "frag_list". Otherwise, make a Gaussian input file to optimize any fragments with len > 1.
     :param com_file_name: str
     :param gauss_command: str
-    :param gauss_end: str
+    :param gauss_end: str or None
     :param for_comment_line: str
     :param atoms_content: dictionary with atom type, atom coordinates, and fragment ID
     :param broke_double_bond: flag to change multiplicity
@@ -346,15 +350,15 @@ def write_com_file(com_file_name, gauss_command, gauss_end, for_comment_line, at
     print_list = [[gauss_command], [], [comment_begin + for_comment_line], [], [charge_mult]]
     for atom_num in frag_list:
         if frag_num:
-            atom_line = atoms_content[atom_num][ATOM_TYPE] + \
-                        '    {:11.6f} {:11.6f} {:11.6f}'.format(*atoms_content[atom_num][ATOM_COORDS])
+            atom_line = "{:7}".format(atoms_content[atom_num][ATOM_TYPE]) + \
+                        ' {:11.6f} {:11.6f} {:11.6f}'.format(*atoms_content[atom_num][ATOM_COORDS])
         else:
-            atom_line = atoms_content[atom_num][ATOM_TYPE] + \
-                        '(Fragment={})    {:11.6f} {:11.6f} {:11.6f}'.format(atoms_content[atom_num][FRAGMENT],
-                                                                             *atoms_content[atom_num][ATOM_COORDS])
+            atom_type_str = "{}(Fragment={})".format(atoms_content[atom_num][ATOM_TYPE],
+                                                     atoms_content[atom_num][FRAGMENT])
+            atom_line = '{:15}  {:11.6f} {:11.6f} {:11.6f}'.format(atom_type_str, *atoms_content[atom_num][ATOM_COORDS])
         print_list.append(atom_line)
     print_list.append([])
-    if len(gauss_end) > 0:
+    if gauss_end:
         print_list.append([gauss_end])
         print_list.append([])
     print_list.append([])
@@ -370,11 +374,11 @@ def print_com_files(atom_pair, atoms_content, gauss_in_fname, cfg, frag1, frag2,
                                     ext='.com', base_dir=cfg[OUT_BASE_DIR])
     write_com_file(cp_file_name, cfg[GAUSS_CP_COMMAND], cfg[GAUSS_CP_END], for_comment_line, atoms_content,
                    broke_double_bond, broke_triple_bond, ignore_max_dist, charge, mult)
-    frag1_file_name = create_out_fname(gauss_in_fname, suffix='_{}_{}_f1'.format(*atom_pair),
+    frag1_file_name = create_out_fname(gauss_in_fname, suffix='_{}_{}_f1'.format(*atom_pair), ext='.com',
                                        base_dir=cfg[OUT_BASE_DIR])
     write_com_file(frag1_file_name, cfg[GAUSS_COMMAND], cfg[GAUSS_END], for_comment_line, atoms_content,
                    broke_double_bond, broke_triple_bond, ignore_max_dist, charge, mult, 1, frag1)
-    frag2_file_name = create_out_fname(gauss_in_fname, suffix='_{}_{}_f2'.format(*atom_pair),
+    frag2_file_name = create_out_fname(gauss_in_fname, suffix='_{}_{}_f2'.format(*atom_pair), ext='.com',
                                        base_dir=cfg[OUT_BASE_DIR])
     write_com_file(frag2_file_name, cfg[GAUSS_COMMAND], cfg[GAUSS_END], for_comment_line, atoms_content,
                    broke_double_bond, broke_triple_bond, ignore_max_dist, charge, mult, 2, frag2)
@@ -396,9 +400,8 @@ def main(argv=None):
             atom_data = gauss_in_content[SEC_ATOMS]
         elif cfg[GAUSSLOG_FILE]:
             gauss_file = cfg[GAUSSLOG_FILE]
-            gauss_in_content = []
-            atom_data = []
-            pass
+            gauss_in_content = process_gausslog_file(gauss_file)
+            atom_data = gauss_in_content[SEC_ATOMS]
         else:
             raise InvalidDataError("This program requires either a valid Gaussian input file ('{}') or Gaussian "
                                    "output file ('{}') from which to extract atoms with their coordinates.")

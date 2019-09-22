@@ -95,6 +95,14 @@ GOOD_F1_METAL_OUT = os.path.join(SUB_DATA_DIR, 'tieg5ipatse_ts_ircr_optts_37_38_
 F2_METAL_OUT = os.path.join(SUB_DATA_DIR, 'tieg5ipatse_ts_ircr_optts_37_38_f2.com')
 GOOD_F2_METAL_OUT = os.path.join(SUB_DATA_DIR, 'tieg5ipatse_ts_ircr_optts_37_38_f2_good.com')
 
+ADD_CP_FOOTER_INI = os.path.join(SUB_DATA_DIR, 'gauss_frag_add_end_basis.ini')
+CP_FOOTER_CP_OUT = os.path.join(SUB_DATA_DIR, '2011shi_fig5cts_origts_ircf_opt_19_40_cp.com')
+CP_FOOTER_F1_OUT = os.path.join(SUB_DATA_DIR, '2011shi_fig5cts_origts_ircf_opt_19_40_f1.com')
+CP_FOOTER_F2_OUT = os.path.join(SUB_DATA_DIR, '2011shi_fig5cts_origts_ircf_opt_19_40_f2.com')
+GOOD_CP_FOOTER_CP_OUT = os.path.join(SUB_DATA_DIR, '2011shi_fig5cts_origts_ircf_opt_19_40_cp_good.com')
+GOOD_CP_FOOTER_F1_OUT = os.path.join(SUB_DATA_DIR, '2011shi_fig5cts_origts_ircf_opt_19_40_f1_good.com')
+GOOD_CP_FOOTER_F2_OUT = os.path.join(SUB_DATA_DIR, '2011shi_fig5cts_origts_ircf_opt_19_40_f2_good.com')
+
 
 class TestGausscomFragNoOut(unittest.TestCase):
     # These all test failure cases
@@ -237,4 +245,18 @@ class TestGausscomFrag(unittest.TestCase):
             silent_remove(CP_METAL_OUT, disable=DISABLE_REMOVE)
             silent_remove(F1_METAL_OUT, disable=DISABLE_REMOVE)
             silent_remove(F2_METAL_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testCPFooter(self):
+        # Uses a longer bond cut-off when one of the atoms is a metal
+        test_input = ["-c", ADD_CP_FOOTER_INI]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(CP_FOOTER_CP_OUT, GOOD_CP_FOOTER_CP_OUT))
+            self.assertFalse(diff_lines(CP_FOOTER_F1_OUT, GOOD_CP_FOOTER_F1_OUT))
+            self.assertFalse(diff_lines(CP_FOOTER_F2_OUT, GOOD_CP_FOOTER_F2_OUT))
+        finally:
+            silent_remove(CP_FOOTER_CP_OUT, disable=DISABLE_REMOVE)
+            silent_remove(CP_FOOTER_F1_OUT, disable=DISABLE_REMOVE)
+            silent_remove(CP_FOOTER_F2_OUT, disable=DISABLE_REMOVE)
             pass

@@ -150,3 +150,6 @@ tests/test_data/goodvibes_helper/aea_prod_vibes.dat
 /ethylrad0.slurm
 /ethylrad1.ini
 /ethylrad1.slurm
+/tests/test_data/gauss_fragment/2011shi_fig5cts_origts_ircf_opt_19_40_cp.com
+/tests/test_data/gauss_fragment/2011shi_fig5cts_origts_ircf_opt_19_40_f1.com
+/tests/test_data/gauss_fragment/2011shi_fig5cts_origts_ircf_opt_19_40_f2.com
