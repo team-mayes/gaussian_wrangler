@@ -283,7 +283,7 @@ class TestRunGaussBDE(unittest.TestCase):
         for fname in temp_file_list:
             with open(fname, 'w') as f:
                 f.write("# for test only")
-        test_input = ['ethylrad', "-c", SETUP_IRCS_INI, "-s", "-o", 'ethyl']
+        test_input = ['ethylrad', "-c", SETUP_IRCS_INI, "-s", ]
         try:
             main(test_input)
             self.assertFalse(diff_lines(SETUP_IRCR_INI_OUT, GOOD_SETUP_IRCR_INI_OUT))
