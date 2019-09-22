@@ -11,6 +11,7 @@ from nrel_tools.common import (InvalidDataError, warning, create_out_fname, list
                                NUM_ATOMS, GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, GAU_CHARGE_PAT)
 
+
 try:
     # noinspection PyCompatibility
     from ConfigParser import ConfigParser, MissingSectionHeaderError
@@ -33,6 +34,7 @@ OUT_BASE_DIR = 'output_directory'
 SEC_HEAD = 'head_section'
 SEC_ATOMS = 'atoms_section'
 SEC_TAIL = 'tail_section'
+SEC_INITIAL_COORDINATES = 'initial_coordinates_section'
 COM_TYPE = 'com_type'
 
 
@@ -89,7 +91,7 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def process_gausscom_files(gausslog_files, com_tpl_content, charge_from_log_flag, find_low_energy, base_dir, out_fname):
+def process_gausslog_files(gausslog_files, com_tpl_content, charge_from_log_flag, find_low_energy, base_dir, out_fname):
     for gausslog_file in gausslog_files:
         process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, find_low_energy,
                               base_dir, out_fname)
@@ -103,10 +105,9 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
             com_tpl_content[SEC_HEAD][-3] = "Last conformation from file {}".format(gausslog_file)
         lowest_energy_found = 0.0
         final_atoms_section = []
+        atom_type_list = []
         section = SEC_HEAD
         atom_id = 0
-        lines_after_coord = 2
-        coord_match = False
         # so don't change the flag that is passed it, so if there is another log file it will also be checked
         if not charge_from_log_flag:
             find_charge = True
@@ -121,27 +122,52 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
             if section == SEC_HEAD:
                 if find_charge:
                     if GAU_CHARGE_PAT.match(line):
-                        split_line = line.split()
-                        com_tpl_content[SEC_HEAD][-1] = '{}  {}'.format(int(split_line[2]), int(split_line[5]))
-                        find_charge = False
+                        charge_mult = []
+                        while find_charge:
+                            split_line = line.split('=')
+                            charge_mult.append('{}  {}'.format(int(split_line[1].split()[0]),
+                                                               int(split_line[2].split()[0])))
+                            line = next(d).strip()
+                            if not GAU_CHARGE_PAT.match(line):
+                                if len(charge_mult) > 1:
+                                    section = SEC_INITIAL_COORDINATES
+                                    final_atoms_section = []
+                                    # already reading the next section, so grab the needed info
+                                    atom_type_list.append("{:15}".format(line.split()[0]))
+                                com_tpl_content[SEC_HEAD][-1] = '   '.join(charge_mult)
+                                find_charge = False
                         continue
                 if GAU_COORD_PAT.match(line):
-                    coord_match = True
                     atoms_section = []
-                    continue
-                elif coord_match and lines_after_coord > 0:
-                    lines_after_coord -= 1
-                    if lines_after_coord == 0:
-                        section = SEC_ATOMS
+                    next(d)
+                    next(d)
+                    section = SEC_ATOMS
                     continue
 
+            elif section == SEC_INITIAL_COORDINATES:
+                while len(line) > 0:
+                    # originally just added whole line to final. Then found that this section prints fewer sig figs
+                    #   than the coordinate section, so taking those instead
+                    atom_type_list.append("{:15}".format(line.split()[0]))
+                    line = next(d).strip()
+                while not GAU_COORD_PAT.match(line):
+                    line = next(d).strip()
+                next(d)
+                next(d)
+                line = next(d).strip()
+                while not GAU_SEP_PAT.match(line):
+                    split_line = line.split()
+                    atom_xyz = ["{:>12}".format(x) for x in split_line[3:6]]
+                    final_atoms_section.append(atom_type_list[atom_id] + ' '.join(atom_xyz))
+                    atom_id += 1
+                    line = next(d).strip()
+                break
             elif section == SEC_ATOMS:
                 if GAU_SEP_PAT.match(line):
                     section = SEC_TAIL
                     continue
 
                 split_line = line.split()
-
                 try:
                     atom_type = ATOM_NUM_DICT[int(split_line[1])]
                 except KeyError:
@@ -177,9 +203,7 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
                     else:
                         final_atoms_section = atoms_section[:]
                     section = SEC_HEAD
-                    coord_match = False
                     atom_id = 0
-                    lines_after_coord = 2
 
     if len(final_atoms_section) == 0:
         raise InvalidDataError("Check that the following log file has coordinates to use: {}".format(gausslog_file))
@@ -196,7 +220,7 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
 def process_gausscom_tpl(com_tpl_file):
     com_tpl_content = {SEC_HEAD: [], SEC_ATOMS: [], SEC_TAIL: ['', ]}
     section = SEC_HEAD
-    lines_after_first_blank = 0
+    num_blank_lines_read = 0
     with open(com_tpl_file) as d:
         file_name = os.path.basename(com_tpl_file)
         com_tpl_content[COM_TYPE] = os.path.splitext(file_name)[0]
@@ -204,12 +228,10 @@ def process_gausscom_tpl(com_tpl_file):
             line = line.strip()
             if section == SEC_HEAD:
                 com_tpl_content[SEC_HEAD].append(line)
-                if lines_after_first_blank == 0 and len(line) == 0:
-                    lines_after_first_blank += 1
+                if len(line) == 0:
+                    num_blank_lines_read += 1
                     continue
-                elif lines_after_first_blank > 0:
-                    lines_after_first_blank += 1
-                if lines_after_first_blank == 4:
+                if num_blank_lines_read == 2:
                     section = SEC_ATOMS
             elif section == SEC_ATOMS:
                 if len(line) == 0:
@@ -253,7 +275,7 @@ def main(argv=None):
 
         # Read template and data files
         com_tpl_content = process_gausscom_tpl(args.tpl)
-        process_gausscom_files(gausslog_files, com_tpl_content, args.charge_from_tpl, args.low_energy, args.out_dir,
+        process_gausslog_files(gausslog_files, com_tpl_content, args.charge_from_tpl, args.low_energy, args.out_dir,
                                args.output_fname)
     except IOError as e:
         warning("Problems reading file:", e)

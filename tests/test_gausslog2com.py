@@ -40,6 +40,10 @@ TYPE_NUM_MATCH_TPL = os.path.join(SUB_DATA_DIR, 's12but_17_84_f2_tpl.com')
 TYPE_NUM_MATCH_OUT = os.path.join(MAIN_DIR, 's12but_17_84_f2_t.com')
 GOOD_TYPE_NUM_MATCH_OUT = os.path.join(SUB_DATA_DIR, 's12but_17_84_f2_tpl_good.com')
 
+FRAG_LOG_FILE = os.path.join(SUB_DATA_DIR, 'frag_example.log')
+FRAG_COM_OUT = os.path.join(SUB_DATA_DIR, 'frag_example_fresh_fb.com')
+GOOD_FRAG_COM_OUT = os.path.join(SUB_DATA_DIR, 'frag_example_good.com')
+
 
 class TestGausslog2comNoOut(unittest.TestCase):
     # These all test failure cases
@@ -138,4 +142,13 @@ class TestGausslog2com(unittest.TestCase):
             self.assertFalse(diff_lines(TYPE_NUM_MATCH_OUT, GOOD_TYPE_NUM_MATCH_OUT))
         finally:
             silent_remove(TYPE_NUM_MATCH_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testFragments(self):
+        test_input = ["-t", LOW_E_TPL, "-f", FRAG_LOG_FILE]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(FRAG_COM_OUT, GOOD_FRAG_COM_OUT))
+        finally:
+            silent_remove(FRAG_COM_OUT, disable=DISABLE_REMOVE)
             pass

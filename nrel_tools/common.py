@@ -1359,7 +1359,7 @@ def process_gausscom_file(gausscom_file):
         gausscom_content = {SEC_HEAD: [], SEC_ATOMS: {}, SEC_TAIL: []}
         section = SEC_HEAD
         atom_id = 1
-        lines_after_header = 4  # blank line, description, blank line, charge & multiplicity
+        blank_header_lines = 0
 
         for line in d:
             line = line.strip()
@@ -1368,9 +1368,9 @@ def process_gausscom_file(gausscom_file):
                 gausscom_content[SEC_HEAD].append(line)
                 if GAU_HEADER_PAT.match(line):
                     continue
-                elif lines_after_header > 0:
-                    lines_after_header -= 1
-                    if lines_after_header == 0:
+                elif len(line) == 0:
+                    blank_header_lines += 1
+                    if blank_header_lines == 2:
                         section = SEC_ATOMS
                         split_line = line.split()
                         gausscom_content[CHARGE] = int(split_line[0])
@@ -1392,6 +1392,43 @@ def process_gausscom_file(gausscom_file):
                 gausscom_content[SEC_TAIL].append(line)
 
     return gausscom_content
+
+
+def process_gausslog_file(gausslog_file):
+    with open(gausslog_file) as d:
+        gausslog_content = {SEC_ATOMS: {}}
+        section = SEC_HEAD
+        atom_id = 1
+
+        for line in d:
+            line = line.strip()
+
+            if section == SEC_HEAD:
+                # only get overall charge and mult
+                if GAU_CHARGE_PAT.match(line):
+                    split_line = line.split('=')
+                    gausslog_content[CHARGE] = int(split_line[1].split()[0])
+                    gausslog_content[MULT] = int(split_line[2].split()[0])
+                    section = SEC_TAIL
+
+            elif section == SEC_TAIL:
+                if GAU_COORD_PAT.match(line):
+                    next(d)
+                    next(d)
+                    section = SEC_ATOMS
+
+            elif section == SEC_ATOMS:
+                # will keep overwriting coordinates until it gets to the end
+                while not GAU_SEP_PAT.match(line):
+                    split_line = line.split()
+                    atom_type = ATOM_NUM_DICT[int(split_line[1])]
+                    atom_xyz = ["{:>12}".format(x) for x in split_line[3:6]]
+                    gausslog_content[SEC_ATOMS][atom_id] = {ATOM_TYPE: atom_type, ATOM_COORDS: atom_xyz}
+                    atom_id += 1
+                section = SEC_TAIL
+                atom_id = 1
+
+    return gausslog_content
 
 
 def longest_common_substring(s1, s2):
