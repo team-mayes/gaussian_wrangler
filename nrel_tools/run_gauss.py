@@ -388,6 +388,8 @@ def main(argv=None):
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR
+    except subprocess.CalledProcessError as e:
+        warning("", e)
     except InvalidDataError as e:
         warning("Problems reading data:", e)
         return INVALID_DATA
