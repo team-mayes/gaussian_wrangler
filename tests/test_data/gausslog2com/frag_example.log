@@ -1,0 +1,489 @@
+ Entering Gaussian System, Link 0=g16
+ Initial command:
+ /nopt/nrel/apps/gaussian/g16B/g16/l1.exe "/dev/shm/Gau-79896.inp" -scrdir="/dev/shm/"
+ Default is to use a total of  36 processors:
+                               36 via shared-memory
+                                1 via Linda
+ Entering Link 1 = /nopt/nrel/apps/gaussian/g16B/g16/l1.exe PID=     79897.
+  
+ Copyright (c) 1988-2017, Gaussian, Inc.  All Rights Reserved.
+  
+ This is part of the Gaussian(R) 16 program.  It is based on
+ the Gaussian(R) 09 system (copyright 2009, Gaussian, Inc.),
+ the Gaussian(R) 03 system (copyright 2003, Gaussian, Inc.),
+ the Gaussian(R) 98 system (copyright 1998, Gaussian, Inc.),
+ the Gaussian(R) 94 system (copyright 1995, Gaussian, Inc.),
+ the Gaussian 92(TM) system (copyright 1992, Gaussian, Inc.),
+ the Gaussian 90(TM) system (copyright 1990, Gaussian, Inc.),
+ the Gaussian 88(TM) system (copyright 1988, Gaussian, Inc.),
+ the Gaussian 86(TM) system (copyright 1986, Carnegie Mellon
+ University), and the Gaussian 82(TM) system (copyright 1983,
+ Carnegie Mellon University). Gaussian is a federally registered
+ trademark of Gaussian, Inc.
+  
+ This software contains proprietary and confidential information,
+ including trade secrets, belonging to Gaussian, Inc.
+  
+ This software is provided under written license and may be
+ used, copied, transmitted, or stored only in accord with that
+ written license.
+  
+ The following legend is applicable only to US Government
+ contracts under FAR:
+  
+                    RESTRICTED RIGHTS LEGEND
+  
+ Use, reproduction and disclosure by the US Government is
+ subject to restrictions as set forth in subparagraphs (a)
+ and (c) of the Commercial Computer Software - Restricted
+ Rights clause in FAR 52.227-19.
+  
+ Gaussian, Inc.
+ 340 Quinnipiac St., Bldg. 40, Wallingford CT 06492
+  
+  
+ ---------------------------------------------------------------
+ Warning -- This program may not be used in any manner that
+ competes with the business of Gaussian, Inc. or will provide
+ assistance to any competitor of Gaussian, Inc.  The licensee
+ of this program is prohibited from giving any competitor of
+ Gaussian, Inc. access to this program.  By using this program,
+ the user acknowledges that Gaussian, Inc. is engaged in the
+ business of creating and licensing software in the field of
+ computational chemistry and represents and warrants to the
+ licensee that it is not a competitor of Gaussian, Inc. and that
+ it will not use this program in any manner prohibited above.
+ ---------------------------------------------------------------
+  
+
+ Cite this work as:
+ Gaussian 16, Revision B.01,
+ M. J. Frisch, G. W. Trucks, H. B. Schlegel, G. E. Scuseria, 
+ M. A. Robb, J. R. Cheeseman, G. Scalmani, V. Barone, 
+ G. A. Petersson, H. Nakatsuji, X. Li, M. Caricato, A. V. Marenich, 
+ J. Bloino, B. G. Janesko, R. Gomperts, B. Mennucci, H. P. Hratchian, 
+ J. V. Ortiz, A. F. Izmaylov, J. L. Sonnenberg, D. Williams-Young, 
+ F. Ding, F. Lipparini, F. Egidi, J. Goings, B. Peng, A. Petrone, 
+ T. Henderson, D. Ranasinghe, V. G. Zakrzewski, J. Gao, N. Rega, 
+ G. Zheng, W. Liang, M. Hada, M. Ehara, K. Toyota, R. Fukuda, 
+ J. Hasegawa, M. Ishida, T. Nakajima, Y. Honda, O. Kitao, H. Nakai, 
+ T. Vreven, K. Throssell, J. A. Montgomery, Jr., J. E. Peralta, 
+ F. Ogliaro, M. J. Bearpark, J. J. Heyd, E. N. Brothers, K. N. Kudin, 
+ V. N. Staroverov, T. A. Keith, R. Kobayashi, J. Normand, 
+ K. Raghavachari, A. P. Rendell, J. C. Burant, S. S. Iyengar, 
+ J. Tomasi, M. Cossi, J. M. Millam, M. Klene, C. Adamo, R. Cammi, 
+ J. W. Ochterski, R. L. Martin, K. Morokuma, O. Farkas, 
+ J. B. Foresman, and D. J. Fox, Gaussian, Inc., Wallingford CT, 2016.
+ 
+ ******************************************
+ Gaussian 16:  ES64L-G16RevB.01 20-Dec-2017
+                21-Sep-2019 
+ ******************************************
+ %RWF=/dev/shm/,5GB,/tmp/scratch/1421112/,-1
+ %NoSave
+ %Chk=/dev/shm/frag_example.chk
+ Default route: CacheSize=180224 MaxDisk=256GB
+ --------------------------------------------------
+ # UBP86/6-311G(d) Guess=(Fragment=8,Only) Pop=None
+ --------------------------------------------------
+ 1/4=180224,38=1,62=8,160=20,172=1/1;
+ 2/4=180224,12=2,17=6,18=5,40=1/2;
+ 1/4=180224,38=1,53=2,62=8,63=1,160=20/22;
+ 3/4=180224,5=4,6=6,7=1,11=2,25=1,30=1,74=404,89=1,116=2/1,2;
+ 4/4=180224/1;
+ 1/4=180224,53=2,62=8,63=1,160=20/22;
+ 3/4=180224,5=7,6=11,7=1,11=2,25=1,30=1,74=404,82=7,89=1,116=2/1,2;
+ 4/4=180224/1;
+ 1/4=180224,53=2,62=8,63=1,160=20/22(-2);
+ 99/4=180224,5=5/99;
+ -------------------------------------------------------------------
+ Fe2S2 cluster with phenylthiolates. Step 1: Generate fragment guess
+ -------------------------------------------------------------------
+ Symbolic Z-matrix:
+ Charge = -2 Multiplicity = 1 in supermolecule
+ Charge =  3 Multiplicity = 6 in fragment      1.
+ Charge = -2 Multiplicity = 1 in fragment      2.
+ Charge =  3 Multiplicity =-6 in fragment      3.
+ Charge = -2 Multiplicity = 1 in fragment      4.
+ Charge = -1 Multiplicity = 1 in fragment      5.
+ Charge = -1 Multiplicity = 1 in fragment      6.
+ Charge = -1 Multiplicity = 1 in fragment      7.
+ Charge = -1 Multiplicity = 1 in fragment      8.
+ H(Fragment=7)         23.501    2.2873    8.5744 
+ S(Fragment=2)         14.8495   1.149     7.0431 
+ Fe(Fragment=3)        17.043    1.0091    7.0068 
+ S(Fragment=4)         17.4565  -1.149     7.0431 
+ S(Fragment=5)         14.3762  -2.1581    8.7983 
+ C(Fragment=5)         12.5993  -2.1848    8.6878 
+ H(Fragment=5)         12.3743  -3.6513    10.1678 
+ C(Fragment=5)         10.4994  -3.1122    9.4309 
+ H(Fragment=5)         9.9929   -3.7579    10.0022 
+ C(Fragment=5)         9.8049   -2.2791    8.5639 
+ H(Fragment=5)         8.805    -2.2873    8.5744 
+ C(Fragment=5)         10.4833  -1.4146    7.6615 
+ H(Fragment=5)         9.973    -0.8525    7.0106 
+ S(Fragment=8)         14.3794  -1.8091    5.0446 
+ C(Fragment=5)         11.9048  -1.3675    7.7057 
+ H(Fragment=5)         12.4158  -0.7843    7.0743 
+ C(Fragment=6)         17.2999   3.4265    4.6624 
+ C(Fragment=6)         16.6376   4.1967    5.609 
+ H(Fragment=6)         16.5022   3.8494    6.5369 
+ C(Fragment=6)         16.153    5.4856    5.2463 
+ H(Fragment=6)         15.6665   6.0472    5.9155 
+ C(Fragment=6)         16.3468   5.9257    4.0431 
+ H(Fragment=6)         16.0236   6.8408    3.802 
+ C(Fragment=6)         17.0091   5.1398    3.0522 
+ H(Fragment=6)         17.133    5.4944    2.1254 
+ C(Fragment=6)         17.4775   3.8823    3.3884 
+ H(Fragment=6)         17.94     3.3149    2.7071 
+ S(Fragment=7)         17.9298   2.1581    8.7983 
+ C(Fragment=7)         19.7067   2.1848    8.6878 
+ C(Fragment=7)         20.4174   3.065     9.5194 
+ H(Fragment=7)         19.9317   3.6513    10.1678 
+ C(Fragment=7)         21.8066   3.1122    9.4309 
+ H(Fragment=7)         22.3132   3.7579    10.0022 
+ C(Fragment=7)         22.5011   2.2791    8.5639 
+ C(Fragment=7)         21.8227   1.4146    7.6615 
+ H(Fragment=7)         22.333    0.8525    7.0106 
+ C(Fragment=7)         20.4012   1.3675    7.7057 
+ H(Fragment=7)         19.8902   0.7843    7.0743 
+ C(Fragment=8)         15.0061  -3.4265    4.6624 
+ Fe(Fragment=1)        15.263   -1.0091    7.0068 
+ C(Fragment=8)         15.6684  -4.1967    5.609 
+ H(Fragment=8)         15.8038  -3.8494    6.5369 
+ C(Fragment=8)         16.153   -5.4856    5.2463 
+ H(Fragment=8)         16.6395  -6.0472    5.9155 
+ C(Fragment=5)         11.8886  -3.065     9.5194 
+ C(Fragment=8)         15.9592  -5.9257    4.0431 
+ H(Fragment=8)         16.2824  -6.8408    3.802 
+ C(Fragment=8)         15.2969  -5.1398    3.0522 
+ H(Fragment=8)         15.173   -5.4944    2.1254 
+ C(Fragment=8)         14.8285  -3.8823    3.3884 
+ H(Fragment=8)         14.366   -3.3149    2.7071 
+ S(Fragment=6)         17.9266   1.8091    5.0446 
+ 
+ Stoichiometry    C24H20Fe2S6(2-)
+ Framework group  C1[X(C24H20Fe2S6)]
+ Deg. of freedom   150
+ Full point group                 C1      NOp   1
+ Largest Abelian subgroup         C1      NOp   1
+ Largest concise Abelian subgroup C1      NOp   1
+                         Standard orientation:                         
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          1           0       -6.669461   -3.839679   -1.871242
+      2         16           0        0.041993    1.737110   -0.339942
+      3         26           0       -1.345121    0.032137   -0.303642
+      4         16           0       -0.041992   -1.737109   -0.339942
+      5         16           0        2.790750   -0.161641   -2.095142
+      6          6           0        4.017193    1.124409   -1.984642
+      7          1           0        5.246371    0.293525   -3.464642
+      8          6           0        6.124097    2.035787   -2.727742
+      9          1           0        6.942026    1.968990   -3.299042
+     10          6           0        5.984324    3.111356   -1.860742
+     11          1           0        6.669461    3.839679   -1.871242
+     12          6           0        4.889051    3.200590   -0.958342
+     13          1           0        4.823077    3.956904   -0.307442
+     14         16           0        2.532423    0.073046    1.658558
+     15          6           0        3.889018    2.189247   -1.002542
+     16          1           0        3.113905    2.210292   -0.371142
+     17          6           0       -3.293893    1.485446    2.040758
+     18          6           0       -3.409368    2.494661    1.094158
+     19          1           0       -3.062500    2.358159    0.166258
+     20          6           0       -4.026243    3.725744    1.456858
+     21          1           0       -4.108015    4.464250    0.787658
+     22          6           0       -4.480888    3.882412    2.660058
+     23          1           0       -4.933027    4.741153    2.901158
+     24          6           0       -4.353889    2.862534    3.650958
+     25          1           0       -4.698305    3.012435    4.577758
+     26          6           0       -3.749058    1.664667    3.314758
+     27          1           0       -3.646729    0.939838    3.996058
+     28         16           0       -2.790750    0.161641   -2.095142
+     29          6           0       -4.017193   -1.124408   -1.984642
+     30          6           0       -5.145927   -1.048218   -2.816242
+     31          1           0       -5.246371   -0.293524   -3.464642
+     32          6           0       -6.124096   -2.035786   -2.727742
+     33          1           0       -6.942094   -1.969063   -3.299042
+     34          6           0       -5.984324   -3.111356   -1.860742
+     35          6           0       -4.889050   -3.200590   -0.958342
+     36          1           0       -4.823077   -3.956903   -0.307442
+     37          6           0       -3.889017   -2.189247   -1.002542
+     38          1           0       -3.113904   -2.210292   -0.371142
+     39          6           0        3.293893   -1.485446    2.040758
+     40         26           0        1.345121   -0.032137   -0.303642
+     41          6           0        3.409369   -2.494661    1.094158
+     42          1           0        3.062501   -2.358158    0.166258
+     43          6           0        4.026244   -3.725744    1.456858
+     44          1           0        4.108015   -4.464249    0.787658
+     45          6           0        5.145928    1.048219   -2.816242
+     46          6           0        4.480889   -3.882411    2.660058
+     47          1           0        4.933028   -4.741152    2.901158
+     48          6           0        4.353890   -2.862533    3.650958
+     49          1           0        4.698305   -3.012434    4.577758
+     50          6           0        3.749058   -1.664667    3.314758
+     51          1           0        3.646730   -0.939837    3.996058
+     52         16           0       -2.532422   -0.073046    1.658558
+ ---------------------------------------------------------------------
+ Rotational constants (GHZ):           0.1136441           0.0523135           0.0514904
+ Fragment guess: doing full-system calculation.
+ Standard basis: 6-311G(d) (5D, 7F)
+ There are   782 symmetry adapted cartesian basis functions of A   symmetry.
+ There are   740 symmetry adapted basis functions of A   symmetry.
+   740 basis functions,  1306 primitive gaussians,   782 cartesian basis functions
+   157 alpha electrons      157 beta electrons
+       nuclear repulsion energy      5424.4987679978 Hartrees.
+ NAtoms=   52 NActive=   52 NUniq=   52 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
+ Integral buffers will be    131072 words long.
+ Raffenetti 2 integral format.
+ Two-electron integral symmetry is turned on.
+ One-electron integrals computed using PRISM.
+ NBasis=   740 RedAO= T EigKep=  1.80D-04  NBF=   740
+ NBsUse=   740 1.00D-06 EigRej= -1.00D+00 NBFU=   740
+ ExpMin= 4.19D-02 ExpMax= 2.58D+05 ExpMxC= 8.89D+03 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
+ Harris functional with IExCor=  404 and IRadAn=       5 diagonalized for initial guess.
+ HarFok:  IExCor=  404 AccDes= 0.00D+00 IRadAn=         5 IDoV= 1 UseB2=F ITyADJ=14
+ ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
+ FoFCou: FMM=F IPFlag=           0 FMFlag=      100000 FMFlg1=           0
+         NFxFlg=           0 DoJE=T BraDBF=F KetDBF=T FulRan=T
+         wScrn=  0.000000 ICntrl=       500 IOpCl=  0 I1Cent=   200000004 NGrid=           0
+         NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
+ Petite list used in FoFCou.
+ Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.0000 <S**2>=-0.0000 S=-0.0000
+ CPIOFr:  IOpCl= 1 IRwI=-1 IRwCP=  731 ICalc= -1 LCPTot=      843388 Len1MO=     1650632 IndFrg=      843388
+ CPIOFr:  IOpCl= 1 IRwI=-1 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ Fragment guess: doing calculation for fragment   1 using the basis set of the fragment.
+ Basis read from rwf:  (5D, 7F)
+ There are    52 symmetry adapted cartesian basis functions of A   symmetry.
+ There are    46 symmetry adapted basis functions of A   symmetry.
+    46 basis functions,    81 primitive gaussians,    52 cartesian basis functions
+    14 alpha electrons        9 beta electrons
+       nuclear repulsion energy         0.0000000000 Hartrees.
+ NAtoms=   52 NActive=    1 NUniq=    1 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
+ Integral buffers will be    131072 words long.
+ Raffenetti 2 integral format.
+ Two-electron integral symmetry is turned on.
+ One-electron integrals computed using PRISM.
+ NBasis=    46 RedAO= T EigKep=  9.37D-03  NBF=    46
+ NBsUse=    46 1.00D-06 EigRej= -1.00D+00 NBFU=    46
+ ExpMin= 4.19D-02 ExpMax= 2.58D+05 ExpMxC= 8.89D+03 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
+ Harris functional with IExCor=  404 and IRadAn=       5 diagonalized for initial guess.
+ HarFok:  IExCor=  404 AccDes= 0.00D+00 IRadAn=         5 IDoV= 1 UseB2=F ITyADJ=14
+ ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
+ FoFCou: FMM=F IPFlag=           0 FMFlag=      100000 FMFlg1=           0
+         NFxFlg=           0 DoJE=T BraDBF=F KetDBF=T FulRan=T
+         wScrn=  0.000000 ICntrl=       500 IOpCl=  0 I1Cent=   200000004 NGrid=           0
+         NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
+ Petite list used in FoFCou.
+ Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 2.5000 <S**2>= 8.7500 S= 2.5000
+ CPIOFr:  IOpCl= 1 IRwI=-1 IRwCP=  731 ICalc=  1 LCPTot=      843388 Len1MO=     1650632 IndFrg=     4144652
+ CPIOFr:  IOpCl= 1 IRwI= 2 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ CPIOFr:  IOpCl= 1 IRwI= 1 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ Fragment guess: doing calculation for fragment   2 using the basis set of the fragment.
+ Basis read from rwf:  (5D, 7F)
+ There are    27 symmetry adapted cartesian basis functions of A   symmetry.
+ There are    26 symmetry adapted basis functions of A   symmetry.
+    26 basis functions,    46 primitive gaussians,    27 cartesian basis functions
+     9 alpha electrons        9 beta electrons
+       nuclear repulsion energy         0.0000000000 Hartrees.
+ NAtoms=   52 NActive=    1 NUniq=    1 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
+ Integral buffers will be    131072 words long.
+ Raffenetti 2 integral format.
+ Two-electron integral symmetry is turned on.
+ One-electron integrals computed using PRISM.
+ NBasis=    26 RedAO= T EigKep=  4.61D-02  NBF=    26
+ NBsUse=    26 1.00D-06 EigRej= -1.00D+00 NBFU=    26
+ ExpMin= 7.71D-02 ExpMax= 9.34D+04 ExpMxC= 3.17D+03 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
+ Harris functional with IExCor=  404 and IRadAn=       5 diagonalized for initial guess.
+ HarFok:  IExCor=  404 AccDes= 0.00D+00 IRadAn=         5 IDoV= 1 UseB2=F ITyADJ=14
+ ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
+ FoFCou: FMM=F IPFlag=           0 FMFlag=      100000 FMFlg1=           0
+         NFxFlg=           0 DoJE=T BraDBF=F KetDBF=T FulRan=T
+         wScrn=  0.000000 ICntrl=       500 IOpCl=  0 I1Cent=   200000004 NGrid=           0
+         NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
+ Petite list used in FoFCou.
+ Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.0000 <S**2>=-0.0000 S=-0.0000
+ CPIOFr:  IOpCl= 1 IRwI=-1 IRwCP=  731 ICalc=  2 LCPTot=      843388 Len1MO=     1650632 IndFrg=     5795284
+ CPIOFr:  IOpCl= 1 IRwI= 2 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ CPIOFr:  IOpCl= 1 IRwI= 1 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ Fragment guess: doing calculation for fragment   3 using the basis set of the fragment.
+ Basis read from rwf:  (5D, 7F)
+ There are    52 symmetry adapted cartesian basis functions of A   symmetry.
+ There are    46 symmetry adapted basis functions of A   symmetry.
+    46 basis functions,    81 primitive gaussians,    52 cartesian basis functions
+    14 alpha electrons        9 beta electrons
+       nuclear repulsion energy         0.0000000000 Hartrees.
+ NAtoms=   52 NActive=    1 NUniq=    1 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
+ Integral buffers will be    131072 words long.
+ Raffenetti 2 integral format.
+ Two-electron integral symmetry is turned on.
+ One-electron integrals computed using PRISM.
+ NBasis=    46 RedAO= T EigKep=  9.37D-03  NBF=    46
+ NBsUse=    46 1.00D-06 EigRej= -1.00D+00 NBFU=    46
+ ExpMin= 4.19D-02 ExpMax= 2.58D+05 ExpMxC= 8.89D+03 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
+ Harris functional with IExCor=  404 and IRadAn=       5 diagonalized for initial guess.
+ HarFok:  IExCor=  404 AccDes= 0.00D+00 IRadAn=         5 IDoV= 1 UseB2=F ITyADJ=14
+ ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
+ FoFCou: FMM=F IPFlag=           0 FMFlag=      100000 FMFlg1=           0
+         NFxFlg=           0 DoJE=T BraDBF=F KetDBF=T FulRan=T
+         wScrn=  0.000000 ICntrl=       500 IOpCl=  0 I1Cent=   200000004 NGrid=           0
+         NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
+ Petite list used in FoFCou.
+ Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 2.5000 <S**2>= 8.7500 S= 2.5000
+ CPIOFr:  IOpCl= 1 IRwI=-1 IRwCP=  731 ICalc=  3 LCPTot=      843388 Len1MO=     1650632 IndFrg=     7445916
+ CPIOFr:  IOpCl= 1 IRwI= 2 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ CPIOFr:  IOpCl= 1 IRwI= 1 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ Fragment guess: doing calculation for fragment   4 using the basis set of the fragment.
+ Basis read from rwf:  (5D, 7F)
+ There are    27 symmetry adapted cartesian basis functions of A   symmetry.
+ There are    26 symmetry adapted basis functions of A   symmetry.
+    26 basis functions,    46 primitive gaussians,    27 cartesian basis functions
+     9 alpha electrons        9 beta electrons
+       nuclear repulsion energy         0.0000000000 Hartrees.
+ NAtoms=   52 NActive=    1 NUniq=    1 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
+ Integral buffers will be    131072 words long.
+ Raffenetti 2 integral format.
+ Two-electron integral symmetry is turned on.
+ One-electron integrals computed using PRISM.
+ NBasis=    26 RedAO= T EigKep=  4.61D-02  NBF=    26
+ NBsUse=    26 1.00D-06 EigRej= -1.00D+00 NBFU=    26
+ ExpMin= 7.71D-02 ExpMax= 9.34D+04 ExpMxC= 3.17D+03 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
+ Harris functional with IExCor=  404 and IRadAn=       5 diagonalized for initial guess.
+ HarFok:  IExCor=  404 AccDes= 0.00D+00 IRadAn=         5 IDoV= 1 UseB2=F ITyADJ=14
+ ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
+ FoFCou: FMM=F IPFlag=           0 FMFlag=      100000 FMFlg1=           0
+         NFxFlg=           0 DoJE=T BraDBF=F KetDBF=T FulRan=T
+         wScrn=  0.000000 ICntrl=       500 IOpCl=  0 I1Cent=   200000004 NGrid=           0
+         NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
+ Petite list used in FoFCou.
+ Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.0000 <S**2>=-0.0000 S=-0.0000
+ CPIOFr:  IOpCl= 1 IRwI=-1 IRwCP=  731 ICalc=  4 LCPTot=      843388 Len1MO=     1650632 IndFrg=     9096548
+ CPIOFr:  IOpCl= 1 IRwI= 2 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ CPIOFr:  IOpCl= 1 IRwI= 1 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ Fragment guess: doing calculation for fragment   5 using the basis set of the fragment.
+ Basis read from rwf:  (5D, 7F)
+ There are   156 symmetry adapted cartesian basis functions of A   symmetry.
+ There are   149 symmetry adapted basis functions of A   symmetry.
+   149 basis functions,   263 primitive gaussians,   156 cartesian basis functions
+    29 alpha electrons       29 beta electrons
+       nuclear repulsion energy       305.8790580001 Hartrees.
+ NAtoms=   52 NActive=   12 NUniq=   12 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
+ Integral buffers will be    131072 words long.
+ Raffenetti 2 integral format.
+ Two-electron integral symmetry is turned on.
+ One-electron integrals computed using PRISM.
+ NBasis=   149 RedAO= T EigKep=  2.45D-04  NBF=   149
+ NBsUse=   149 1.00D-06 EigRej= -1.00D+00 NBFU=   149
+ ExpMin= 7.71D-02 ExpMax= 9.34D+04 ExpMxC= 3.17D+03 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
+ Harris functional with IExCor=  404 and IRadAn=       5 diagonalized for initial guess.
+ HarFok:  IExCor=  404 AccDes= 0.00D+00 IRadAn=         5 IDoV= 1 UseB2=F ITyADJ=14
+ ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
+ FoFCou: FMM=F IPFlag=           0 FMFlag=      100000 FMFlg1=           0
+         NFxFlg=           0 DoJE=T BraDBF=F KetDBF=T FulRan=T
+         wScrn=  0.000000 ICntrl=       500 IOpCl=  0 I1Cent=   200000004 NGrid=           0
+         NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
+ Petite list used in FoFCou.
+ Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.0000 <S**2>=-0.0000 S=-0.0000
+ CPIOFr:  IOpCl= 1 IRwI=-1 IRwCP=  731 ICalc=  5 LCPTot=      843388 Len1MO=     1650632 IndFrg=    10747180
+ CPIOFr:  IOpCl= 1 IRwI= 2 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ CPIOFr:  IOpCl= 1 IRwI= 1 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ Fragment guess: doing calculation for fragment   6 using the basis set of the fragment.
+ Basis read from rwf:  (5D, 7F)
+ There are   156 symmetry adapted cartesian basis functions of A   symmetry.
+ There are   149 symmetry adapted basis functions of A   symmetry.
+   149 basis functions,   263 primitive gaussians,   156 cartesian basis functions
+    29 alpha electrons       29 beta electrons
+       nuclear repulsion energy       311.2798943699 Hartrees.
+ NAtoms=   52 NActive=   12 NUniq=   12 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
+ Integral buffers will be    131072 words long.
+ Raffenetti 2 integral format.
+ Two-electron integral symmetry is turned on.
+ One-electron integrals computed using PRISM.
+ NBasis=   149 RedAO= T EigKep=  1.91D-04  NBF=   149
+ NBsUse=   149 1.00D-06 EigRej= -1.00D+00 NBFU=   149
+ ExpMin= 7.71D-02 ExpMax= 9.34D+04 ExpMxC= 3.17D+03 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
+ Harris functional with IExCor=  404 and IRadAn=       5 diagonalized for initial guess.
+ HarFok:  IExCor=  404 AccDes= 0.00D+00 IRadAn=         5 IDoV= 1 UseB2=F ITyADJ=14
+ ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
+ FoFCou: FMM=F IPFlag=           0 FMFlag=      100000 FMFlg1=           0
+         NFxFlg=           0 DoJE=T BraDBF=F KetDBF=T FulRan=T
+         wScrn=  0.000000 ICntrl=       500 IOpCl=  0 I1Cent=   200000004 NGrid=           0
+         NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
+ Petite list used in FoFCou.
+ Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.0000 <S**2>=-0.0000 S=-0.0000
+ CPIOFr:  IOpCl= 1 IRwI=-1 IRwCP=  731 ICalc=  6 LCPTot=      843388 Len1MO=     1650632 IndFrg=    12397812
+ CPIOFr:  IOpCl= 1 IRwI= 2 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ CPIOFr:  IOpCl= 1 IRwI= 1 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ Fragment guess: doing calculation for fragment   7 using the basis set of the fragment.
+ Basis read from rwf:  (5D, 7F)
+ There are   156 symmetry adapted cartesian basis functions of A   symmetry.
+ There are   149 symmetry adapted basis functions of A   symmetry.
+   149 basis functions,   263 primitive gaussians,   156 cartesian basis functions
+    29 alpha electrons       29 beta electrons
+       nuclear repulsion energy       305.8787600434 Hartrees.
+ NAtoms=   52 NActive=   12 NUniq=   12 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
+ Integral buffers will be    131072 words long.
+ Raffenetti 2 integral format.
+ Two-electron integral symmetry is turned on.
+ One-electron integrals computed using PRISM.
+ NBasis=   149 RedAO= T EigKep=  2.45D-04  NBF=   149
+ NBsUse=   149 1.00D-06 EigRej= -1.00D+00 NBFU=   149
+ ExpMin= 7.71D-02 ExpMax= 9.34D+04 ExpMxC= 3.17D+03 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
+ Harris functional with IExCor=  404 and IRadAn=       5 diagonalized for initial guess.
+ HarFok:  IExCor=  404 AccDes= 0.00D+00 IRadAn=         5 IDoV= 1 UseB2=F ITyADJ=14
+ ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
+ FoFCou: FMM=F IPFlag=           0 FMFlag=      100000 FMFlg1=           0
+         NFxFlg=           0 DoJE=T BraDBF=F KetDBF=T FulRan=T
+         wScrn=  0.000000 ICntrl=       500 IOpCl=  0 I1Cent=   200000004 NGrid=           0
+         NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
+ Petite list used in FoFCou.
+ Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.0000 <S**2>=-0.0000 S=-0.0000
+ CPIOFr:  IOpCl= 1 IRwI=-1 IRwCP=  731 ICalc=  7 LCPTot=      843388 Len1MO=     1650632 IndFrg=    14048444
+ CPIOFr:  IOpCl= 1 IRwI= 2 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ CPIOFr:  IOpCl= 1 IRwI= 1 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ Fragment guess: doing calculation for fragment   8 using the basis set of the fragment.
+ Basis read from rwf:  (5D, 7F)
+ There are   156 symmetry adapted cartesian basis functions of A   symmetry.
+ There are   149 symmetry adapted basis functions of A   symmetry.
+   149 basis functions,   263 primitive gaussians,   156 cartesian basis functions
+    29 alpha electrons       29 beta electrons
+       nuclear repulsion energy       311.2798943699 Hartrees.
+ NAtoms=   52 NActive=   12 NUniq=   12 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
+ Integral buffers will be    131072 words long.
+ Raffenetti 2 integral format.
+ Two-electron integral symmetry is turned on.
+ One-electron integrals computed using PRISM.
+ NBasis=   149 RedAO= T EigKep=  1.91D-04  NBF=   149
+ NBsUse=   149 1.00D-06 EigRej= -1.00D+00 NBFU=   149
+ ExpMin= 7.71D-02 ExpMax= 9.34D+04 ExpMxC= 3.17D+03 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
+ Harris functional with IExCor=  404 and IRadAn=       5 diagonalized for initial guess.
+ HarFok:  IExCor=  404 AccDes= 0.00D+00 IRadAn=         5 IDoV= 1 UseB2=F ITyADJ=14
+ ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
+ FoFCou: FMM=F IPFlag=           0 FMFlag=      100000 FMFlg1=           0
+         NFxFlg=           0 DoJE=T BraDBF=F KetDBF=T FulRan=T
+         wScrn=  0.000000 ICntrl=       500 IOpCl=  0 I1Cent=   200000004 NGrid=           0
+         NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
+ Petite list used in FoFCou.
+ Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.0000 <S**2>=-0.0000 S=-0.0000
+ CPIOFr:  IOpCl= 1 IRwI=-1 IRwCP=  731 ICalc=  8 LCPTot=      843388 Len1MO=     1650632 IndFrg=    15699076
+ CPIOFr:  IOpCl= 1 IRwI= 2 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ CPIOFr:  IOpCl= 1 IRwI= 1 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ CPIOFr:  IOpCl= 1 IRwI= 2 IRwCP=  731 ICalc= -1 LCPTot=      843388 Len1MO=     1650632 IndFrg=      843388
+ CPIOFr:  IOpCl= 1 IRwI= 2 IRwCP=  731 ICalc=  0 LCPTot=      843388 Len1MO=     1650632 IndFrg=     2494020
+ FinFrg:  NACore=    72 NAVal2=    80 NAVal1=     5 NBCore=    72 NBVal2=    80 NBVal1=     5
+ GSVD:  LWork=      -25905 too small for GESVD, short by      125600 words or      125600 for optimal perf.
+ GSVD:  LWork=      -25905 too small for GESVD, short by      125600 words or      125600 for optimal perf.
+ Alpha deviation from unit magnitude is 1.29D-13 for orbital    738.
+ Alpha deviation from orthogonality  is 1.18D-13 for orbitals   740   738.
+ Beta  deviation from unit magnitude is 1.30D-13 for orbital    711.
+ Beta  deviation from orthogonality  is 1.42D-13 for orbitals   711   707.
+
+ This type of calculation cannot be archived.
+
+
+ HE WHO LAUGHS LAST PROBABLY DIDN'T GET THE JOKE.
+ Job cpu time:       0 days  0 hours  4 minutes  6.7 seconds.
+ Elapsed time:       0 days  0 hours  0 minutes  8.0 seconds.
+ File lengths (MBytes):  RWF=    183 Int=      0 D2E=      0 Chk=    142 Scr=      1
+ Normal termination of Gaussian 16 at Sat Sep 21 23:51:35 2019.

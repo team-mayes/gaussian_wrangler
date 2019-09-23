@@ -9,7 +9,7 @@ import sys
 import argparse
 from nrel_tools.common import (InvalidDataError, warning, create_out_fname, list_to_file, ATOM_NUM_DICT,
                                NUM_ATOMS, GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT,
-                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, GAU_CHARGE_PAT)
+                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, GAU_CHARGE_PAT, BASE_NAME)
 
 
 try:
@@ -35,7 +35,6 @@ SEC_HEAD = 'head_section'
 SEC_ATOMS = 'atoms_section'
 SEC_TAIL = 'tail_section'
 SEC_INITIAL_COORDINATES = 'initial_coordinates_section'
-COM_TYPE = 'com_type'
 
 
 def str2bool(v):
@@ -100,6 +99,7 @@ def process_gausslog_files(gausslog_files, com_tpl_content, charge_from_log_flag
 def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, find_low_energy, base_dir, out_fname):
     with open(gausslog_file) as d:
         rel_path_fname = os.path.relpath(gausslog_file)
+        # The header may be more than 5 lines long--counting from end makes sure the comment goes in the correct line
         if find_low_energy:
             com_tpl_content[SEC_HEAD][-3] = "Low energy conformation from file {}".format(rel_path_fname)
         else:
@@ -134,7 +134,7 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
                                     section = SEC_INITIAL_COORDINATES
                                     final_atoms_section = []
                                     # already reading the next section, so grab the needed info
-                                    atom_type_list.append("{:15}".format(line.split()[0]))
+                                    atom_type_list.append(line.split()[0])
                                 com_tpl_content[SEC_HEAD][-1] = '   '.join(charge_mult)
                                 find_charge = False
                         continue
@@ -149,7 +149,7 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
                 while len(line) > 0:
                     # originally just added whole line to final. Then found that this section prints fewer sig figs
                     #   than the coordinate section, so taking those instead
-                    atom_type_list.append("{:15}".format(line.split()[0]))
+                    atom_type_list.append(line.split()[0])
                     line = next(d).strip()
                 while not GAU_COORD_PAT.match(line):
                     line = next(d).strip()
@@ -159,7 +159,7 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
                 while not GAU_SEP_PAT.match(line):
                     split_line = line.split()
                     atom_xyz = ["{:>12}".format(x) for x in split_line[3:6]]
-                    final_atoms_section.append(atom_type_list[atom_id] + ' '.join(atom_xyz))
+                    final_atoms_section.append('{:16}'.format(atom_type_list[atom_id]) + ' '.join(atom_xyz))
                     atom_id += 1
                     line = next(d).strip()
                 break
@@ -186,7 +186,7 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
                                                    "atom type '{}'".format(atom_id+1, gausslog_file, atom_type,
                                                                            com_atom_type))
                     atom_type = com_tpl_content[SEC_ATOMS][atom_id]  # This keeps the "fragment" number if there
-                atom_type = '{:11}'.format(atom_type)
+                atom_type = '{:16}'.format(atom_type)
 
                 atom_xyz = ["{:>12}".format(x) for x in split_line[3:6]]
                 atoms_section.append(atom_type + ''.join(atom_xyz))
@@ -212,19 +212,19 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
         f_name = create_out_fname(out_fname, base_dir=base_dir)
 
     else:
-        f_name = create_out_fname(gausslog_file, ext='_' + com_tpl_content[COM_TYPE] + '.com', base_dir=base_dir)
+        f_name = create_out_fname(gausslog_file, ext='_' + com_tpl_content[BASE_NAME] + '.com', base_dir=base_dir)
     list_to_file(com_tpl_content[SEC_HEAD] + final_atoms_section + com_tpl_content[SEC_TAIL], f_name)
 
     # Now that finished reading the file, first make sure didn't  exit before reaching the desired number of atoms
 
 
-def process_gausscom_tpl(com_tpl_file):
+def process_gausscom_tpl(com_tpl_file, check_for_charge_mult):
     com_tpl_content = {SEC_HEAD: [], SEC_ATOMS: [], SEC_TAIL: ['', ]}
     section = SEC_HEAD
     num_blank_lines_read = 0
     with open(com_tpl_file) as d:
         file_name = os.path.basename(com_tpl_file)
-        com_tpl_content[COM_TYPE] = os.path.splitext(file_name)[0]
+        com_tpl_content[BASE_NAME] = os.path.splitext(file_name)[0]
         for line in d:
             line = line.strip()
             if section == SEC_HEAD:
@@ -239,13 +239,31 @@ def process_gausscom_tpl(com_tpl_file):
                     section = SEC_TAIL
                     continue
                 line_split = line.split()
-                com_tpl_content[SEC_ATOMS].append(line_split[0] + '    ')
+                com_tpl_content[SEC_ATOMS].append(line_split[0])
             elif section == SEC_TAIL:
                 com_tpl_content[SEC_TAIL].append(line)
     if len(com_tpl_content[SEC_ATOMS]) == 0:
         com_tpl_content[NUM_ATOMS] = None
     else:
         com_tpl_content[NUM_ATOMS] = len(com_tpl_content[SEC_ATOMS])
+
+    # Later code will assume there is a full header, which is five lines (minimum), so make it so now.
+    # Blank lines will be filled in, unless the charge is from the template, which is checked next
+    while len(com_tpl_content[SEC_HEAD]) < 5:
+        com_tpl_content[SEC_HEAD].append('')
+    # if getting the charge from the template, make sure they are read.
+    if check_for_charge_mult:
+        try:
+            charge_mult = com_tpl_content[SEC_HEAD][-1].split()
+            int(charge_mult[0])
+            int(charge_mult[1])
+        except (IndexError, ValueError):
+            raise InvalidDataError("Option to read charge and multiplicity from template chosen, but not found "
+                                   "in template file: {}".format(com_tpl_file))
+    # Gaussian needs two blank lines at the end. If they are not already there, add them.
+    while len(com_tpl_content[SEC_TAIL]) < 2 or \
+            (not com_tpl_content[SEC_TAIL][-2] == '') or (not com_tpl_content[SEC_TAIL][-1] == ''):
+        com_tpl_content[SEC_TAIL].append('')
 
     return com_tpl_content
 
@@ -275,7 +293,7 @@ def main(argv=None):
             raise IOError(args.tpl)
 
         # Read template and data files
-        com_tpl_content = process_gausscom_tpl(args.tpl)
+        com_tpl_content = process_gausscom_tpl(args.tpl, args.charge_from_tpl)
         process_gausslog_files(gausslog_files, com_tpl_content, args.charge_from_tpl, args.low_energy, args.out_dir,
                                args.output_fname)
     except IOError as e:

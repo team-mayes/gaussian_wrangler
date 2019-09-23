@@ -91,6 +91,7 @@ MULT = 'Mult'
 MULTIPLICITY = 'Multiplicity'
 
 # From template files
+BASE_NAME = 'base_name'
 NUM_ATOMS = 'num_atoms'
 HEAD_CONTENT = 'head_content'
 ATOMS_CONTENT = 'atoms_content'
@@ -1364,7 +1365,8 @@ def process_gausscom_file(gausscom_file):
     #        ATOM_TYPE: atom_type (str), ATOM_COORDS: (np array)
     #    SEC_TAIL: everything including and after the blank line following SEC_ATOMS
     with open(gausscom_file) as d:
-        gausscom_content = {SEC_HEAD: [], SEC_ATOMS: {}, SEC_TAIL: []}
+        gausscom_content = {SEC_HEAD: [], SEC_ATOMS: {}, SEC_TAIL: [],
+                            BASE_NAME: os.path.splitext(os.path.basename(gausscom_file))[0]}
         section = SEC_HEAD
         atom_id = 1
         blank_header_lines = 0
@@ -1413,7 +1415,7 @@ def process_gausslog_file(gausslog_file):
     #        ATOM_TYPE: atom_type (str), ATOM_COORDS: (np array)
     #    SEC_TAIL: everything including and after the blank line following SEC_ATOMS
     with open(gausslog_file) as d:
-        gausslog_content = {SEC_ATOMS: {}}
+        gausslog_content = {SEC_ATOMS: {}, BASE_NAME: os.path.splitext(os.path.basename(gausslog_file))[0]}
         section = SEC_HEAD
         atom_id = 1
 

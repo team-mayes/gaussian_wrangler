@@ -44,6 +44,16 @@ FRAG_LOG_FILE = os.path.join(SUB_DATA_DIR, 'frag_example.log')
 FRAG_COM_OUT = os.path.join(SUB_DATA_DIR, 'frag_example_fresh_fb.com')
 GOOD_FRAG_COM_OUT = os.path.join(SUB_DATA_DIR, 'frag_example_good.com')
 
+ALT_FRAG_LOG_FILE = os.path.join(SUB_DATA_DIR, 'a579.log')
+ALT_FRAG_COM_TPL = os.path.join(SUB_DATA_DIR, 'a579.com')
+ALT_FRAG_COM_OUT = os.path.join(SUB_DATA_DIR, 'a579_a579.com')
+GOOD_ALT_FRAG_COM_OUT = os.path.join(SUB_DATA_DIR, 'a579_from_com_good.com')
+
+ROUTE_ONLY_TPL = os.path.join(SUB_DATA_DIR, 'route_only.tpl')
+ROUTE_NO_CHARGE_TPL = os.path.join(SUB_DATA_DIR, 'route_no_charge.tpl')
+ROUTE_ONLY_COM_OUT = os.path.join(SUB_DATA_DIR, 'frag_example_route_only.com')
+GOOD_ROUTE_ONLY_COM_OUT = os.path.join(SUB_DATA_DIR, 'frag_example_route_only_good.com')
+
 
 class TestGausslog2comNoOut(unittest.TestCase):
     # These all test failure cases
@@ -93,6 +103,18 @@ class TestGausslog2comNoOut(unittest.TestCase):
         # main(test_input)
         with capture_stderr(main, test_input) as output:
             self.assertTrue("log file has coordinates to use" in output)
+
+    def testNoChargeToRead(self):
+        test_input = ["-t", ROUTE_ONLY_TPL, "-f", FRAG_LOG_FILE, "-c"]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("read charge and multiplicity" in output)
+
+    def testNonIntChargeLine(self):
+        test_input = ["-t", ROUTE_NO_CHARGE_TPL, "-f", FRAG_LOG_FILE, "-c"]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("read charge and multiplicity" in output)
 
 
 class TestGausslog2com(unittest.TestCase):
@@ -151,4 +173,23 @@ class TestGausslog2com(unittest.TestCase):
             self.assertFalse(diff_lines(FRAG_COM_OUT, GOOD_FRAG_COM_OUT))
         finally:
             silent_remove(FRAG_COM_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testAddLines(self):
+        # Gaussian needs to have two blank lines at the end. Check adding them if they don't exist
+        test_input = ["-t", ROUTE_ONLY_TPL, "-f", FRAG_LOG_FILE]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(ROUTE_ONLY_COM_OUT, GOOD_ROUTE_ONLY_COM_OUT))
+        finally:
+            silent_remove(ROUTE_ONLY_COM_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testFragments2(self):
+        test_input = ["-t", ALT_FRAG_COM_TPL, "-f", ALT_FRAG_LOG_FILE, "-c"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(ALT_FRAG_COM_OUT, GOOD_ALT_FRAG_COM_OUT))
+        finally:
+            silent_remove(ALT_FRAG_COM_OUT, disable=DISABLE_REMOVE)
             pass

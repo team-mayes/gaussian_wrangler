@@ -1,4 +1,4 @@
-# m062x/Def2TZVP nosymm scf=xqc opt=CalcFC freq=NoRaman SCRF=(Solvent=PerFluoroBenzene)
+# m062x/Def2TZVP nosymm scf=xqc opt freq=NoRaman
 
 Last conformation from file tests/test_data/gausslog2com/frag_example.log
 
@@ -55,7 +55,5 @@ H(Fragment=8)       4.698305    -3.012434     4.577758
 C(Fragment=8)       3.749058    -1.664667     3.314758
 H(Fragment=8)       3.646730    -0.939837     3.996058
 S(Fragment=6)      -2.532422    -0.073046     1.658558
-
-PDENS=7.0
 
 
