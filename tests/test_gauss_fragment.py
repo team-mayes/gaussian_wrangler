@@ -96,12 +96,14 @@ F2_METAL_OUT = os.path.join(SUB_DATA_DIR, 'tieg5ipatse_ts_ircr_optts_37_38_f2.co
 GOOD_F2_METAL_OUT = os.path.join(SUB_DATA_DIR, 'tieg5ipatse_ts_ircr_optts_37_38_f2_good.com')
 
 ADD_CP_FOOTER_INI = os.path.join(SUB_DATA_DIR, 'gauss_frag_add_end_basis.ini')
-CP_FOOTER_CP_OUT = os.path.join(SUB_DATA_DIR, '2011shi_fig5cts_origts_ircf_opt_19_40_cp.com')
-CP_FOOTER_F1_OUT = os.path.join(SUB_DATA_DIR, '2011shi_fig5cts_origts_ircf_opt_19_40_f1.com')
-CP_FOOTER_F2_OUT = os.path.join(SUB_DATA_DIR, '2011shi_fig5cts_origts_ircf_opt_19_40_f2.com')
+CP_FOOTER_CP_OUT = os.path.join(MAIN_DIR, '2011shi_fig5cts_origts_ircf_opt_19_40_cp.com')
+CP_FOOTER_F1_OUT = os.path.join(MAIN_DIR, '2011shi_fig5cts_origts_ircf_opt_19_40_f1.com')
+CP_FOOTER_F2_OUT = os.path.join(MAIN_DIR, '2011shi_fig5cts_origts_ircf_opt_19_40_f2.com')
 GOOD_CP_FOOTER_CP_OUT = os.path.join(SUB_DATA_DIR, '2011shi_fig5cts_origts_ircf_opt_19_40_cp_good.com')
 GOOD_CP_FOOTER_F1_OUT = os.path.join(SUB_DATA_DIR, '2011shi_fig5cts_origts_ircf_opt_19_40_f1_good.com')
 GOOD_CP_FOOTER_F2_OUT = os.path.join(SUB_DATA_DIR, '2011shi_fig5cts_origts_ircf_opt_19_40_f2_good.com')
+
+LOG_AS_COM_INI = os.path.join(SUB_DATA_DIR, 'gauss_log_as_com.ini')
 
 
 class TestGausscomFragNoOut(unittest.TestCase):
@@ -127,6 +129,12 @@ class TestGausscomFragNoOut(unittest.TestCase):
             main(test_input)
         with capture_stderr(main, test_input) as output:
             self.assertTrue("No such file or directory" in output)
+
+    def testLogAsCom(self):
+        test_input = ['-c', LOG_AS_COM_INI]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("where charge and multiplicity are expected" in output)
 
 
 class TestGausscomFrag(unittest.TestCase):
@@ -248,7 +256,8 @@ class TestGausscomFrag(unittest.TestCase):
             pass
 
     def testCPFooter(self):
-        # Uses a longer bond cut-off when one of the atoms is a metal
+        # Checks adding a multiline footer
+        # Also checks making the output directory the current directory using 'output_directory =' in the ini
         test_input = ["-c", ADD_CP_FOOTER_INI]
         try:
             main(test_input)

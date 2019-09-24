@@ -99,6 +99,9 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
                                    "separated by ';'".format(CUT_PAIR_LIST))
         main_proc[CUT_PAIR_LIST].append(atom_pair)
 
+    if main_proc[GAUSSCOM_FILE] and main_proc[GAUSSLOG_FILE]:
+        raise InvalidDataError("Both a '{}' and a '{}' are specified. Choose only one file to read and fragment.")
+
     if main_proc[OUT_BASE_DIR]:
         if not os.path.exists(main_proc[OUT_BASE_DIR]):
             os.makedirs(main_proc[OUT_BASE_DIR])

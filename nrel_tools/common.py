@@ -1385,8 +1385,13 @@ def process_gausscom_file(gausscom_file):
                         line = next(d).strip()
                         gausscom_content[SEC_HEAD].append(line)
                         split_line = line.split()
-                        gausscom_content[CHARGE] = int(split_line[0])
-                        gausscom_content[MULT] = int(split_line[1])
+                        try:
+                            gausscom_content[CHARGE] = int(split_line[0])
+                            gausscom_content[MULT] = int(split_line[1])
+                        except (IndexError, ValueError):
+                            raise InvalidDataError("Error in reading file {}\n  as a Gaussian input file. On the line "
+                                                   "where charge and multiplicity are expected, "
+                                                   "found: '{}'".format(gausscom_file, line))
                     continue
 
             elif section == SEC_ATOMS:
