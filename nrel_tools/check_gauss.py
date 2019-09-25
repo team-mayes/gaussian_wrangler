@@ -72,8 +72,12 @@ def parse_cmdline(argv):
 
 
 def process_list_file(output_file, good_output_directory, completed_list, likely_failed_list, perhaps_running_list):
-    with open(output_file, 'r') as fh:
-        last_line = fh.readlines()[-1].strip()
+    try:
+        with open(output_file, 'r') as fh:
+            last_line = fh.readlines()[-1].strip()
+    except IndexError:
+        warning("Could not read the last line (may be blank) of file: {}".format(output_file))
+        return
     if NORM_TERM_PAT.match(last_line):
         base_name = os.path.basename(output_file)
         completed_list.append(output_file)

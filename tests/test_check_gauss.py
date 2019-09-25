@@ -80,6 +80,8 @@ class TestCheckGauss(unittest.TestCase):
             with capture_stdout(main, test_input) as output:
                 self.assertTrue(output == GOOD_OUT)
             self.assertFalse(diff_lines(MOVED_FILE, NORM_TERM_LOG))
+            with capture_stderr(main, test_input) as output:
+                self.assertTrue("not read" in output)
         finally:
             silent_remove(MOVED_FILE, disable=DISABLE_REMOVE)
             silent_remove(FOR_HARTREE_DIR, disable=DISABLE_REMOVE)
