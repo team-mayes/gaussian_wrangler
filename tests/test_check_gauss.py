@@ -21,12 +21,14 @@ TEMP_NORM_TERM_LOG = os.path.join(SUB_DATA_DIR, 'pet_mono_637_tzvp.log')
 FOR_HARTREE_DIR = os.path.join(MAIN_DIR, 'for_hartree')
 MOVED_FILE = os.path.join(FOR_HARTREE_DIR, 'pet_mono_637_tzvp.log')
 
-GOOD_OUT = "The following files may have failed:\n" \
+GOOD_OUT = "The following files completed normally:\n" \
+           "    tests/test_data/check_gauss/pet_mono_637_tzvp.log\n" \
+           "The following files may have failed:\n" \
            "    tests/test_data/check_gauss/pet_mono_819_tzvp.log\n" \
            "    tests/test_data/check_gauss/pet_mono_872_tzvp.log\n" \
            "The following files may still be running:\n" \
-           "    tests/test_data/check_gauss/pet_mono_674_tzvp.log\n" \
-           "    tests/test_data/check_gauss/pet_mono_671_tzvp.log\n"
+           "    tests/test_data/check_gauss/pet_mono_671_tzvp.log\n" \
+           "    tests/test_data/check_gauss/pet_mono_674_tzvp.log\n"
 
 
 class TestCheckGaussNoOut(unittest.TestCase):

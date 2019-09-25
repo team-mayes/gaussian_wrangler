@@ -71,11 +71,12 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def process_list_file(output_file, likely_failed_list, good_output_directory, perhaps_running_list):
+def process_list_file(output_file, good_output_directory, completed_list, likely_failed_list, perhaps_running_list):
     with open(output_file, 'r') as fh:
         last_line = fh.readlines()[-1].strip()
     if NORM_TERM_PAT.match(last_line):
         base_name = os.path.basename(output_file)
+        completed_list.append(output_file)
         os.rename(output_file, os.path.join(good_output_directory, base_name))
         return
     for pattern in FAIL_PAT_LIST:
@@ -92,6 +93,7 @@ def main(argv=None):
         return ret
 
     # Find files to process, then process them
+    completed_list = []
     check_file_list = []
     perhaps_running_list = []
     likely_failed_list = []
@@ -115,7 +117,17 @@ def main(argv=None):
             raise InvalidDataError("Could not find files with extension '{}' in directory '{}'".format(args.extension,
                                                                                                        search_folder))
         for file in check_file_list:
-            process_list_file(file, likely_failed_list, args.output_directory, perhaps_running_list)
+            process_list_file(file, args.output_directory, completed_list, likely_failed_list, perhaps_running_list)
+        # sort if list is at least 2 long:
+        for file_list in [completed_list, likely_failed_list, perhaps_running_list]:
+            if len(file_list) > 1:
+                file_list.sort()
+        if len(completed_list) > 0:
+            print("The following files completed normally:")
+            for file in completed_list:
+                print("    {}".format(os.path.relpath(file)))
+        else:
+            print("No normally completed files found.")
         if len(likely_failed_list) > 0:
             print("The following files may have failed:")
             for file in likely_failed_list:
