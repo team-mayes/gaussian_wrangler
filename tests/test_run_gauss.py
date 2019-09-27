@@ -139,8 +139,25 @@ class TestRunGaussNoOut(unittest.TestCase):
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
+    def testNoChk(self):
+        # Checking alternate input from above
+        temp_file_list = ['ethylrad.com', 'f.tpl', 'ts.tpl']
+        for fname in temp_file_list:
+            with open(fname, 'w') as f:
+                f.write("# for test only")
 
-class TestRunGaussBDE(unittest.TestCase):
+        test_input = ['tests/test_data/run_gauss/ethylrad_restart', "-c", SPAWN_INI, "-s"]
+        try:
+            # main(test_input)
+            with capture_stderr(main, test_input) as output:
+                self.assertTrue("old checkpoint" in output)
+        finally:
+            for fname in temp_file_list:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+
+class TestRunGauss(unittest.TestCase):
     # These test/demonstrate different options
     def testDefIni(self):
         test_input = [ETHYLRAD, "-c", DEF_INI]
@@ -211,11 +228,15 @@ class TestRunGaussBDE(unittest.TestCase):
             self.assertFalse(diff_lines(SETUP_INI_OUT, GOOD_SETUP_INI_OUT))
             self.assertFalse(diff_lines(SETUP_SLURM_OUT, GOOD_SETUP_SLURM_OUT))
         finally:
-            # for fname in [SETUP_INI_OUT, SETUP_SLURM_OUT]:
-            #     silent_remove(fname, disable=DISABLE_REMOVE)
+            for fname in [SETUP_INI_OUT, SETUP_SLURM_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
     def testSetupSubmitList(self):
+        temp_file_list = ['ethylrad.com', 'water.com']
+        for fname in temp_file_list:
+            with open(fname, 'w') as f:
+                f.write("# for test only\n\n")
         test_input = [LIST, "-l", "-c", SETUP_SUBMIT_INI]
         try:
             main(test_input)
@@ -224,7 +245,7 @@ class TestRunGaussBDE(unittest.TestCase):
             self.assertFalse(diff_lines(WATER_INI_OUT, GOOD_WATER_INI_OUT))
             self.assertFalse(diff_lines(WATER_SLURM_OUT, GOOD_WATER_SLURM_OUT))
         finally:
-            for fname in [SETUP_INI_OUT, SETUP_SLURM_OUT, WATER_INI_OUT, WATER_SLURM_OUT]:
+            for fname in temp_file_list + [SETUP_INI_OUT, SETUP_SLURM_OUT, WATER_INI_OUT, WATER_SLURM_OUT]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 

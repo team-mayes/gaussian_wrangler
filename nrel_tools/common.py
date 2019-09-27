@@ -142,6 +142,10 @@ class MdError(Exception):
     pass
 
 
+class InvalidInputError(MdError):
+    pass
+
+
 class InvalidDataError(MdError):
     pass
 

@@ -261,7 +261,7 @@ def fragment_molecule(atom_pair, atoms_content, ignore_max_dist):
                 max_dist = MAX_BOND_DIST
             if pair_dist < max_dist:
                 raise InvalidDataError("Found that atom {} assigned to fragment 1 is within {} Angstroms of atom {} "
-                                       "which was not assigned to fragment 1".format(f1_atom, MAX_BOND_DIST, atom))
+                                       "which was not assigned to fragment 1".format(f1_atom, max_dist, atom))
     # check that all remaining atoms are bonded to each other
     atoms_to_check = [atom_pair[1]]
     add_atoms_to_fragment(unassigned_atom_numbers, atoms_content, atoms_to_check, frag2_list, 2, single_bond_atoms)

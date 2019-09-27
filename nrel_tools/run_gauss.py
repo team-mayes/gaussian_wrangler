@@ -10,8 +10,8 @@ import subprocess
 import re
 import os
 from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname,
-                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                               read_tpl)
+                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, GAU_HEADER_PAT,
+                               read_tpl, InvalidInputError)
 from nrel_tools.fill_tpl import (OUT_DIR, MAIN_SEC, fill_save_tpl)
 
 try:
@@ -30,6 +30,7 @@ __author__ = 'hmayes'
 CONFIG_FILE = 'config_file_name'
 JOB_LIST = 'job_list'
 FOLLOW_JOBS_LIST = 'follow_job_list'
+GAUSS_IN_EXT = 'gaussian_input_ext'
 TPL_DICT = 'dictionary of tpls for jobs'
 JOB_RUN_TPL = "job_run_tpl"
 FIRST_JOB_CHK = 'chk_for_first_job'
@@ -52,7 +53,7 @@ NO_SUBMIT = 'no_submit'
 
 DEF_CFG_FILE = 'run_gauss.ini'
 DEF_JOB_RUN_TPL = 'run_gauss_job.tpl'
-DEF_SLURM_FROM_CHK_TPL = 'run_gauss_from_old_chk.tpl'
+DEF_GAUSS_IN_EXT = '.com'
 DEF_JOB_LIST = None
 DEF_PARTITION = 'short'
 DEF_RUN_TIME = '4:00:00'
@@ -64,6 +65,7 @@ DEF_FOLLOW_JOBS_LIST = None
 
 # Set notation
 DEF_CFG_VALS = {OUT_DIR: None,
+                GAUSS_IN_EXT: DEF_GAUSS_IN_EXT,
                 JOB_RUN_TPL: DEF_JOB_RUN_TPL,
                 JOB_LIST: None,
                 FOLLOW_JOBS_LIST: DEF_FOLLOW_JOBS_LIST,
@@ -85,6 +87,7 @@ JOB_NAME = 'job_name'
 OLD_JOB_NAME = 'old_job_name'
 INPUT_FILE = 'input_file'
 GAU_GOOD_PAT = re.compile(r"Normal termination of Gaussian.*")
+GUESS_READ_OR_GEOM_CHK_PAT = re.compile(r"^.*\b(guess.*read|geom.*check)\b.*$", re.I)
 
 
 def read_cfg(f_loc, cfg_proc=process_cfg):
@@ -152,9 +155,10 @@ def parse_cmdline(argv):
     # initialize the parser object:
     parser = argparse.ArgumentParser(description='Sets up and runs series of Gaussian jobs, checking between jobs '
                                                  'for normal termination.')
-    parser.add_argument("job_name", help="The job name to run. If the first job to run is '', a Gaussian input "
-                                         "file (with extension '.com') is needed. Otherwise, a checkpoint file "
-                                         "(with extension '.chk') is needed.")
+    parser.add_argument("job_name", help="The job name to run. If the first job to run is '', a Gaussian input file "
+                                         "(with extension '{}' or specified with '{}' argument in the config file) is "
+                                         "needed. Otherwise, a checkpoint file (with extension '.chk') is "
+                                         "needed.".format(DEF_GAUSS_IN_EXT, GAUSS_IN_EXT))
     parser.add_argument("-c", "--config", help="The location of the configuration file in ini format. "
                                                "The default file name is {}, located in the base directory "
                                                "where the program as run.".format(DEF_CFG_FILE),
@@ -219,7 +223,7 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
     # Determine if it will run fresh or from an old checkpoint
     if job == '':
         new_job_name = tpl_dict[JOB_NAME]
-        tpl_dict[INPUT_FILE] = job_name_perhaps_with_dir + ".com"
+        tpl_dict[INPUT_FILE] = job_name_perhaps_with_dir + cfg[GAUSS_IN_EXT]
         if cfg[FIRST_JOB_CHK]:
             tpl_dict[OLD_CHECK_ECHO] = 'echo "%OldChk={}.chk" >> $INFILE'.format(cfg[FIRST_JOB_CHK])
         else:
@@ -254,7 +258,7 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
             raise InvalidDataError('Job failed: {}'.format(out_file))
 
 
-def create_sbatch_dict(cfg, tpl_dict, new_ini_fname, start_from_job_name_chk=True):
+def create_sbatch_dict(cfg, tpl_dict, new_ini_fname, current_job_list, start_from_job_name_chk=True):
     sbatch_dict = {PARTITION: cfg[PARTITION], RUN_TIME: cfg[RUN_TIME], ACCOUNT: cfg[ACCOUNT],
                    JOB_NAME: tpl_dict[JOB_NAME], RUN_GAUSS_INI: new_ini_fname, QOS: cfg[QOS]
                    }
@@ -265,6 +269,21 @@ def create_sbatch_dict(cfg, tpl_dict, new_ini_fname, start_from_job_name_chk=Tru
         sbatch_dict[OPT_OLD_JOB_NAME] = '-o ' + tpl_dict[JOB_NAME]
     else:
         sbatch_dict[OPT_OLD_JOB_NAME] = ''
+        if current_job_list[0] == '':
+            # in the case when there is no old_check_file, make sure the first input file does not try to read from chk
+            # IOError is already caught; no don't need to add a try loop
+            with open(tpl_dict[INPUT_FILE], "r") as f:
+                for line in f:
+                    line = line.strip()
+                    # route can be multiple lines, so first fine the line, then continue until a blank is reached
+                    if GAU_HEADER_PAT.match(line):
+                        while line != '':
+                            if GUESS_READ_OR_GEOM_CHK_PAT.match(line):
+                                raise InvalidDataError("Did not find an old checkpoint file to read, but the "
+                                                       "Gaussian input header indicates that Gaussian will attempt "
+                                                       "and fail to read from a checkpoint:\n   file:  {}\n"
+                                                       "  route:  {} ".format(tpl_dict[INPUT_FILE], line))
+                            line = next(f).strip()
 
     if cfg[EMAIL]:
         sbatch_dict[EMAIL] = '#SBATCH --mail-type=FAIL\n#SBATCH --mail-type=END\n' \
@@ -307,23 +326,26 @@ def create_ini_dict(cfg, thread):
     return ini_dict
 
 
-def setup_and_submit(cfg, suffix, thread, tpl_dict):
+def setup_and_submit(cfg, suffix, thread, tpl_dict, current_job_list):
     ini_dict = create_ini_dict(cfg, thread)
-    tpl_str = read_tpl(cfg[INI_TPL])
-    if cfg[SETUP_SUBMIT]:
-        base_name = tpl_dict[JOB_NAME]
-    elif cfg[LIST_OF_JOBS]:
+
+    if cfg[SETUP_SUBMIT] or cfg[LIST_OF_JOBS]:
         base_name = tpl_dict[JOB_NAME]
     else:
         base_name = cfg[CONFIG_FILE]
+
     new_ini_fname = create_out_fname(base_name, suffix=str(suffix), ext='.ini', base_dir=cfg[OUT_DIR])
+    new_sbatch_fname = create_out_fname(base_name, suffix=str(suffix), ext='.slurm', base_dir=cfg[OUT_DIR])
+
+    sbatch_dict = create_sbatch_dict(cfg, tpl_dict, os.path.relpath(new_ini_fname), current_job_list,
+                                     start_from_job_name_chk=cfg[START_FROM_SAME_CHK])
+    tpl_str = read_tpl(cfg[SBATCH_TPL])
+    fill_save_tpl(cfg, tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
+
+    tpl_str = read_tpl(cfg[INI_TPL])
     fill_save_tpl(cfg, tpl_str, ini_dict, cfg[INI_TPL], new_ini_fname)
     add_to_ini(new_ini_fname, thread, cfg[TPL_DICT])
-    tpl_str = read_tpl(cfg[SBATCH_TPL])
-    sbatch_dict = create_sbatch_dict(cfg, tpl_dict, os.path.relpath(new_ini_fname),
-                                     start_from_job_name_chk=cfg[START_FROM_SAME_CHK])
-    new_sbatch_fname = create_out_fname(base_name, suffix=str(suffix), ext='.slurm', base_dir=cfg[OUT_DIR])
-    fill_save_tpl(cfg, tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
+
     if not cfg[NO_SUBMIT]:
         try:
             sbatch_result = subprocess.check_output(["sbatch", new_sbatch_fname]).strip().decode("utf-8")
@@ -349,19 +371,20 @@ def main(argv=None):
         if args.list_of_jobs:
             with open(args.job_name) as f:
                 for line in f:
+                    input_job_file = os.path.splitext(line.strip())[0] + cfg[GAUSS_IN_EXT]
                     base_name = os.path.splitext(os.path.basename(line.strip()))[0]
-                    tpl_dict = {JOB_NAME: base_name}
+                    tpl_dict = {JOB_NAME: base_name, INPUT_FILE: input_job_file}
                     for index, thread in enumerate(cfg[JOB_LIST]):
                         if len(cfg[JOB_LIST]) == 1:
                             suffix = ''
                         else:
                             suffix = index
-                        setup_and_submit(cfg, suffix, thread, tpl_dict)
+                        setup_and_submit(cfg, suffix, thread, tpl_dict, thread)
             return GOOD_RET
 
         job_name_perhaps_with_dir = args.job_name
         job_name = os.path.splitext(os.path.basename(args.job_name))[0]
-        tpl_dict = {JOB_NAME: job_name}
+        tpl_dict = {JOB_NAME: job_name, INPUT_FILE: job_name_perhaps_with_dir + cfg[GAUSS_IN_EXT]}
 
         if args.setup_submit:
             for index, thread in enumerate(cfg[JOB_LIST]):
@@ -369,7 +392,7 @@ def main(argv=None):
                     suffix = ''
                 else:
                     suffix = index
-                setup_and_submit(cfg, suffix, thread, tpl_dict)
+                setup_and_submit(cfg, suffix, thread, tpl_dict, thread)
             return GOOD_RET
 
         for job in cfg[JOB_LIST]:
@@ -379,7 +402,7 @@ def main(argv=None):
             for index, thread in enumerate(cfg[FOLLOW_JOBS_LIST]):
                 if index == 0 and not cfg[ALL_NEW]:
                     continue
-                setup_and_submit(cfg, index, thread, tpl_dict)
+                setup_and_submit(cfg, index, thread, tpl_dict, thread)
 
         if len(cfg[FOLLOW_JOBS_LIST]) > 0 and not cfg[ALL_NEW]:
             for job in cfg[FOLLOW_JOBS_LIST][0]:
@@ -390,6 +413,9 @@ def main(argv=None):
         return IO_ERROR
     except subprocess.CalledProcessError as e:
         warning("", e)
+    except InvalidInputError as e:
+        warning("Check input:", e)
+        return INVALID_DATA
     except InvalidDataError as e:
         warning("Problems reading data:", e)
         return INVALID_DATA
