@@ -368,6 +368,7 @@ def main(argv=None):
 
     # Read template and data files
     try:
+        # for the "list_of_jobs" option, "job_name" is actually the name of the name of file with the list of jobs
         if args.list_of_jobs:
             with open(args.job_name) as f:
                 for line in f:
@@ -382,8 +383,9 @@ def main(argv=None):
                         setup_and_submit(cfg, suffix, thread, tpl_dict, thread)
             return GOOD_RET
 
-        job_name_perhaps_with_dir = args.job_name
-        job_name = os.path.splitext(os.path.basename(args.job_name))[0]
+        # otherwise, job_name is actually the job name. We can to ignore any extension on it
+        job_name_perhaps_with_dir = os.path.splitext(args.job_name)[0]
+        job_name = os.path.basename(job_name_perhaps_with_dir)
         tpl_dict = {JOB_NAME: job_name, INPUT_FILE: job_name_perhaps_with_dir + cfg[GAUSS_IN_EXT]}
 
         if args.setup_submit:
