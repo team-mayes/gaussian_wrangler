@@ -50,6 +50,7 @@ LIST_OF_JOBS = 'list_of_jobs'
 SETUP_SUBMIT = 'setup_submit'
 START_FROM_SAME_CHK = 'start_from_job_name_chk'
 NO_SUBMIT = 'no_submit'
+CHECK_FOR_CHK = "check_for_chk"
 
 DEF_CFG_FILE = 'run_gauss.ini'
 DEF_JOB_RUN_TPL = 'run_gauss_job.tpl'
@@ -62,6 +63,7 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 DEF_SBATCH_TPL = os.path.join(DATA_DIR, 'sbatch.tpl')
 DEF_INI_TPL = os.path.join(DATA_DIR, 'run_gauss_ini.tpl')
 DEF_FOLLOW_JOBS_LIST = None
+DEF_OLD_CHK_STR = 'echo "%OldChk={}.chk" >> $INFILE'
 
 # Set notation
 DEF_CFG_VALS = {OUT_DIR: None,
@@ -79,6 +81,8 @@ DEF_CFG_VALS = {OUT_DIR: None,
                 INI_TPL: DEF_INI_TPL,
                 QOS: 'normal',
                 START_FROM_SAME_CHK: False,
+                OLD_CHECK_ECHO: DEF_OLD_CHK_STR,
+                CHECK_FOR_CHK: True,
                 }
 REQ_KEYS = {
             }
@@ -225,13 +229,13 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
         new_job_name = tpl_dict[JOB_NAME]
         tpl_dict[INPUT_FILE] = job_name_perhaps_with_dir + cfg[GAUSS_IN_EXT]
         if cfg[FIRST_JOB_CHK]:
-            tpl_dict[OLD_CHECK_ECHO] = 'echo "%OldChk={}.chk" >> $INFILE'.format(cfg[FIRST_JOB_CHK])
+            tpl_dict[OLD_CHECK_ECHO] = cfg[OLD_CHECK_ECHO].format(cfg[FIRST_JOB_CHK])
         else:
             tpl_dict[OLD_CHECK_ECHO] = ''
     else:
         new_job_name = tpl_dict[JOB_NAME] + '_' + job
         tpl_dict[OLD_JOB_NAME] = tpl_dict[JOB_NAME]
-        tpl_dict[OLD_CHECK_ECHO] = 'echo "%OldChk={}.chk" >> $INFILE'.format(tpl_dict[OLD_JOB_NAME])
+        tpl_dict[OLD_CHECK_ECHO] = cfg[OLD_CHECK_ECHO].format(tpl_dict[OLD_JOB_NAME])
         tpl_dict[INPUT_FILE] = cfg[TPL_DICT][job]
     if not os.path.isfile(tpl_dict[INPUT_FILE]):
         raise IOError(tpl_dict[INPUT_FILE])
@@ -269,7 +273,7 @@ def create_sbatch_dict(cfg, tpl_dict, new_ini_fname, current_job_list, start_fro
         sbatch_dict[OPT_OLD_JOB_NAME] = '-o ' + tpl_dict[JOB_NAME]
     else:
         sbatch_dict[OPT_OLD_JOB_NAME] = ''
-        if current_job_list[0] == '':
+        if current_job_list[0] == '' and cfg[CHECK_FOR_CHK]:
             # in the case when there is no old_check_file, make sure the first input file does not try to read from chk
             # IOError is already caught; no don't need to add a try loop
             with open(tpl_dict[INPUT_FILE], "r") as f:

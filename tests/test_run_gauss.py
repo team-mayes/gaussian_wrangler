@@ -43,6 +43,23 @@ GOOD_SPAWN2_INI = os.path.join(SUB_DATA_DIR, 'run_spawn2_good.ini')
 GOOD_SPAWN1_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn1_good.slurm')
 GOOD_SPAWN2_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn2_good.slurm')
 
+SUBMIT_NO_CHK_CHECK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_no_chk_chk.ini')
+NO_CHK_CHECK_INI = os.path.join(MAIN_DIR, 'ethylrad_restart.ini')
+NO_CHK_CHECK_SLM = os.path.join(MAIN_DIR, 'ethylrad_restart.slurm')
+
+SPAWN_GIVE_OLD_CHK_STR_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str.ini')
+SPAWN1_GIVE_CHK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str1.ini')
+SPAWN2_GIVE_CHK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str2.ini')
+SPAWN1_GIVE_CHK_SLM = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str1.slurm')
+SPAWN2_GIVE_CHK_SLM = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str2.slurm')
+
+SPAWN_ALT_OLD_CHK_STR_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_diff_old_chk_str.ini')
+GOOD_ALT_OPT_STABLE_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt_stable_alt.sh')
+SPAWN1_DIFF_CHK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_diff_old_chk_str1.ini')
+SPAWN2_DIFF_CHK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_diff_old_chk_str2.ini')
+SPAWN1_DIFF_CHK_SLM = os.path.join(SUB_DATA_DIR, 'run_spawn_diff_old_chk_str1.slurm')
+SPAWN2_DIFF_CHK_SLM = os.path.join(SUB_DATA_DIR, 'run_spawn_diff_old_chk_str2.slurm')
+
 SPAWN_ALL_NEW_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new.ini')
 SPAWN0_NEW_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new0.ini')
 SPAWN1_NEW_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new1.ini')
@@ -201,6 +218,39 @@ class TestRunGauss(unittest.TestCase):
         finally:
             for fname in [DEF_SH_OUT, OPT_SH_OUT, OPT_STABLE_SH_OUT, DEF_LOG_OUT, OPT_LOG_OUT, OPT_STABLE_LOG_OUT,
                           SPAWN1_INI, SPAWN2_INI, SPAWN1_SLURM, SPAWN2_SLURM]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testSpawnGiveChkStr(self):
+        test_input = [ETHYLRAD, "-c", SPAWN_GIVE_OLD_CHK_STR_INI, "-t"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(OPT_STABLE_SH_OUT, GOOD_OPT_STABLE_SH_OUT))
+        finally:
+            for fname in [DEF_SH_OUT, OPT_SH_OUT, OPT_STABLE_SH_OUT, DEF_LOG_OUT, OPT_LOG_OUT, OPT_STABLE_LOG_OUT,
+                          SPAWN1_GIVE_CHK_INI, SPAWN2_GIVE_CHK_INI, SPAWN1_GIVE_CHK_SLM, SPAWN2_GIVE_CHK_SLM]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testSpawnAltChkStr(self):
+        test_input = [ETHYLRAD, "-c", SPAWN_ALT_OLD_CHK_STR_INI, "-t"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(OPT_STABLE_SH_OUT, GOOD_ALT_OPT_STABLE_SH_OUT))
+        finally:
+            for fname in [DEF_SH_OUT, OPT_SH_OUT, OPT_STABLE_SH_OUT, DEF_LOG_OUT, OPT_LOG_OUT, OPT_STABLE_LOG_OUT,
+                          SPAWN1_DIFF_CHK_INI, SPAWN2_DIFF_CHK_INI, SPAWN1_DIFF_CHK_SLM, SPAWN2_DIFF_CHK_SLM]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testNoChkChk(self):
+        test_input = ['tests/test_data/run_gauss/ethylrad_restart', "-s", "-c", SUBMIT_NO_CHK_CHECK_INI, "-t"]
+        try:
+            main(test_input)
+            # TODO: Check that you can submit a spawn job!
+            # self.assertFalse(diff_lines(OPT_STABLE_SH_OUT, GOOD_ALT_OPT_STABLE_SH_OUT))
+        finally:
+            for fname in [NO_CHK_CHECK_INI, NO_CHK_CHECK_SLM]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
