@@ -244,6 +244,8 @@ class TestRunGauss(unittest.TestCase):
             pass
 
     def testNoChkChk(self):
+        # checks not throwing an error when the chk file is not in the current directory.
+        # also checks adding config lines to the created ini if they are needed but not part of the template
         test_input = ['tests/test_data/run_gauss/ethylrad_restart', "-s", "-c", SUBMIT_NO_CHK_CHECK_INI, "-t"]
         try:
             main(test_input)

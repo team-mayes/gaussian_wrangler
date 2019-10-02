@@ -11,7 +11,7 @@ import re
 import os
 from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, GAU_HEADER_PAT,
-                               read_tpl, InvalidInputError)
+                               read_tpl, InvalidInputError, str_to_file)
 from nrel_tools.fill_tpl import (OUT_DIR, MAIN_SEC, fill_save_tpl)
 
 try:
@@ -51,6 +51,9 @@ SETUP_SUBMIT = 'setup_submit'
 START_FROM_SAME_CHK = 'start_from_job_name_chk'
 NO_SUBMIT = 'no_submit'
 CHECK_FOR_CHK = "check_for_chk"
+STR_KEYS_FOR_SPAWNING_INIS = [JOB_RUN_TPL, PARTITION, QOS, RUN_TIME, ACCOUNT, SBATCH_TPL, EMAIL,
+                              OLD_CHECK_ECHO, INI_TPL]
+NON_STR_KEYS_FOR_SPAWNING_INIS = [ALL_NEW, OUT_DIR, FIRST_JOB_CHK]
 
 DEF_CFG_FILE = 'run_gauss.ini'
 DEF_JOB_RUN_TPL = 'run_gauss_job.tpl'
@@ -308,17 +311,11 @@ def add_to_ini(filled_tpl_name, thread, tpl_dict):
 
 
 def create_ini_dict(cfg, thread):
-    ini_dict = {JOB_RUN_TPL: cfg[JOB_RUN_TPL],
-                JOB_LIST: ','.join(thread),
-                # next are for setting up submits with spawning; doesn't hurt if not needed
-                PARTITION: cfg[PARTITION], QOS: cfg[QOS], RUN_TIME: cfg[RUN_TIME], ACCOUNT: cfg[ACCOUNT],
-                SBATCH_TPL: cfg[SBATCH_TPL],
-                ALL_NEW: cfg[ALL_NEW],
-                INI_TPL: cfg[INI_TPL],
-                OUT_DIR: cfg[OUT_DIR],
-                FIRST_JOB_CHK: cfg[FIRST_JOB_CHK],
-                EMAIL: cfg[EMAIL],
-                }
+    ini_dict = {JOB_LIST: ','.join(thread)}
+    # most of the next are for setting up submits with spawning; doesn't hurt if not needed
+    for key_word in STR_KEYS_FOR_SPAWNING_INIS:
+        # if the cfg values are not strings, they have to be treated differently
+        ini_dict[key_word] = cfg[key_word]
     jobs_string = None
     if len(cfg[FOLLOW_JOBS_LIST]) > 0 and (cfg[SETUP_SUBMIT] or cfg[LIST_OF_JOBS]):
         thread_list = []
@@ -328,6 +325,49 @@ def create_ini_dict(cfg, thread):
     ini_dict[FOLLOW_JOBS_LIST] = jobs_string
 
     return ini_dict
+
+
+def create_ini_tpl_with_req_keys(ini_dict, thread, tpl_dict, cfg, new_ini_fname):
+    """
+    Adds to the ini_tpl if a non-default parameter needs to be specified, and is not already included
+    :param thread: the jobs to be run, to check that if a location of the tpl is specified, it gets included
+                   in the new ini file
+    :param tpl_dict: dictionary of locations of job tpl files
+    :param new_ini_fname: name and location of the ini_tpl created
+    :param ini_dict: values for filling
+    :param cfg: configuration dict
+    :return: tpl_str: str with values to be filled
+    """
+    # we always need the header, job_list, and job_run_tpl
+    tpl_str = '[main]\njob_run_tpl = {}\njob_list = {}'.format(ini_dict[JOB_RUN_TPL], ini_dict[JOB_LIST])
+
+    # check for not None, because want this check to catch if it is ''
+    # if not none, make sure it has the keys needed to make a new ini with sbatch options
+    if ini_dict[FOLLOW_JOBS_LIST] is not None:
+        tpl_str += '\n{} = {}'.format(FOLLOW_JOBS_LIST, ini_dict[FOLLOW_JOBS_LIST])
+        # I've checked that this list all has default vals and is added to ini_dict, so no catch added
+        # opt = tests/test_data/run_gauss/opt.tpl
+        # stable = tests/test_data/run_gauss/stable.tpl
+        # freq = tests/test_data/run_gauss/freq.tpl
+        for key_word in STR_KEYS_FOR_SPAWNING_INIS:
+            # if the value is not what is default, check if it will be printed in the created ini
+            # (by checking the tpl_str). If not, add to the tpl_str.
+            if ini_dict[key_word] != DEF_CFG_VALS[key_word]:
+                if not (key_word in tpl_str):
+                    # might as well just fill in the value here; easier than setting it up to be filled later
+                    tpl_str += '\n{} = {}'.format(key_word, ini_dict[key_word])
+        # the keys below were not already added to the ini_dict, which skipped any keys with non-string values
+        # add to tpl_str now
+        for key_word in NON_STR_KEYS_FOR_SPAWNING_INIS:
+            if key_word not in tpl_str:
+                if cfg[key_word] != DEF_CFG_VALS[key_word]:
+                    tpl_str += '\n{} = {}'.format(key_word, cfg[key_word])
+    # whether or not sbatch options are needed, job locations will be needed
+    for job in thread:
+        if job != '':
+            tpl_str += '\n{} = {}'.format(job, tpl_dict[job])
+
+    str_to_file(tpl_str, new_ini_fname, print_info=True)
 
 
 def setup_and_submit(cfg, suffix, thread, tpl_dict, current_job_list):
@@ -346,9 +386,8 @@ def setup_and_submit(cfg, suffix, thread, tpl_dict, current_job_list):
     tpl_str = read_tpl(cfg[SBATCH_TPL])
     fill_save_tpl(cfg, tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
 
-    tpl_str = read_tpl(cfg[INI_TPL])
-    fill_save_tpl(cfg, tpl_str, ini_dict, cfg[INI_TPL], new_ini_fname)
-    add_to_ini(new_ini_fname, thread, cfg[TPL_DICT])
+    # read ini_tpl and check if it has fields for submitting spawned jobs, if needed
+    create_ini_tpl_with_req_keys(ini_dict, thread, cfg[TPL_DICT], cfg, new_ini_fname)
 
     if not cfg[NO_SUBMIT]:
         try:

@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --partition=standard
+#SBATCH --partition=compute
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --job-name=ethylrad
 #SBATCH --output=ethylrad.out
 #SBATCH --error=ethylrad.err
-#SBATCH --account=bpms
+#SBATCH --account=nwu150
 #SBATCH --qos=normal
 
 
