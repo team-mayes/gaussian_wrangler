@@ -299,7 +299,7 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
             file_set = file_set + ["-c", "1"]
         if REACT_PROD_SEP in file_set:
             file_set.remove(REACT_PROD_SEP)
-        vibes_out = subprocess.check_output(["python", "-m", "goodvibes"] + file_set +
+        vibes_out = subprocess.check_output(["python", "-m", "goodvibes_hmayes"] + file_set +
                                             ["--check"]).decode("utf-8").strip().split("\n")
         for line in vibes_out:
             if GOODVIBES_ERROR_PAT.match(line):
@@ -352,12 +352,16 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
             gt.append(np.full([len(temps)], np.nan))
             qh_gt.append(np.full([len(temps)], np.nan))
             continue
-        vibes_input = ["python", "-m", "goodvibes", file, "--ti", temp_range]
+        vibes_input = ["python", "-m", "goodvibes_hmayes", file, "--ti", temp_range]
         if solvent:
             vibes_input += ["-c", "1"]
         if qh_h_opt:
             vibes_input += ["-q"]
         vibes_out = subprocess.check_output(vibes_input).decode("utf-8").strip().split("\n")
+        # TODO: remove debug statement
+        # if testing:
+        #     print(vibes_out)
+        #     return temps, h, qh_h, gt, qh_gt
         found_structure = False
         skip_line = True
         h.append([])
@@ -580,8 +584,13 @@ def main(argv=None):
             tog_fname = None
         for file_set in row_list:
             solvent, ts_index = check_gausslog_fileset(file_set, args[0].hartree_call, args[0].vibes_check)
+            # testing = True
             temps, h, qh_h, gt, qh_gt = get_thermochem(file_set, args[0].temp_range, solvent, args[0].save_vibes,
                                                        args[0].out_dir, tog_fname, args[0].quasiharmonic)
+            # # TODO: remove debug statement
+            # if testing:
+            #     return GOOD_RET
+            # print(temps, h, qh_h, gt, qh_gt)
             delta_h_ts, delta_h_rxn = get_deltas(temps, h, ts_index)
             if args[0].quasiharmonic:
                 qh_delta_h_ts, qh_delta_h_rxn = get_deltas(temps, qh_h, ts_index)
