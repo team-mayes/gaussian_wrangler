@@ -298,15 +298,6 @@ def create_sbatch_dict(cfg, tpl_dict, new_ini_fname, current_job_list, start_fro
     return sbatch_dict
 
 
-def add_to_ini(filled_tpl_name, thread, tpl_dict):
-    with open(filled_tpl_name, 'a') as f:
-        f.write('\n')
-        for job in thread:
-            if job == '':
-                continue
-            f.write('{} = {}\n'.format(job, tpl_dict[job]))
-
-
 def create_ini_dict(cfg, thread):
     ini_dict = {JOB_LIST: ','.join(thread)}
     # most of the next are for setting up submits with spawning; doesn't hurt if not needed
