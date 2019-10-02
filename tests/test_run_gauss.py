@@ -46,6 +46,8 @@ GOOD_SPAWN2_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn2_good.slurm')
 SUBMIT_NO_CHK_CHECK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_no_chk_chk.ini')
 NO_CHK_CHECK_INI = os.path.join(MAIN_DIR, 'ethylrad_restart.ini')
 NO_CHK_CHECK_SLM = os.path.join(MAIN_DIR, 'ethylrad_restart.slurm')
+GOOD_NO_CHK_CHECK_INI = os.path.join(SUB_DATA_DIR, 'good_ethylrad_restart.ini')
+GOOD_NO_CHK_CHECK_SLM = os.path.join(SUB_DATA_DIR, 'good_ethylrad_restart.slurm')
 
 SPAWN_GIVE_OLD_CHK_STR_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str.ini')
 SPAWN1_GIVE_CHK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str1.ini')
@@ -249,8 +251,8 @@ class TestRunGauss(unittest.TestCase):
         test_input = ['tests/test_data/run_gauss/ethylrad_restart', "-s", "-c", SUBMIT_NO_CHK_CHECK_INI, "-t"]
         try:
             main(test_input)
-            # TODO: Check that you can submit a spawn job!
-            # self.assertFalse(diff_lines(OPT_STABLE_SH_OUT, GOOD_ALT_OPT_STABLE_SH_OUT))
+            self.assertFalse(diff_lines(NO_CHK_CHECK_INI, GOOD_NO_CHK_CHECK_INI))
+            self.assertFalse(diff_lines(NO_CHK_CHECK_SLM, GOOD_NO_CHK_CHECK_SLM))
         finally:
             for fname in [NO_CHK_CHECK_INI, NO_CHK_CHECK_SLM]:
                 silent_remove(fname, disable=DISABLE_REMOVE)

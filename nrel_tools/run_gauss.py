@@ -37,7 +37,6 @@ FIRST_JOB_CHK = 'chk_for_first_job'
 OLD_CHECK_ECHO = 'old_check_echo'
 # config keys for spawning additional jobs
 SBATCH_TPL = 'sbatch_tpl'
-INI_TPL = 'ini_tpl'
 PARTITION = 'partition'
 RUN_TIME = 'run_time'
 ACCOUNT = 'account'
@@ -52,7 +51,7 @@ START_FROM_SAME_CHK = 'start_from_job_name_chk'
 NO_SUBMIT = 'no_submit'
 CHECK_FOR_CHK = "check_for_chk"
 STR_KEYS_FOR_SPAWNING_INIS = [JOB_RUN_TPL, PARTITION, QOS, RUN_TIME, ACCOUNT, SBATCH_TPL, EMAIL,
-                              OLD_CHECK_ECHO, INI_TPL]
+                              OLD_CHECK_ECHO]
 NON_STR_KEYS_FOR_SPAWNING_INIS = [ALL_NEW, OUT_DIR, FIRST_JOB_CHK]
 
 DEF_CFG_FILE = 'run_gauss.ini'
@@ -64,7 +63,6 @@ DEF_RUN_TIME = '4:00:00'
 DEF_ACCOUNT = 'bpms'
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 DEF_SBATCH_TPL = os.path.join(DATA_DIR, 'sbatch.tpl')
-DEF_INI_TPL = os.path.join(DATA_DIR, 'run_gauss_ini.tpl')
 DEF_FOLLOW_JOBS_LIST = None
 DEF_OLD_CHK_STR = 'echo "%OldChk={}.chk" >> $INFILE'
 
@@ -81,7 +79,6 @@ DEF_CFG_VALS = {OUT_DIR: None,
                 EMAIL: None,
                 ALL_NEW: False,
                 SBATCH_TPL: DEF_SBATCH_TPL,
-                INI_TPL: DEF_INI_TPL,
                 QOS: 'normal',
                 START_FROM_SAME_CHK: False,
                 OLD_CHECK_ECHO: DEF_OLD_CHK_STR,
