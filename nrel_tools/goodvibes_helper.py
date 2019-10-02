@@ -358,10 +358,6 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
         if qh_h_opt:
             vibes_input += ["-q"]
         vibes_out = subprocess.check_output(vibes_input).decode("utf-8").strip().split("\n")
-        # TODO: remove debug statement
-        # if testing:
-        #     print(vibes_out)
-        #     return temps, h, qh_h, gt, qh_gt
         found_structure = False
         skip_line = True
         h.append([])
@@ -584,13 +580,8 @@ def main(argv=None):
             tog_fname = None
         for file_set in row_list:
             solvent, ts_index = check_gausslog_fileset(file_set, args[0].hartree_call, args[0].vibes_check)
-            # testing = True
             temps, h, qh_h, gt, qh_gt = get_thermochem(file_set, args[0].temp_range, solvent, args[0].save_vibes,
                                                        args[0].out_dir, tog_fname, args[0].quasiharmonic)
-            # # TODO: remove debug statement
-            # if testing:
-            #     return GOOD_RET
-            # print(temps, h, qh_h, gt, qh_gt)
             delta_h_ts, delta_h_rxn = get_deltas(temps, h, ts_index)
             if args[0].quasiharmonic:
                 qh_delta_h_ts, qh_delta_h_rxn = get_deltas(temps, qh_h, ts_index)

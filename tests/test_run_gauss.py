@@ -91,6 +91,7 @@ GOOD_ETHYL_SPAWN_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_spawn.slu
 GOOD_WATER_SPAWN_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'water_spawn_good.slurm')
 
 SETUP_DEF_TPL_INI = os.path.join(SUB_DATA_DIR, 'submit_current_f_ts.ini')
+GOOD_DEF_TPL_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_default_tpl_good.ini')
 SETUP_INI_DEF_DIR_OUT = os.path.join(MAIN_DIR, 'ethylrad.ini')
 SETUP_SLURM_DEF_DIR_OUT = os.path.join(MAIN_DIR, 'ethylrad.slurm')
 GOOD_DEF_DIR_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_default_dir_good.ini')
@@ -345,7 +346,7 @@ class TestRunGauss(unittest.TestCase):
         try:
             with capture_stdout(main, test_input) as output:
                 self.assertTrue("sbatch" in output)
-            self.assertFalse(diff_lines(SETUP_INI_DEF_DIR_OUT, GOOD_DEF_DIR_INI_OUT))
+            self.assertFalse(diff_lines(SETUP_INI_DEF_DIR_OUT, GOOD_DEF_TPL_INI_OUT))
             self.assertFalse(diff_lines(SETUP_SLURM_DEF_DIR_OUT, GOOD_SHORT_DEF_DIR_SLURM_OUT))
         finally:
             for fname in temp_file_list + [SETUP_INI_DEF_DIR_OUT, SETUP_SLURM_DEF_DIR_OUT]:
