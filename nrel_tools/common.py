@@ -20,7 +20,6 @@ from itertools import chain, islice
 import math
 import numpy as np
 import os
-from shutil import copy2, Error, copystat
 import six
 import sys
 from contextlib import contextmanager
@@ -67,8 +66,7 @@ SIG_DECIMALS = 12
 ATOM_NUM_DICT = {1: 'H', 2: 'He', 3: 'Li', 4: 'Be', 5: 'B', 6: 'C', 7: 'N', 8: 'O', 9: 'F', 10: 'Ne',
                  11: 'Na', 12: 'Mg', 13: 'Al', 14: 'Si', 15: 'P', 16: 'S', 17: 'Cl', 18: 'Ar',
                  19: 'K', 20: 'Ca', 21: 'Sc', 22: 'Ti', 23: 'V', 24: 'Cr', 25: 'Mn', 26: 'Fe', 27: 'Co', 28: 'Ni',
-                 29: 'Cu',
-                 30: 'Zn', 31: 'Ga', 32: 'Ge', 33: 'As', 34: 'Se', 35: 'Br', 36: 'Kr',
+                 29: 'Cu', 30: 'Zn', 31: 'Ga', 32: 'Ge', 33: 'As', 34: 'Se', 35: 'Br', 36: 'Kr',
                  }
 
 # Sections for reading files
@@ -219,35 +217,6 @@ def calc_k(temp, delta_gibbs):
     @return: rate coefficient in inverse seconds
     """
     return BOLTZ_CONST * temp / PLANCK_CONST * math.exp(-delta_gibbs / (RG * temp))
-
-
-def pbc_calc_vector(a, b, box):
-    """
-    Finds the vectors between two points
-    @param a: xyz coords 1
-    @param b: xyz coords 2
-    @param box: vector with PBC box dimensions
-    @return: returns the vector a - b
-    """
-    vec = np.subtract(a, b)
-    return vec - np.multiply(box, np.asarray(list(map(round, vec / box))))
-
-
-def first_pbc_image(xyz_coords, box):
-    """
-    Moves xyz coords to the first PBC image, centered at the origin
-    @param xyz_coords: coordinates to center (move to first image)
-    @param box: PBC box dimensions
-    @return: xyz coords (np array) moved to the first image
-    """
-    return pbc_calc_vector(xyz_coords, XYZ_ORIGIN, box)
-
-
-def pbc_vector_avg(a, b, box):
-    diff = pbc_calc_vector(a, b, box)
-    mid_pt = np.add(b, np.divide(diff, 2.0))
-    # mid-point may not be in the first periodic image. Make it so by getting its difference from the origin
-    return pbc_calc_vector(mid_pt, np.zeros(len(mid_pt)), box)
 
 
 def unit_vector(vector):
@@ -598,79 +567,6 @@ def find_files_by_dir(tgt_dir, pat):
     return match_dirs
 
 
-def copytree(src, dst, symlinks=False, ignore=None):
-    """This is a copy of the standard Python shutil.copytree, but it
-    allows for an existing destination directory.
-
-    Recursively copy a directory tree using copy2().
-
-    If exception(s) occur, an Error is raised with a list of reasons.
-
-    If the optional symlinks flag is true, symbolic links in the
-    source tree result in symbolic links in the destination tree; if
-    it is false, the contents of the files pointed to by symbolic
-    links are copied.
-
-    The optional ignore argument is a callable. If given, it
-    is called with the `src` parameter, which is the directory
-    being visited by copytree(), and `names` which is the list of
-    `src` contents, as returned by os.listdir():
-
-        callable(src, names) -> ignored_names
-
-    Since copytree() is called recursively, the callable will be
-    called once for each directory that is copied. It returns a
-    list of names relative to the `src` directory that should
-    not be copied.
-
-    XXX Consider this example code rather than the ultimate tool.
-
-    @param src: The source directory.
-    @param dst: The destination directory.
-    @param symlinks: Whether to follow symbolic links.
-    @param ignore: A callable for items to ignore at a given level.
-    """
-    names = os.listdir(src)
-    if ignore is not None:
-        ignored_names = ignore(src, names)
-    else:
-        ignored_names = set()
-
-    if not os.path.exists(dst):
-        os.makedirs(dst)
-
-    errors = []
-    for name in names:
-        if name in ignored_names:
-            continue
-        src_name = os.path.join(src, name)
-        dst_name = os.path.join(dst, name)
-        try:
-            if symlinks and os.path.islink(src_name):
-                link_to = os.readlink(src_name)
-                os.symlink(link_to, dst_name)
-            elif os.path.isdir(src_name):
-                copytree(src_name, dst_name, symlinks, ignore)
-            else:
-                # Will raise a SpecialFileError for unsupported file types
-                copy2(src_name, dst_name)
-        # catch the Error from the recursive copytree so that we can
-        # continue with other files
-        except Error as err:
-            errors.extend(err.args[0])
-        except EnvironmentError as why:
-            errors.append((src_name, dst_name, str(why)))
-    try:
-        copystat(src, dst)
-    except OSError as why:
-        # can't copy file access times on Windows
-        # noinspection PyUnresolvedReferences
-        if why.winerror is None:
-            errors.extend((src, dst, str(why)))
-    if errors:
-        raise Error(errors)
-
-
 # CSV #
 
 def read_csv_header(src_file):
@@ -932,58 +828,6 @@ def list_to_file(list_to_print, fname, list_format=None, delimiter=' ', mode='w'
             print("Wrote file: {}".format(rel_path_fname))
         elif mode == 'a':
             print("  Appended: {}".format(rel_path_fname))
-
-
-def print_qm_kind(int_list, element_name, fname, mode='w'):
-    """
-    Writes the list to the given file, formatted for CP2K to read as qm atom indices.
-
-    @param int_list: The list to write.
-    @param element_name: element type to designate
-    @param fname: The location of the file to write.
-    @param mode: default is to write to a new file. Use option to designate to append to existing file.
-    """
-    with open(fname, mode) as m_file:
-        m_file.write('    &QM_KIND {}\n'.format(element_name))
-        m_file.write('        MM_INDEX {}\n'.format(' '.join(map(str, int_list))))
-        m_file.write('    &END QM_KIND\n')
-    if mode == 'w':
-        print("Wrote file: {}".format(fname))
-
-
-def print_mm_kind(atom_type, radius, fname, mode='w'):
-    """
-    Writes the list to the given file, formatted for CP2K to read as qm atom indices.
-
-    @param atom_type: (str) MM atom type
-    @param radius: radius to list for covalent radius (smoothing point charge)
-    @param fname: The location of the file to write.
-    @param mode: default is to write to a new file. Use option to designate to append to existing file.
-    """
-    with open(fname, mode) as m_file:
-        m_file.write('    &MM_KIND {}\n'.format(atom_type))
-        m_file.write('        RADIUS {}\n'.format(radius))
-        m_file.write('    &END MM_KIND\n')
-    if mode == 'w':
-        print("Wrote file: {}".format(fname))
-
-
-def print_qm_links(c_alpha_dict, c_beta_dict, f_name, mode="w"):
-    """
-    Note: this needs to be tested. Only ran once to get the protein residues set up correctly.
-    @param c_alpha_dict: dict of protein residue to be broken to c_alpha atom id
-    @param c_beta_dict: as above, but for c_beta
-    @param f_name: The location of the file to write.
-    @param mode: default is to write to a new file. Use option to designate to append to existing file.
-    """
-    with open(f_name, mode) as m_file:
-        for resid in c_beta_dict:
-            m_file.write('    !! Break resid {} between CA and CB, and cap CB with hydrogen\n'
-                         '    &LINK\n       MM_INDEX  {}  !! CA\n       QM_INDEX  {}  !! CB\n'
-                         '       LINK_TYPE  IMOMM\n       ALPHA_IMOMM  1.5\n'
-                         '    &END LINK\n'.format(resid, c_alpha_dict[resid], c_beta_dict[resid]))
-    if mode == 'w':
-        print("Wrote file: {}".format(f_name))
 
 
 # Conversions #
@@ -1276,19 +1120,6 @@ def conv_str_to_func(func_name):
 
 # Processing LAMMPS files #
 
-def find_dump_section_state(line, sec_timestep=SEC_TIMESTEP, sec_num_atoms=SEC_NUM_ATOMS, sec_box_size=SEC_BOX_SIZE,
-                            sec_atoms=SEC_ATOMS):
-    atoms_pat = re.compile(r"^ITEM: ATOMS id mol type q x y z.*")
-    if line == 'ITEM: TIMESTEP':
-        return sec_timestep
-    elif line == 'ITEM: NUMBER OF ATOMS':
-        return sec_num_atoms
-    elif line == 'ITEM: BOX BOUNDS pp pp pp':
-        return sec_box_size
-    elif atoms_pat.match(line):
-        return sec_atoms
-
-
 def process_pdb_file(pdb_file, atom_info_only=False):
     if atom_info_only:
         pdb_data = {NUM_ATOMS: 0, SEC_HEAD: [], SEC_ATOMS: {}, SEC_TAIL: []}
@@ -1365,7 +1196,7 @@ def process_gausscom_file(gausscom_file):
     #    SEC_TAIL: everything including and after the blank line following SEC_ATOMS
     with open(gausscom_file) as d:
         gausscom_content = {SEC_HEAD: [], SEC_ATOMS: {}, SEC_TAIL: [],
-                            BASE_NAME: os.path.splitext(os.path.basename(gausscom_file))[0]}
+                            BASE_NAME: get_fname_root(gausscom_file)}
         section = SEC_HEAD
         atom_id = 1
         blank_header_lines = 0
@@ -1391,7 +1222,6 @@ def process_gausscom_file(gausscom_file):
                             raise InvalidDataError("Error in reading file {}\n  as a Gaussian input file. On the line "
                                                    "where charge and multiplicity are expected, "
                                                    "found: '{}'".format(gausscom_file, line))
-                    continue
 
             elif section == SEC_ATOMS:
                 if len(line) == 0:
@@ -1399,11 +1229,11 @@ def process_gausscom_file(gausscom_file):
                     gausscom_content[SEC_TAIL].append(line)
                     continue
                 split_line = line.split()
-
                 atom_type = split_line[0]
                 atom_xyz = np.array(list(map(float, split_line[1:4])))
                 gausscom_content[SEC_ATOMS][atom_id] = {ATOM_TYPE: atom_type, ATOM_COORDS: atom_xyz}
                 atom_id += 1
+
             elif section == SEC_TAIL:
                 gausscom_content[SEC_TAIL].append(line)
 
@@ -1419,7 +1249,7 @@ def process_gausslog_file(gausslog_file):
     #        ATOM_TYPE: atom_type (str), ATOM_COORDS: (np array)
     #    SEC_TAIL: everything including and after the blank line following SEC_ATOMS
     with open(gausslog_file) as d:
-        gausslog_content = {SEC_ATOMS: {}, BASE_NAME: os.path.splitext(os.path.basename(gausslog_file))[0]}
+        gausslog_content = {SEC_ATOMS: {}, BASE_NAME: get_fname_root(gausslog_file)}
         section = SEC_HEAD
         atom_id = 1
 
@@ -1453,28 +1283,6 @@ def process_gausslog_file(gausslog_file):
                 atom_id = 1
 
     return gausslog_content
-
-
-def longest_common_substring(s1, s2):
-    """
-    From https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Longest_common_substring#Python
-    @param s1: string 1
-    @param s2: string 2
-    @return: string: the longest common string!
-    """
-    # noinspection PyUnusedLocal
-    m = [[0] * (1 + len(s2)) for i in range(1 + len(s1))]
-    longest, x_longest = 0, 0
-    for x in range(1, 1 + len(s1)):
-        for y in range(1, 1 + len(s2)):
-            if s1[x - 1] == s2[y - 1]:
-                m[x][y] = m[x - 1][y - 1] + 1
-                if m[x][y] > longest:
-                    longest = m[x][y]
-                    x_longest = x
-            else:
-                m[x][y] = 0
-    return s1[x_longest - longest: x_longest]
 
 
 # FIGURES

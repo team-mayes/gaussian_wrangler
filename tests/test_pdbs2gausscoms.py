@@ -32,7 +32,7 @@ REMOVE_H_OUT3 = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_3.com')
 GOOD_REMOVE_H_OUT3 = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_3_good.com')
 
 MULTI_FIRST_ONLY_INI = os.path.join(SUB_DATA_DIR, 'pdb2gau_multi.ini')
-GOOD_KEEP_H_OUT1 = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_1_withh_good.com')
+GOOD_KEEP_H_OUT1 = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_1_with_good.com')
 
 ALT_INI = os.path.join(SUB_DATA_DIR, 'pdb2gau_2.ini')
 ALT_OUT = os.path.join(SUB_DATA_DIR, 'pe_linear.com')
@@ -45,7 +45,7 @@ class TestPdbs2GausscomsNoOut(unittest.TestCase):
     # These all test failure cases
     def testNoArgs(self):
         with capture_stderr(main, []) as output:
-            self.assertTrue("WARNING:  Problems reading file: Could not read file" in output)
+            self.assertTrue("Could not read" in output)
         with capture_stdout(main, []) as output:
             self.assertTrue("optional arguments" in output)
 
@@ -70,6 +70,19 @@ class TestPdbs2Gausscoms(unittest.TestCase):
     # These test/demonstrate different options
     def testDefIni(self):
         test_input = ["-c", DEF_INI]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(GAU_OUT1, GOOD_GAU_OUT1))
+            self.assertFalse(diff_lines(GAU_OUT2, GOOD_GAU_OUT2))
+            self.assertFalse(diff_lines(GAU_OUT3, GOOD_GAU_OUT3))
+        finally:
+            silent_remove(GAU_OUT1, disable=DISABLE_REMOVE)
+            silent_remove(GAU_OUT2, disable=DISABLE_REMOVE)
+            silent_remove(GAU_OUT3, disable=DISABLE_REMOVE)
+
+    def testCommandLineOptions(self):
+        test_input = ["-t", "tests/test_data/pdbs2gausscoms/gau.tpl",
+                      "-l", "tests/test_data/pdbs2gausscoms/pdb_list.txt"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(GAU_OUT1, GOOD_GAU_OUT1))

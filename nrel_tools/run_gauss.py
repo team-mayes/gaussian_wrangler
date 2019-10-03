@@ -9,6 +9,9 @@ import argparse
 import subprocess
 import re
 import os
+
+from common_wrangler import get_fname_root
+
 from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname,
                                GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, GAU_HEADER_PAT,
                                read_tpl, InvalidInputError, str_to_file)
@@ -387,7 +390,7 @@ def main(argv=None):
             with open(args.job_name) as f:
                 for line in f:
                     input_job_file = os.path.splitext(line.strip())[0] + cfg[GAUSS_IN_EXT]
-                    base_name = os.path.splitext(os.path.basename(line.strip()))[0]
+                    base_name = get_fname_root(line.strip())
                     tpl_dict = {JOB_NAME: base_name, INPUT_FILE: input_job_file}
                     for index, thread in enumerate(cfg[JOB_LIST]):
                         if len(cfg[JOB_LIST]) == 1:
