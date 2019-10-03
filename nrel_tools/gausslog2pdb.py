@@ -8,10 +8,10 @@ import os
 import copy
 import sys
 import argparse
-from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file, process_pdb_file,
-                               SEC_HEAD, SEC_ATOMS, SEC_TAIL, PDB_FORMAT, NUM_ATOMS, ATOM_NUM_DICT,
-                               GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT,
-                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, silent_remove)
+from common_wrangler.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file,
+                                    process_pdb_file, MAIN_SEC, SEC_HEAD, SEC_ATOMS, SEC_TAIL, PDB_FORMAT, NUM_ATOMS,
+                                    ATOM_NUM_DICT, GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT, GOOD_RET, INPUT_ERROR,
+                                    IO_ERROR, INVALID_DATA, silent_remove)
 
 try:
     # noinspection PyCompatibility
@@ -25,7 +25,6 @@ __author__ = 'hmayes'
 # Constants #
 
 # Config File Sections
-MAIN_SEC = 'main'
 
 # Config keys
 PDB_TPL_FILE = 'pdb_tpl_file'

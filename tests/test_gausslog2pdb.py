@@ -1,7 +1,7 @@
 import unittest
 import os
 from nrel_tools.gausslog2pdb import main
-from nrel_tools.common import diff_lines, silent_remove, capture_stdout, capture_stderr
+from common_wrangler.common import diff_lines, silent_remove, capture_stdout, capture_stderr
 import logging
 
 # logging.basicConfig(level=logging.DEBUG)

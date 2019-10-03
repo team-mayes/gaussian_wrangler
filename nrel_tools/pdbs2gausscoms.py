@@ -11,11 +11,11 @@ from __future__ import print_function
 import os
 import sys
 import argparse
-from nrel_tools.common import (list_to_file, InvalidDataError, create_out_fname, process_cfg, warning,
-                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                               PDB_LINE_TYPE_LAST_CHAR, PDB_MOL_NUM_LAST_CHAR, PDB_Z_LAST_CHAR,
-                               PDB_BEFORE_ELE_LAST_CHAR, PDB_ELE_LAST_CHAR,
-                               process_gausscom_file, PDB_ATOM_NUM_LAST_CHAR, PDB_ATOM_TYPE_LAST_CHAR)
+from common_wrangler.common import (list_to_file, InvalidDataError, create_out_fname, process_cfg, warning,
+                                    GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, PDB_LINE_TYPE_LAST_CHAR,
+                                    PDB_MOL_NUM_LAST_CHAR, PDB_Z_LAST_CHAR, PDB_BEFORE_ELE_LAST_CHAR,
+                                    PDB_ELE_LAST_CHAR, PDB_ATOM_NUM_LAST_CHAR, PDB_ATOM_TYPE_LAST_CHAR,
+                                    process_gausscom_file, MAIN_SEC)
 
 try:
     # noinspection PyCompatibility
@@ -37,7 +37,6 @@ INVALID_DATA = 3
 # Constants #
 
 # Config File Sections
-MAIN_SEC = 'main'
 
 # Config keys
 GAU_TPL_FILE = 'gau_tpl_file'

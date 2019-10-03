@@ -2,7 +2,7 @@ import unittest
 import os
 from shutil import copyfile
 from nrel_tools.check_gauss import main
-from nrel_tools.common import capture_stdout, capture_stderr, diff_lines, silent_remove
+from common_wrangler.common import capture_stdout, capture_stderr, diff_lines, silent_remove
 import logging
 
 # logging.basicConfig(level=logging.DEBUG)

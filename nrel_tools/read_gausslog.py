@@ -6,7 +6,7 @@ Creates pdb files from Gaussian log files
 from __future__ import print_function
 import sys
 import argparse
-from nrel_tools.common import (InvalidDataError, warning, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA)
+from common_wrangler.common import (InvalidDataError, warning, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA)
 
 try:
     # noinspection PyCompatibility
@@ -18,9 +18,6 @@ except ImportError:
 __author__ = 'hmayes'
 
 # Constants #
-
-# Config File Sections
-MAIN_SEC = 'main'
 
 # Config keys
 GAUSSLOG_FILES = 'gausslog_files_list'

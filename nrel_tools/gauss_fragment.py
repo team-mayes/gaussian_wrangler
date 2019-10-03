@@ -8,10 +8,10 @@ import os
 import sys
 import argparse
 import numpy as np
-from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file,
-                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                               ATOM_TYPE, ATOM_COORDS, process_gausscom_file,
-                               CHARGE, MULT, process_gausslog_file)
+from common_wrangler.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file,
+                                    GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
+                                    ATOM_TYPE, ATOM_COORDS, process_gausscom_file, MAIN_SEC,
+                                    CHARGE, MULT, process_gausslog_file)
 
 try:
     # noinspection PyCompatibility
@@ -26,7 +26,6 @@ __author__ = 'hmayes'
 # Constants #
 
 # Config File Sections
-MAIN_SEC = 'main'
 
 # Config keys
 GAUSSCOM_FILE = 'input_com_file'
