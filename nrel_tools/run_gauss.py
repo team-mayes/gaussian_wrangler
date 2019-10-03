@@ -330,7 +330,10 @@ def create_ini_tpl_with_req_keys(thread, tpl_dict, cfg, new_ini_fname):
     for key_word in KEYS_FOR_SPAWNING_INIS:
         if key_word not in tpl_str:
             if cfg[key_word] != DEF_CFG_VALS[key_word]:
-                tpl_str += '\n{} = {}'.format(key_word, cfg[key_word])
+                if key_word == OLD_CHECK_ECHO:
+                    tpl_str += '\n{} = {}'.format(key_word, cfg[key_word].replace('%', '%%'))
+                else:
+                    tpl_str += '\n{} = {}'.format(key_word, cfg[key_word])
 
     # job locations will be needed
     for job, tpl_loc in tpl_dict.items():
