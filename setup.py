@@ -31,8 +31,9 @@ setup(
 
     entry_points={'console_scripts': ['gausscom2pdb = nrel_tools.gausscom2pdb:main',
                                       'pdbs2gausscoms = nrel_tools.pdbs2gausscoms:main',
-                                      'gausslog2pdb = nrel_tools.gausslog2pdb:main',
                                       'gausslog2com = nrel_tools.gausslog2com:main',
+                                      'gausslog2pdb = nrel_tools.gausslog2pdb:main',
+                                      'gausslog_unique = nrel_tools.gausslog_unique:main',
                                       'gauss_fragment = nrel_tools.gauss_fragment:main',
                                       'run_gauss = nrel_tools.run_gauss:main',
                                       'check_gauss = nrel_tools.check_gauss:main',
