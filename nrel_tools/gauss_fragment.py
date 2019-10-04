@@ -7,11 +7,10 @@ from __future__ import print_function
 import os
 import sys
 import argparse
-import numpy as np
 from common_wrangler.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                     ATOM_TYPE, ATOM_COORDS, process_gausscom_file, MAIN_SEC,
-                                    CHARGE, MULT, process_gausslog_file)
+                                    CHARGE, MULT, process_gausslog_file, calc_dist)
 
 try:
     # noinspection PyCompatibility
@@ -142,10 +141,6 @@ def parse_cmdline(argv):
         return args, INPUT_ERROR
 
     return args, GOOD_RET
-
-
-def calc_dist(a, b):
-    return np.linalg.norm(np.subtract(a, b))
 
 
 def validate_atom_num(atom_pair, atoms_content, gauss_in_fname, ignore_max_dist):

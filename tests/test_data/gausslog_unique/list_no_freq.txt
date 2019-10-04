@@ -1,0 +1,3 @@
+tests/test_data/gausslog_unique/lme2acetoxypropionate_18_t.log
+tests/test_data/gausslog_unique/lme2acetoxypropionate_25_t.log
+tests/test_data/gausslog_unique/lme2acetoxprpnt_ts3_ircf_opt_no_freq.log
