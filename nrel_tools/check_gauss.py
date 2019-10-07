@@ -27,7 +27,8 @@ FAIL_OPEN_FILE = re.compile(r"open-new-file*")
 FAIL_FILE_LEN = re.compile(r"File lengths (MBytes): RWF=*")
 FAIL_RDCARD = re.compile(r"In source file rdcard*")
 FAIL_NTR = re.compile(r"NtrErr Called from FileIO*")
-FAIL_PAT_LIST = [FAIL_OPEN_FILE, FAIL_FILE_LEN, FAIL_RDCARD, FAIL_NTR]
+FAIL_LEN = re.compile(r"File lengths (MBytes):  RWF=*")
+FAIL_PAT_LIST = [FAIL_OPEN_FILE, FAIL_FILE_LEN, FAIL_RDCARD, FAIL_NTR, FAIL_LEN]
 
 DEF_COMPLETE_DIR = 'for_hartree'
 DEF_EXT = '.log'

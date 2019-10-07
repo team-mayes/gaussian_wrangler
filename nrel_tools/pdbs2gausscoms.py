@@ -15,7 +15,7 @@ from common_wrangler.common import (list_to_file, InvalidDataError, create_out_f
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, PDB_LINE_TYPE_LAST_CHAR,
                                     PDB_MOL_NUM_LAST_CHAR, PDB_Z_LAST_CHAR, PDB_BEFORE_ELE_LAST_CHAR,
                                     PDB_ELE_LAST_CHAR, PDB_ATOM_NUM_LAST_CHAR, PDB_ATOM_TYPE_LAST_CHAR,
-                                    process_gausscom_file, MAIN_SEC)
+                                    process_gausscom_file, MAIN_SEC, SEC_HEAD, SEC_TAIL)
 
 try:
     # noinspection PyCompatibility
@@ -27,12 +27,6 @@ except ImportError:
 
 __author__ = 'hmayes'
 
-# Error Codes
-# The good status code
-GOOD_RET = 0
-INPUT_ERROR = 1
-IO_ERROR = 2
-INVALID_DATA = 3
 
 # Constants #
 
@@ -59,11 +53,6 @@ CONFIG_NAME = 'config_fname'
 # From data template file
 NUM_ATOMS = 'num_atoms'
 ATOM_TYPE_DICT = 'atom_type_dict'
-
-# For data template file processing
-SEC_HEAD = 'head_section'
-SEC_ATOMS = 'atoms_section'
-SEC_TAIL = 'tail_section'
 
 
 def read_cfg(floc, cfg_proc=process_cfg):
@@ -163,6 +152,8 @@ def process_pdb_files(cfg, gau_tpl_content):
     if cfg[PDB_FILE]:
         if os.path.isfile(cfg[PDB_FILE]):
             pdb_files.append(cfg[PDB_FILE])
+        else:
+            raise IOError(cfg[PDB_FILE])
     if os.path.isfile(cfg[PDB_LIST_FILE]):
         with open(cfg[PDB_LIST_FILE]) as f:
             for pdb_file in f.readlines():

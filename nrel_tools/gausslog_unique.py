@@ -38,9 +38,6 @@ DEF_DIH_TOL = 5.0
 
 
 # For file processing
-SEC_HEAD = 'head_section'
-SEC_ATOMS = 'atoms_section'
-SEC_TAIL = 'tail_section'
 MAX_BOND_DIST = 1.9  # same length units as in input and output file, here Angstroms
 MAX_H_BOND_DIST = 1.5  # same length units as in input and output file, here Angstroms
 MAX_M_BOND_DIST = 2.3  # same length units as in input and output file, here Angstroms

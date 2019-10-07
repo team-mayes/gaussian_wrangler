@@ -10,7 +10,7 @@ import argparse
 from common_wrangler.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                     ATOM_TYPE, ATOM_COORDS, process_gausscom_file, MAIN_SEC,
-                                    CHARGE, MULT, process_gausslog_file, calc_dist)
+                                    CHARGE, MULT, process_gausslog_file, calc_dist, SEC_ATOMS)
 
 try:
     # noinspection PyCompatibility
@@ -60,9 +60,6 @@ REQ_KEYS = {CUT_ATOMS: str,
 
 # For file processing
 CUT_PAIR_LIST = 'cut_pair_list'
-SEC_HEAD = 'head_section'
-SEC_ATOMS = 'atoms_section'
-SEC_TAIL = 'tail_section'
 FRAGMENT = 'fragment'
 MAX_BOND_DIST = 1.9  # same length units as in input and output file, here Angstroms
 MAX_H_BOND_DIST = 1.5  # same length units as in input and output file, here Angstroms

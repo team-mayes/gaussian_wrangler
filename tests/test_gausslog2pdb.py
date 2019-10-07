@@ -17,6 +17,7 @@ SUB_DATA_DIR = os.path.join(DATA_DIR, 'gausslog2pdb')
 
 DEF_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb.ini')
 # noinspection PyUnresolvedReferences
+ALT_PDB_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_0.pdb')
 PDB_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_1.pdb')
 GOOD_PDB_ALL_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_1_all_good.pdb')
 
@@ -52,10 +53,10 @@ MISSING_FILE_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_missing_file.ini')
 class TestGausslog2pdbNoOut(unittest.TestCase):
     # These all test failure cases
     def testNoArgs(self):
-        with capture_stderr(main, []) as output:
-            self.assertTrue("WARNING:  Problems reading file: Could not read file" in output)
-        with capture_stdout(main, []) as output:
-            self.assertTrue("optional arguments" in output)
+        test_input = []
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("No files to process" in output)
 
     def testHelp(self):
         test_input = ['-h']
@@ -87,6 +88,16 @@ class TestGausslog2pdbNoOut(unittest.TestCase):
         with capture_stderr(main, test_input) as output:
             self.assertTrue("No such file or directory" in output)
 
+    def testUnrecognizedArg(self):
+        test_input = ["-c", DEF_INI, "--ghost"]
+        # main(test_input)
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("unrecognized arguments" in output)
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue("optional arguments" in output)
+
 
 class TestGausslog2pdb(unittest.TestCase):
     # These test/demonstrate different options
@@ -100,12 +111,12 @@ class TestGausslog2pdb(unittest.TestCase):
             pass
 
     def testFirstIni(self):
-        test_input = ["-c", DEF_INI, "-a"]
+        test_input = ["-c", DEF_INI, "-a", "-o", 'pet_mono_f1hs_0.pdb']
         try:
             main(test_input)
-            self.assertFalse(diff_lines(PDB_OUT, GOOD_PDB_FIRST_OUT))
+            self.assertFalse(diff_lines(ALT_PDB_OUT, GOOD_PDB_FIRST_OUT))
         finally:
-            silent_remove(PDB_OUT, disable=DISABLE_REMOVE)
+            silent_remove(ALT_PDB_OUT, disable=DISABLE_REMOVE)
             pass
 
     def testLastIni(self):
@@ -137,7 +148,7 @@ class TestGausslog2pdb(unittest.TestCase):
             pass
 
     def testComb2Ini(self):
-        test_input = ["-c", COMB2_INI]
+        test_input = ["-c", COMB2_INI, "-o", "pet_mono_test_comb.pdb"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(COMB_PDB_OUT, GOOD_COMB_PDB_OUT))
@@ -165,7 +176,7 @@ class TestGausslog2pdb(unittest.TestCase):
 
     def testCommandLineFile(self):
         test_input = ["-c", NO_LOG_INI, "-f", "tests/test_data/gausslog2pdb/pet_mono_f1hs_1.log",
-                      "-o", "tests/test_data/gausslog2pdb"]
+                      "-d", "tests/test_data/gausslog2pdb"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(PDB_OUT, GOOD_PDB_LAST_OUT))

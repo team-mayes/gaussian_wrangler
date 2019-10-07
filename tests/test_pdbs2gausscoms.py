@@ -65,6 +65,11 @@ class TestPdbs2GausscomsNoOut(unittest.TestCase):
         with capture_stderr(main, test_input) as output:
             self.assertTrue("No such file" in output)
 
+    def testAltIni(self):
+        test_input = ["-t", 'tests/test_data/pdbs2gausscoms/gau_2.tpl', '-p', 'pe_linear.pdb']
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("pe_linear.pdb" in output)
+
 
 class TestPdbs2Gausscoms(unittest.TestCase):
     # These test/demonstrate different options
@@ -120,6 +125,17 @@ class TestPdbs2Gausscoms(unittest.TestCase):
         try:
             main(test_input)
             self.assertFalse(diff_lines(ALT_OUT, GOOD_ALT_OUT))
+        finally:
+            silent_remove(ALT_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testAltIni(self):
+        # As ALT_INI, but command-line only
+        test_input = ["-t", 'tests/test_data/pdbs2gausscoms/gau_2.tpl',
+                      '-p', 'tests/test_data/pdbs2gausscoms/pe_linear.pdb']
+        try:
+            main(test_input)
+            # self.assertFalse(diff_lines(ALT_OUT, GOOD_ALT_OUT))
         finally:
             silent_remove(ALT_OUT, disable=DISABLE_REMOVE)
             pass

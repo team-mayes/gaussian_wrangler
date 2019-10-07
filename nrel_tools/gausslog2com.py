@@ -9,7 +9,8 @@ import sys
 import argparse
 from common_wrangler.common import (InvalidDataError, warning, create_out_fname, list_to_file, ATOM_NUM_DICT,
                                     NUM_ATOMS, GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT,
-                                    GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, GAU_CHARGE_PAT, BASE_NAME)
+                                    GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, GAU_CHARGE_PAT, BASE_NAME, SEC_HEAD,
+                                    SEC_ATOMS, SEC_TAIL)
 
 
 try:
@@ -31,9 +32,6 @@ GAUSSLOG_FILES_FILE = 'gausslog_list_file'
 OUT_BASE_DIR = 'output_directory'
 
 # For log file processing
-SEC_HEAD = 'head_section'
-SEC_ATOMS = 'atoms_section'
-SEC_TAIL = 'tail_section'
 SEC_INITIAL_COORDINATES = 'initial_coordinates_section'
 
 
