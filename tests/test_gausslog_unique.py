@@ -105,12 +105,12 @@ class TestGausslogUnique(unittest.TestCase):
         pet_1 = 'pet_mono_1_tzvp.log,0.8478,-917.069490509,-916.794649\n'
         test_input = ["-l", TWO_MOL_LIST, "-n"]
         good_output = ''.join([HEADER, pet_843, pet_1, ALPHA_FIRST, ENERGY_FIRST])
-        main(test_input)
+        # main(test_input)
         with capture_stdout(main, test_input) as output:
             print(output)
             self.assertTrue(output == good_output)
         with capture_stderr(main, test_input) as output:
-            self.assertTrue('pet_mono_843_tzvp.log' in output)
+            self.assertTrue('lme2acetoxprpnt_ts3_ircf_opt.log' in output)
 
     def testTwoMoreMolecules(self):
         # This test checks that the program can handle the case when Gaussian prints '********' for convergence,

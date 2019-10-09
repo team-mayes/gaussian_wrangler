@@ -9,7 +9,7 @@ import sys
 import argparse
 from common_wrangler.common import (InvalidDataError, warning,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, CONVERG, DIHES, STOICH,
-                                    process_gausslog_file, ENERGY, ENTHALPY)
+                                    process_gausslog_file, ENERGY, ENTHALPY, CONVERG_ERR)
 
 try:
     # noinspection PyCompatibility
@@ -155,7 +155,7 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
     print(','.join(['File', CONVERG, ENERGY, ENTHALPY]))
     for winner, converg, energy, enthalpy in winners:
         print('{},{:.4f},{},{}'.format(winner, converg, energy, enthalpy))
-        if converg > 1.0:
+        if log_info[winner][CONVERG_ERR]:
             warn_files_str += '\n    {:}:  {:.4f}'.format(winner, converg, energy, enthalpy)
     if len(warn_files_str) > 0:
         warning("Check convergence of file(s):" + warn_files_str)
