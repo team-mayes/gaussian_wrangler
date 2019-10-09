@@ -26,6 +26,7 @@ EMPTY_LIST = os.path.join(SUB_DATA_DIR, 'empty_list.txt')
 LIST_NO_FREQ = os.path.join(SUB_DATA_DIR, 'list_no_freq.txt')
 MISSING_FILE_LIST = os.path.join(SUB_DATA_DIR, 'list_with_missing_files.txt')
 TWO_MOL_LIST = os.path.join(SUB_DATA_DIR, 'list_two_molecules.txt')
+TWO_MORE_MOL_LIST = os.path.join(SUB_DATA_DIR, 'list_two_more_molecules.txt')
 
 
 class TestGausslogUniqueNoOut(unittest.TestCase):
@@ -110,3 +111,18 @@ class TestGausslogUnique(unittest.TestCase):
             self.assertTrue(output == good_output)
         with capture_stderr(main, test_input) as output:
             self.assertTrue('pet_mono_843_tzvp.log' in output)
+
+    def testTwoMoreMolecules(self):
+        # This test checks that the program can handle the case when Gaussian prints '********' for convergence,
+        #    when the convergence is so bad that it can't fit in the space allotted
+        good_result = 'lme2acetoxprpnt_ts4_ircf_opt.log,2.0767,-535.576027099,-535.401005\n' \
+                      'lme2acetoxprpnt_ts4_b_ts_ircf_opt.log,8.2747,-535.57502219,-535.399906\n'
+        test_input = ["-l", TWO_MORE_MOL_LIST, "-n"]
+        good_output = ''.join([HEADER, good_result])
+        # main(test_input)
+        with capture_stdout(main, test_input) as output:
+            print(output)
+            self.assertTrue(output == good_output)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue('lme2acetoxprpnt_ts4_ircf_opt.log' in output)
+            self.assertTrue('lme2acetoxprpnt_ts4_b_ts_ircf_opt.log' in output)

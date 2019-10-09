@@ -198,7 +198,7 @@ class TestGoodVibesHelper(unittest.TestCase):
         # check handles it when not all atoms in are in all molecules
         # also checks saving GoodVibes output together
         test_input = ["-l", PROD_NO_TS_LIST, "-d", SUB_DATA_DIR, "-o", "aea_prod.csv",
-                      "-ti", "300,600,25", "--temp", "500"]
+                      "-ti", "300.15,600.15,25", "--temp", "500.15"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(PROD_OUT, GOOD_PROD_NO_TS_OUT))
