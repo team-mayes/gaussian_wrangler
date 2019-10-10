@@ -102,7 +102,7 @@ def compare_gausslog_info(log_info, dih_tol):
                 for dih_name, dih_val in log_info[fname][DIHES].items():
                     try:
                         dih_diff = abs(dih_val - check_dihes[dih_name])
-                        if dih_diff > 360.0:
+                        if dih_diff > (360.0 - dih_tol):
                             dih_diff -= 360.0
                         if dih_diff > dih_tol:
                             add_to_current_group = False
@@ -154,7 +154,10 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
     # now print results
     print(','.join(['File', CONVERG, ENERGY, ENTHALPY]))
     for winner, converg, energy, enthalpy in winners:
-        print('{},{:.4f},{},{}'.format(winner, converg, energy, enthalpy))
+        try:
+            print('{},{:.4f},{:.6f},{:.6f}'.format(winner, converg, energy, enthalpy))
+        except TypeError:
+            print('{},{:.4f},{:.6f},{}'.format(winner, converg, energy, enthalpy))
         if log_info[winner][CONVERG_ERR]:
             warn_files_str += '\n    {:}:  {:.4f}'.format(winner, converg, energy, enthalpy)
     if len(warn_files_str) > 0:

@@ -18,15 +18,16 @@ SUB_DATA_DIR = os.path.join(DATA_DIR, 'gausslog_unique')
 LOG_LIST = os.path.join(SUB_DATA_DIR, 'list.txt')
 
 HEADER = 'File,Convergence,Energy,Enthalpy\n'
-ALPHA_FIRST = 'lme2acetoxprpnt_ts3_ircf_opt.log,7.5369,-535.578433967,-535.403311\n'
-MISSING_FREQ = 'lme2acetoxprpnt_ts3_ircf_opt_no_freq.log,0.9367,-535.578433967,None\n'
-ENERGY_FIRST = 'lme2acetoxypropionate_25_t.log,0.1303,-535.578442535,-535.403293\n'
+ALPHA_FIRST = 'lme2acetoxprpnt_ts3_ircf_opt.log,7.5369,-535.578434,-535.403311\n'
+MISSING_FREQ = 'lme2acetoxprpnt_ts3_ircf_opt_no_freq.log,0.9367,-535.578434,None\n'
+ENERGY_FIRST = 'lme2acetoxypropionate_25_t.log,0.1303,-535.578443,-535.403293\n'
 
 EMPTY_LIST = os.path.join(SUB_DATA_DIR, 'empty_list.txt')
 LIST_NO_FREQ = os.path.join(SUB_DATA_DIR, 'list_no_freq.txt')
 MISSING_FILE_LIST = os.path.join(SUB_DATA_DIR, 'list_with_missing_files.txt')
 TWO_MOL_LIST = os.path.join(SUB_DATA_DIR, 'list_two_molecules.txt')
 TWO_MORE_MOL_LIST = os.path.join(SUB_DATA_DIR, 'list_two_more_molecules.txt')
+SIMILAR_LIST = os.path.join(SUB_DATA_DIR, 'list_similar_molecules.txt')
 
 
 class TestGausslogUniqueNoOut(unittest.TestCase):
@@ -101,8 +102,8 @@ class TestGausslogUnique(unittest.TestCase):
             self.assertFalse('Check convergence' in output)
 
     def testTwoMolecules(self):
-        pet_843 = 'pet_mono_843_tzvp.log,1.4694,-917.071861101,-916.796704\n'
-        pet_1 = 'pet_mono_1_tzvp.log,0.8478,-917.069490509,-916.794649\n'
+        pet_843 = 'pet_mono_843_tzvp.log,1.4694,-917.071861,-916.796704\n'
+        pet_1 = 'pet_mono_1_tzvp.log,0.8478,-917.069491,-916.794649\n'
         test_input = ["-l", TWO_MOL_LIST, "-n"]
         good_output = ''.join([HEADER, pet_843, pet_1, ALPHA_FIRST, ENERGY_FIRST])
         # main(test_input)
@@ -115,14 +116,25 @@ class TestGausslogUnique(unittest.TestCase):
     def testTwoMoreMolecules(self):
         # This test checks that the program can handle the case when Gaussian prints '********' for convergence,
         #    when the convergence is so bad that it can't fit in the space allotted
-        good_result = 'lme2acetoxprpnt_ts4_ircf_opt.log,2.0767,-535.576027099,-535.401005\n' \
-                      'lme2acetoxprpnt_ts4_b_ts_ircf_opt.log,8.2747,-535.57502219,-535.399906\n'
+        good_result = 'lme2acetoxprpnt_ts4_ircf_opt.log,2.0767,-535.576027,-535.401005\n' \
+                      'lme2acetoxprpnt_ts4_b_ts_ircf_opt.log,8.2747,-535.575022,-535.399906\n'
         test_input = ["-l", TWO_MORE_MOL_LIST, "-n"]
         good_output = ''.join([HEADER, good_result])
         # main(test_input)
         with capture_stdout(main, test_input) as output:
-            print(output)
             self.assertTrue(output == good_output)
         with capture_stderr(main, test_input) as output:
             self.assertTrue('lme2acetoxprpnt_ts4_ircf_opt.log' in output)
             self.assertTrue('lme2acetoxprpnt_ts4_b_ts_ircf_opt.log' in output)
+
+    def testSimilarMolecules(self):
+        # I was surprised that these weren't listed as the same; turns out, the difference in dihedral angle
+        #  was almost, but not quite, 360; now, if within tolerance of 360 degrees, it will subtract 360, catching
+        #  these similar conformations
+        good_result = 'me2pheoxprpnt_30.log,0.0139,-613.945900,-613.726343\n'
+        good_output = ''.join([HEADER, good_result])
+        test_input = ["-l", SIMILAR_LIST, "-n"]
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue(output == good_output)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue('' == output)
