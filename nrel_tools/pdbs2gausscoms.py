@@ -110,9 +110,9 @@ def parse_cmdline(argv):
                                                        "used to specify removing the last H atom from the PDB file(s) "
                                                        "when creating the gausscom files. The default is False.",
                         action='store_true')
-    parser.add_argument("-a", "--first_only", help="Only if a config file is not provided, this command can be used to "
-                                                   "specify only using the first set of coordinates in a pdb file to "
-                                                   "create gausscom file(s). The default is False.",
+    parser.add_argument("-a", "--first_only", help="Only read if a config file is not provided. This command can be "
+                                                   "used to specify only using the first set of coordinates in a pdb "
+                                                   "file to create gausscom file(s). The default is False.",
                         action='store_true')
 
     args = None

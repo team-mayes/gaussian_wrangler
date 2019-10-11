@@ -129,13 +129,30 @@ class TestPdbs2Gausscoms(unittest.TestCase):
             silent_remove(ALT_OUT, disable=DISABLE_REMOVE)
             pass
 
-    def testAltIni(self):
+    def testAltIniCommandLine(self):
         # As ALT_INI, but command-line only
         test_input = ["-t", 'tests/test_data/pdbs2gausscoms/gau_2.tpl',
                       '-p', 'tests/test_data/pdbs2gausscoms/pe_linear.pdb']
         try:
             main(test_input)
-            # self.assertFalse(diff_lines(ALT_OUT, GOOD_ALT_OUT))
+            self.assertFalse(diff_lines(ALT_OUT, GOOD_ALT_OUT))
         finally:
             silent_remove(ALT_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testRemoveHCommandLine(self):
+        # As ALT_INI, but command-line only
+        # make sure old files are cleaned up before starting
+        for fname in [REMOVE_H_OUT1, REMOVE_H_OUT2, REMOVE_H_OUT3]:
+            silent_remove(fname)
+
+        test_input = ["-t", 'tests/test_data/pdbs2gausscoms/gau.tpl',
+                      '-p', 'tests/test_data/pdbs2gausscoms/pet_mono_f1hs.pdb', "-r", "-a"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(REMOVE_H_OUT1, GOOD_REMOVE_H_OUT1))
+            self.assertFalse(os.path.isfile(REMOVE_H_OUT2))
+            self.assertFalse(os.path.isfile(REMOVE_H_OUT3))
+        finally:
+            silent_remove(REMOVE_H_OUT1, disable=DISABLE_REMOVE)
             pass
