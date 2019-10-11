@@ -24,11 +24,12 @@ MOVED_FILE = os.path.join(FOR_HARTREE_DIR, 'pet_mono_637_tzvp.log')
 GOOD_OUT = "The following files completed normally:\n" \
            "    tests/test_data/check_gauss/pet_mono_637_tzvp.log\n" \
            "The following files may have failed:\n" \
+           "    tests/test_data/check_gauss/me2propprpnt_7.log\n" \
+           "    tests/test_data/check_gauss/pet_mono_674_tzvp.log\n" \
            "    tests/test_data/check_gauss/pet_mono_819_tzvp.log\n" \
            "    tests/test_data/check_gauss/pet_mono_872_tzvp.log\n" \
            "The following files may still be running:\n" \
            "    tests/test_data/check_gauss/pet_mono_671_tzvp.log\n" \
-           "    tests/test_data/check_gauss/pet_mono_674_tzvp.log\n"
 
 
 class TestCheckGaussNoOut(unittest.TestCase):
