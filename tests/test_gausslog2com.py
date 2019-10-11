@@ -54,6 +54,11 @@ ROUTE_NO_CHARGE_TPL = os.path.join(SUB_DATA_DIR, 'route_no_charge.tpl')
 ROUTE_ONLY_COM_OUT = os.path.join(SUB_DATA_DIR, 'frag_example_route_only.com')
 GOOD_ROUTE_ONLY_COM_OUT = os.path.join(SUB_DATA_DIR, 'frag_example_route_only_good.com')
 
+PINNED_ATOM_TPL = os.path.join(SUB_DATA_DIR, 'acyl-ts_mp.com')
+PINNED_ATOM_LOG = os.path.join(SUB_DATA_DIR, 'acyl-ts_mp.log')
+PINNED_ATOM_OUT = os.path.join(SUB_DATA_DIR, 'acyl-ts_mp_2.com')
+GOOD_PINNED_ATOM_OUT = os.path.join(SUB_DATA_DIR, 'acyl-ts_mp_2_good.com')
+
 
 class TestGausslog2comNoOut(unittest.TestCase):
     # These all test failure cases
@@ -68,6 +73,15 @@ class TestGausslog2comNoOut(unittest.TestCase):
             main(test_input)
         with capture_stderr(main, test_input) as output:
             self.assertFalse(output)
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue("optional arguments" in output)
+
+    def testUnknownArg(self):
+        test_input = ['--ghost']
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("unrecognized arguments" in output)
         with capture_stdout(main, test_input) as output:
             self.assertTrue("optional arguments" in output)
 
@@ -192,4 +206,13 @@ class TestGausslog2com(unittest.TestCase):
             self.assertFalse(diff_lines(ALT_FRAG_COM_OUT, GOOD_ALT_FRAG_COM_OUT))
         finally:
             silent_remove(ALT_FRAG_COM_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testPinnedAtoms(self):
+        test_input = ["-t", PINNED_ATOM_TPL, "-f", PINNED_ATOM_LOG, "-o", PINNED_ATOM_OUT]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(PINNED_ATOM_OUT, GOOD_PINNED_ATOM_OUT))
+        finally:
+            silent_remove(PINNED_ATOM_OUT, disable=DISABLE_REMOVE)
             pass

@@ -156,3 +156,4 @@ tests/test_data/goodvibes_helper/aea_prod_vibes.dat
 /ethylrad_restart.ini
 /ethylrad_restart.slurm
 /tests/test_data/gausslog2pdb/pet_mono_test_comb.pdb
+/tests/test_data/gausslog2com/acyl-ts_mp_2.com

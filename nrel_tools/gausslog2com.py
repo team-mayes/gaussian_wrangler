@@ -5,6 +5,7 @@ Creates pdb data files from lammps data files, given a template pdb file.
 
 from __future__ import print_function
 import os
+import re
 import sys
 import argparse
 from common_wrangler.common import (InvalidDataError, warning, create_out_fname, list_to_file, ATOM_NUM_DICT,
@@ -33,17 +34,6 @@ OUT_BASE_DIR = 'output_directory'
 
 # For log file processing
 SEC_INITIAL_COORDINATES = 'initial_coordinates_section'
-
-
-def str2bool(v):
-    if isinstance(v, bool):
-        return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
 def parse_cmdline(argv):
@@ -174,7 +164,7 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
                                            "atomic number read was {}. Update the code to use this with your current "
                                            "output.".format(split_line[1]))
                 if com_tpl_content[NUM_ATOMS]:
-                    com_atom_type = com_tpl_content[SEC_ATOMS][atom_id].split('(')[0].strip()
+                    com_atom_type = re.split('[ (]', com_tpl_content[SEC_ATOMS][atom_id])[0].strip()
                     if com_atom_type != atom_type:
                         try:
                             if ATOM_NUM_DICT[int(com_atom_type)] != atom_type:
@@ -237,7 +227,11 @@ def process_gausscom_tpl(com_tpl_file, check_for_charge_mult):
                     section = SEC_TAIL
                     continue
                 line_split = line.split()
-                com_tpl_content[SEC_ATOMS].append(line_split[0])
+                # If there are 5 entries, that means that there is freeze/no freeze column to keep
+                if len(line_split) == 5:
+                    com_tpl_content[SEC_ATOMS].append("{:2}{:>8}".format(line_split[0], line_split[1]))
+                else:
+                    com_tpl_content[SEC_ATOMS].append(line_split[0])
             elif section == SEC_TAIL:
                 com_tpl_content[SEC_TAIL].append(line)
     if len(com_tpl_content[SEC_ATOMS]) == 0:
