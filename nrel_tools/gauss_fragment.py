@@ -35,7 +35,7 @@ GAUSS_COMMAND = 'gaussian_options_line'
 GAUSS_END = 'gaussian_options_end'
 GAUSS_CP_COMMAND = 'gaussian_cp_options_line'
 GAUSS_CP_END = 'gaussian_cp_options_end'
-IGNORE_MAX_DIST = 'ignore_max_distance'
+SEPARATE_MOLECULES = 'separate_molecules'
 
 
 # data file info
@@ -53,7 +53,7 @@ DEF_CFG_VALS = {OUT_BASE_DIR: None,
                 GAUSS_END: None,
                 GAUSS_CP_COMMAND: DEF_GAUSS_CP_COMMAND,
                 GAUSS_CP_END: None,
-                IGNORE_MAX_DIST: False,
+                SEPARATE_MOLECULES: False,
                 }
 REQ_KEYS = {CUT_ATOMS: str,
             }
@@ -401,12 +401,12 @@ def main(argv=None):
                                    "output file ('{}') from which to extract atoms with their coordinates.")
         # Before making files, check that atom numbers are valid
         for atom_pair in cfg[CUT_PAIR_LIST]:
-            validate_atom_num(atom_pair, atom_data, gauss_file, cfg[IGNORE_MAX_DIST])
+            validate_atom_num(atom_pair, atom_data, gauss_file, cfg[SEPARATE_MOLECULES])
         for atom_pair in cfg[CUT_PAIR_LIST]:
             frag1, frag2, broke_double_bond, broke_triple_bond = fragment_molecule(atom_pair, atom_data,
-                                                                                   cfg[IGNORE_MAX_DIST])
+                                                                                   cfg[SEPARATE_MOLECULES])
             print_com_files(atom_pair, atom_data, gauss_file, cfg, frag1, frag2, broke_double_bond, broke_triple_bond,
-                            cfg[IGNORE_MAX_DIST], gauss_in_content[CHARGE], gauss_in_content[MULT])
+                            cfg[SEPARATE_MOLECULES], gauss_in_content[CHARGE], gauss_in_content[MULT])
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR
