@@ -88,12 +88,19 @@ def parse_cmdline(argv):
     parser.add_argument("-hc", "--hartree_call", help=hartree_help_string, default=None)
     parser.add_argument("-l", "--list", help="The location of the list of Gaussian output files. "
                                              "The default file name.", default=None)
+    parser.add_argument("-q", "--quasiharmonic", help="Use the '-q' option in GoodVibes, which turns on turns on "
+                                                      "quasi-harmonic corrections to both entropy and enthalpy in the "
+                                                      "Gibbs free energy (qh-G(T)) output from GoodVibes. ",
+                        action='store_true')
     parser.add_argument("--temp", help="Temperature in K for calculating \u0394G. The default is the first "
                                        "temperature in 'temp_range' (if specified). If a value is given, the program "
                                        "will use the temperature closest to it in the temp_range.", default=None)
     parser.add_argument("-ti", "--temp_range", help="Initial temp, final temp, (and optionally) step size (K) for "
                                                     "thermochemistry calculations. The default range is 300,600,30",
                         default="300,600,30")
+    parser.add_argument("-v", "--vib_scale", help="Scaling factor to be used for vibrational frequencies. If not "
+                                                  "provided, the GoodVibes default value will be used.",
+                        default=None)
     parser.add_argument("-o", "--output_fname", help="The name of the output file to be created. The default is the "
                                                      "list name with the extension '.csv', or '{}' if no list name "
                                                      "provided.".format(DEF_OUT_FILE_NAME), default=None)
@@ -101,9 +108,10 @@ def parse_cmdline(argv):
                         action='store_true')
     parser.add_argument("-pl", "--plot_labels", help="Optional labels for \u0394G plot. Enter as a list.",
                         default=None)
-    parser.add_argument("-q", "--quasiharmonic", help="Use the '-q' option in GoodVibes, which turns on turns on "
-                                                      "quasi-harmonic corrections to both entropy and enthalpy in the "
-                                                      "Gibbs free energy (qh-G(T)) output from GoodVibes. ",
+    parser.add_argument("-c", "--vibes_check", help="In addition to standard checks always run (matching solvent, "
+                                                    "level of theory, stoichiometry, charge, multiplicity, and "
+                                                    "Gaussian versions), run files through GoodVibes '--check' before "
+                                                    "performing calculations. The default is False.",
                         action='store_true')
     parser.add_argument("-s", "--save_vibes", help="Save the output from running GoodVibes in separate files, "
                                                    "renamed with the Gaussian log file prefix and '.dat'. "
@@ -112,11 +120,6 @@ def parse_cmdline(argv):
     parser.add_argument("-t", "--tog_vibes", help="Save the output from running GoodVibes in one file, "
                                                   "renamed with the output file prefix and '.dat'. "
                                                   "The default is False.",
-                        action='store_true')
-    parser.add_argument("-v", "--vibes_check", help="In addition to standard checks always run (matching solvent, "
-                                                    "level of theory, stoichiometry, charge, multiplicity, and "
-                                                    "Gaussian versions), run files through GoodVibes '--check' before "
-                                                    "performing calculations. The default is False.",
                         action='store_true')
 
     args = None
@@ -155,7 +158,10 @@ def parse_cmdline(argv):
         else:
             args[0].plot_labels = ['']
 
-    except SystemExit as e:
+        if args[0].vib_scale:
+            args[0].vib_scale = float(args[0].vib_scale)
+
+    except (SystemExit, ValueError) as e:
         if hasattr(e, 'code') and e.code == 0:
             return args, GOOD_RET
         warning(e)
@@ -327,7 +333,7 @@ def parse_stoich(stoich_string, add_to_dict=None):
     return stoich_dict
 
 
-def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_output_fname, qh_h_opt):
+def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_output_fname, qh_h_opt, vib_scale):
     """
     Calls GoodVibes to get thermochem at a range of temps
     :param file_set: list of reactant file(s), TS file (or separator), and optionally products
@@ -337,6 +343,7 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
     :param out_dir: directory to save GoodVibes output files (if requested)
     :param tog_output_fname: None or string (file name) if saving each GoodVibes output together
     :param qh_h_opt: boolean to use the '-q' option in GoodVibes (corrections to both entropy and enthalpy)
+    :param vib_scale: either None (if default scaling is to be used) or a float for option to be used with that value
     :return: nothing
     """
     h = []
@@ -356,6 +363,8 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
             vibes_input += ["-c", "1"]
         if qh_h_opt:
             vibes_input += ["-q"]
+        if vib_scale:
+            vibes_input += ["-v", str(vib_scale)]
         vibes_out = subprocess.check_output(vibes_input).decode("utf-8").strip().split("\n")
         found_structure = False
         skip_line = True
@@ -580,7 +589,8 @@ def main(argv=None):
         for file_set in row_list:
             solvent, ts_index = check_gausslog_fileset(file_set, args[0].hartree_call, args[0].vibes_check)
             temps, h, qh_h, gt, qh_gt = get_thermochem(file_set, args[0].temp_range, solvent, args[0].save_vibes,
-                                                       args[0].out_dir, tog_fname, args[0].quasiharmonic)
+                                                       args[0].out_dir, tog_fname, args[0].quasiharmonic,
+                                                       args[0].vib_scale)
             delta_h_ts, delta_h_rxn = get_deltas(temps, h, ts_index)
             if args[0].quasiharmonic:
                 qh_delta_h_ts, qh_delta_h_rxn = get_deltas(temps, qh_h, ts_index)

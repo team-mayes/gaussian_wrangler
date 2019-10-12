@@ -138,8 +138,6 @@ tests/test_data/goodvibes_helper/aea_prod_vibes.dat
 /tests/test_data/run_gauss/water.ini
 /tests/test_data/run_gauss/water.slurm
 /ts.tpl
-/tests/test_data/run_gauss/ethylrad.ini
-/tests/test_data/run_gauss/ethylrad.slurm
 /f.tpl
 /s12but_17_84_f2_t.com
 /tests/test_data/gausslog2com/frag_example_fresh_fb.com
@@ -156,4 +154,5 @@ tests/test_data/goodvibes_helper/aea_prod_vibes.dat
 /ethylrad_restart.ini
 /ethylrad_restart.slurm
 /tests/test_data/gausslog2pdb/pet_mono_test_comb.pdb
-/tests/test_data/gausslog2com/acyl-ts_mp_2.com
+/tests/test_data/goodvibes_helper/tpa_testing_vibes.dat
+/tests/test_data/goodvibes_helper/tpa_testing.csv

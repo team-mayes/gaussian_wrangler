@@ -42,6 +42,7 @@ TPA_LIST = os.path.join(SUB_DATA_DIR, 'tpa_testing.txt')
 TPA_OUT = os.path.join(SUB_DATA_DIR, 'tpa_testing.csv')
 TPA_VIBES_OUT = os.path.join(SUB_DATA_DIR, 'tpa_testing_vibes.dat')
 GOOD_TPA_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_tpa_good.csv')
+GOOD_TPA_SCALED_OUT = os.path.join(SUB_DATA_DIR, 'tpa_testing_good.csv')
 
 PROD_LIST = os.path.join(SUB_DATA_DIR, 'list_prod.txt')
 PROD_OUT = os.path.join(SUB_DATA_DIR, 'aea_prod.csv')
@@ -72,6 +73,16 @@ class TestGoodVibesHelperNoOut(unittest.TestCase):
             main(test_input)
         with capture_stderr(main, test_input) as output:
             self.assertFalse(output)
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue("optional arguments" in output)
+
+    def testNoneFloatVib(self):
+        test_input = ["-l", TPA_LIST, "-d", SUB_DATA_DIR, "-t", "-v", "ghost"]
+        # main(test_input)
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("not convert string" in output)
         with capture_stdout(main, test_input) as output:
             self.assertTrue("optional arguments" in output)
 
@@ -173,9 +184,19 @@ class TestGoodVibesHelper(unittest.TestCase):
         test_input = ["-l", TPA_LIST, "-d", SUB_DATA_DIR, "-t"]
         try:
             main(test_input)
-            # self.assertFalse(diff_lines(TPA_OUT, GOOD_TPA_OUT))
+            self.assertFalse(diff_lines(TPA_OUT, GOOD_TPA_OUT))
         finally:
             silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
+            silent_remove(TPA_OUT, disable=DISABLE_REMOVE)
+            silent_remove(TPA_VIBES_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testTPAAltVib(self):
+        test_input = ["-l", TPA_LIST, "-d", SUB_DATA_DIR, "-t", "-v", "0.984"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(TPA_OUT, GOOD_TPA_SCALED_OUT))
+        finally:
             silent_remove(TPA_OUT, disable=DISABLE_REMOVE)
             silent_remove(TPA_VIBES_OUT, disable=DISABLE_REMOVE)
             pass
