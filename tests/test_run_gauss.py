@@ -342,7 +342,7 @@ class TestRunGauss(unittest.TestCase):
             with open(fname, 'w') as f:
                 f.write("# for test only")
 
-        test_input = ['ethylrad', "-c", SETUP_DEF_TPL_INI, "-s", "-o", 'ethyl']
+        test_input = ['ethylrad', "-c", SETUP_DEF_TPL_INI, "-s", "-o", 'ethyl', '-t']
         try:
             with capture_stdout(main, test_input) as output:
                 self.assertTrue("sbatch" in output)
