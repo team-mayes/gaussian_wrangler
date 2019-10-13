@@ -210,7 +210,7 @@ class TestRunGauss(unittest.TestCase):
             pass
 
     def testSpawn(self):
-        test_input = [ETHYLRAD, "-c", SPAWN_INI, "-t"]
+        test_input = [ETHYLRAD, "-c", SPAWN_INI, "-t", "-n"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(OPT_STABLE_SH_OUT, GOOD_OPT_STABLE_SH_OUT))
@@ -225,7 +225,7 @@ class TestRunGauss(unittest.TestCase):
             pass
 
     def testSpawnGiveChkStr(self):
-        test_input = [ETHYLRAD, "-c", SPAWN_GIVE_OLD_CHK_STR_INI, "-t"]
+        test_input = [ETHYLRAD, "-c", SPAWN_GIVE_OLD_CHK_STR_INI, "-t", "-n"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(OPT_STABLE_SH_OUT, GOOD_OPT_STABLE_SH_OUT))
@@ -236,7 +236,7 @@ class TestRunGauss(unittest.TestCase):
             pass
 
     def testSpawnAltChkStr(self):
-        test_input = [ETHYLRAD, "-c", SPAWN_ALT_OLD_CHK_STR_INI, "-t"]
+        test_input = [ETHYLRAD, "-c", SPAWN_ALT_OLD_CHK_STR_INI, "-t", "-n"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(OPT_STABLE_SH_OUT, GOOD_ALT_OPT_STABLE_SH_OUT))
@@ -249,7 +249,7 @@ class TestRunGauss(unittest.TestCase):
     def testNoChkChk(self):
         # checks not throwing an error when the chk file is not in the current directory.
         # also checks adding config lines to the created ini if they are needed but not part of the template
-        test_input = ['tests/test_data/run_gauss/ethylrad_restart', "-s", "-c", SUBMIT_NO_CHK_CHECK_INI, "-t"]
+        test_input = ['tests/test_data/run_gauss/ethylrad_restart', "-s", "-c", SUBMIT_NO_CHK_CHECK_INI, "-n", "-t"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(NO_CHK_CHECK_INI, GOOD_NO_CHK_CHECK_INI))
@@ -260,7 +260,7 @@ class TestRunGauss(unittest.TestCase):
             pass
 
     def testSpawnAllNew(self):
-        test_input = [ETHYLRAD, "-c", SPAWN_ALL_NEW_INI, "-t"]
+        test_input = [ETHYLRAD, "-c", SPAWN_ALL_NEW_INI, "-t", "-n"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(SPAWN0_NEW_INI, GOOD_SPAWN0_NEW_INI))
@@ -277,7 +277,7 @@ class TestRunGauss(unittest.TestCase):
             pass
 
     def testSetupSubmit(self):
-        test_input = [ETHYLRAD, "-s", "-c", SETUP_SUBMIT_INI]
+        test_input = [ETHYLRAD, "-s", "-c", SETUP_SUBMIT_INI, "-n"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(SETUP_INI_OUT, GOOD_SETUP_INI_OUT))
@@ -292,7 +292,7 @@ class TestRunGauss(unittest.TestCase):
         for fname in temp_file_list:
             with open(fname, 'w') as f:
                 f.write("# for test only\n\n")
-        test_input = [LIST, "-l", "-c", SETUP_SUBMIT_INI]
+        test_input = [LIST, "-l", "-c", SETUP_SUBMIT_INI, "-n"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(SETUP_INI_OUT, GOOD_SETUP_INI_OUT))
@@ -305,7 +305,7 @@ class TestRunGauss(unittest.TestCase):
             pass
 
     def testSetupSubmitListSpawn(self):
-        test_input = [LIST, "-l", "-c", SETUP_SUBMIT_SPAWN_INI]
+        test_input = [LIST, "-l", "-c", SETUP_SUBMIT_SPAWN_INI, "-n"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(SETUP_INI_OUT, GOOD_ETHYL_SPAWN_INI_OUT))
@@ -325,7 +325,7 @@ class TestRunGauss(unittest.TestCase):
                 f.write("# for test only")
 
         test_input = ['tests/test_data/run_gauss/ethylrad.com', "-c", SETUP_DEF_TPL_INI, "-s",
-                      "-o", 'tests/test_data/run_gauss/ethyl.chk']
+                      "-o", 'tests/test_data/run_gauss/ethyl.chk', "-n"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(SETUP_INI_DEF_DIR_OUT, GOOD_DEF_DIR_INI_OUT))
@@ -342,10 +342,10 @@ class TestRunGauss(unittest.TestCase):
             with open(fname, 'w') as f:
                 f.write("# for test only")
 
-        test_input = ['ethylrad', "-c", SETUP_DEF_TPL_INI, "-s", "-o", 'ethyl', '-t']
+        test_input = ['ethylrad', "-c", SETUP_DEF_TPL_INI, "-s", "-o", 'ethyl', '-n', '-t']
+        main(test_input)
         try:
-            with capture_stdout(main, test_input) as output:
-                self.assertTrue("sbatch" in output)
+            main(test_input)
             self.assertFalse(diff_lines(SETUP_INI_DEF_DIR_OUT, GOOD_DEF_TPL_INI_OUT))
             self.assertFalse(diff_lines(SETUP_SLURM_DEF_DIR_OUT, GOOD_SHORT_DEF_DIR_SLURM_OUT))
         finally:
@@ -359,7 +359,7 @@ class TestRunGauss(unittest.TestCase):
         for fname in temp_file_list:
             with open(fname, 'w') as f:
                 f.write("# for test only")
-        test_input = ['ethylrad', "-c", SETUP_IRCS_INI, "-s", ]
+        test_input = ['ethylrad', "-c", SETUP_IRCS_INI, "-s", "-n"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(SETUP_IRCR_INI_OUT, GOOD_SETUP_IRCR_INI_OUT))
