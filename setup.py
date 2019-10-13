@@ -14,6 +14,7 @@ setup(
     # Self-descriptive entries which should always be present
     name='nrel_tools',
     author='Heather B Mayes',
+    author_email='hmayes@hmayes.com',
     description=DOCLINES[0],
     long_description="\n".join(DOCLINES[2:]),
     version=versioneer.get_version(),

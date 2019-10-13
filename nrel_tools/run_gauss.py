@@ -167,6 +167,16 @@ def parse_cmdline(argv):
                                                "The default file name is {}, located in the base directory "
                                                "where the program as run.".format(DEF_CFG_FILE),
                         default=DEF_CFG_FILE, type=read_cfg)
+    parser.add_argument("-i", "--ignore_chk_warning", help="Ignore warning that a chk file cannot be found in the "
+                                                           "current directory for a job that will attempt to read it. "
+                                                           "Default is False.",
+                        action="store_true", default=False)
+    parser.add_argument("-l", "--list_of_jobs", help="The input in the position of 'job_name' will be read as a file "
+                                                     "name with a list of jobs to set up and submit. Each job name "
+                                                     "should be on a separate line. Any extension, or none, can follow "
+                                                     "the job name. If a 'setup_submit' or 'list_of_jobs' are not "
+                                                     "specified, the script will instead attempt to run the 'job_name'."
+                                                     " The default is False.", action="store_true", default=False)
     parser.add_argument("-n", "--no_submit", help="Set up jobs without submitting them. This flag only effects the "
                                                   "'-s' and '-l' options.", action="store_true", default=False)
     parser.add_argument("-o", "--old_chk_file", help="The base name of the checkpoint file (do not include '.chk')"
@@ -176,12 +186,6 @@ def parse_cmdline(argv):
                                                      "name. If a 'single_job' or 'list_of_jobs' are not specified, "
                                                      "the script will instead attempt to run the 'job_name'. The "
                                                      "default is False.", action="store_true", default=False)
-    parser.add_argument("-l", "--list_of_jobs", help="The input in the position of 'job_name' will be read as a file "
-                                                     "name with a list of jobs to set up and submit. Each job name "
-                                                     "should be on a separate line. Any extension, or none, can follow "
-                                                     "the job name. If a 'setup_submit' or 'list_of_jobs' are not "
-                                                     "specified, the script will instead attempt to run the 'job_name'."
-                                                     " The default is False.", action="store_true", default=False)
     parser.add_argument("-t", "--testing", help="Run in testing mode, which will not check for normal Gaussian "
                                                 "termination before continuing. Default is False.",
                         action="store_true", default=False)
@@ -262,7 +266,8 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
             raise InvalidDataError('Job failed: {}'.format(out_file))
 
 
-def create_sbatch_dict(cfg, tpl_dict, new_ini_fname, current_job_list, start_from_job_name_chk=True):
+def create_sbatch_dict(cfg, tpl_dict, new_ini_fname, current_job_list, start_from_job_name_chk=True,
+                       ignore_chk_warning=False):
     sbatch_dict = {PARTITION: cfg[PARTITION], RUN_TIME: cfg[RUN_TIME], ACCOUNT: cfg[ACCOUNT],
                    JOB_NAME: tpl_dict[JOB_NAME], RUN_GAUSS_INI: new_ini_fname, QOS: cfg[QOS]
                    }
@@ -282,7 +287,7 @@ def create_sbatch_dict(cfg, tpl_dict, new_ini_fname, current_job_list, start_fro
                     # route can be multiple lines, so first fine the line, then continue until a blank is reached
                     if GAU_HEADER_PAT.match(line):
                         while line != '':
-                            if GUESS_READ_OR_GEOM_CHK_PAT.match(line):
+                            if GUESS_READ_OR_GEOM_CHK_PAT.match(line) and not ignore_chk_warning:
                                 raise InvalidDataError("Did not find an old checkpoint file to read, but the "
                                                        "Gaussian input header indicates that Gaussian will attempt "
                                                        "and fail to read from a checkpoint:\n   file:  {}\n"
@@ -344,7 +349,7 @@ def create_ini_tpl_with_req_keys(thread, tpl_dict, cfg, new_ini_fname):
     str_to_file(tpl_str, new_ini_fname, print_info=True)
 
 
-def setup_and_submit(cfg, suffix, thread, tpl_dict, current_job_list):
+def setup_and_submit(cfg, suffix, thread, tpl_dict, current_job_list, chk_warn):
     if cfg[SETUP_SUBMIT] or cfg[LIST_OF_JOBS]:
         base_name = tpl_dict[JOB_NAME]
     else:
@@ -354,7 +359,7 @@ def setup_and_submit(cfg, suffix, thread, tpl_dict, current_job_list):
     new_sbatch_fname = create_out_fname(base_name, suffix=str(suffix), ext='.slurm', base_dir=cfg[OUT_DIR])
 
     sbatch_dict = create_sbatch_dict(cfg, tpl_dict, os.path.relpath(new_ini_fname), current_job_list,
-                                     start_from_job_name_chk=cfg[START_FROM_SAME_CHK])
+                                     start_from_job_name_chk=cfg[START_FROM_SAME_CHK], ignore_chk_warning=chk_warn)
     tpl_str = read_tpl(cfg[SBATCH_TPL])
     fill_save_tpl(cfg, tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
 
@@ -395,7 +400,7 @@ def main(argv=None):
                             suffix = ''
                         else:
                             suffix = index
-                        setup_and_submit(cfg, suffix, thread, tpl_dict, thread)
+                        setup_and_submit(cfg, suffix, thread, tpl_dict, thread, args.ignore_chk_warning)
             return GOOD_RET
 
         # otherwise, job_name is actually the job name. We can to ignore any extension on it
@@ -409,7 +414,7 @@ def main(argv=None):
                     suffix = ''
                 else:
                     suffix = index
-                setup_and_submit(cfg, suffix, thread, tpl_dict, thread)
+                setup_and_submit(cfg, suffix, thread, tpl_dict, thread, args.ignore_chk_warning)
             return GOOD_RET
 
         for job in cfg[JOB_LIST]:
@@ -419,7 +424,7 @@ def main(argv=None):
             for index, thread in enumerate(cfg[FOLLOW_JOBS_LIST]):
                 if index == 0 and not cfg[ALL_NEW]:
                     continue
-                setup_and_submit(cfg, index, thread, tpl_dict, thread)
+                setup_and_submit(cfg, index, thread, tpl_dict, thread, args.ignore_chk_warning)
 
         if len(cfg[FOLLOW_JOBS_LIST]) > 0 and not cfg[ALL_NEW]:
             for job in cfg[FOLLOW_JOBS_LIST][0]:
