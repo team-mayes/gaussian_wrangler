@@ -145,7 +145,7 @@ def parse_cmdline(argv):
                 else:
                     warning("Did not find a valid 'hartree' command. {}".format(hartree_help_string))
                     return args, INPUT_ERROR
-                if not os.path.isfile(args[0].hartree_call):
+                if not os.path.isfile(args[0].hartree_call[-1]):
                     warning("Hartree not found at this location: {}\n"
                             "If using an alias, use the absolute path.".format(args[0].hartree_call))
 
