@@ -101,6 +101,9 @@ ENV/
 # mypy
 .mypy_cache/
 
+# No swap files
+*.swp
+
 nrel_tools/rdkit_attempts/
 .idea
 .idea/
