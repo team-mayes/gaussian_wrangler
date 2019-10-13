@@ -3,8 +3,8 @@
 nrel_tools
 Find low energy conformers using RDKit
 """
+import nrel_tools
 from setuptools import setup
-import versioneer
 
 DOCLINES = __doc__.split("\n")
 
@@ -13,12 +13,11 @@ requirements = ['progressbar2']
 setup(
     # Self-descriptive entries which should always be present
     name='nrel_tools',
+    version=nrel_tools.__version__,
     author='Heather B Mayes',
     author_email='hmayes@hmayes.com',
     description=DOCLINES[0],
     long_description="\n".join(DOCLINES[2:]),
-    version=versioneer.get_version(),
-    cmdclass=versioneer.get_cmdclass(),
     license='MIT',
 
     # Which Python importable modules should be included when your package is installed
@@ -43,9 +42,10 @@ setup(
                                       ],
                   },     package_dir={'nrel_tools': 'nrel_tools'},
 
-    test_suite='tests', install_requires=['numpy', 'six', 'matplotlib']
+    test_suite='tests', install_requires=['numpy', 'six', 'matplotlib'],
+
+    # install_requires=requirements,
     # Additional entries you may want simply uncomment the lines you want and fill in the data
-    # author_email='me@place.org',      # Author email
     # url='http://www.my_package.com',  # Website
     # install_requires=[],              # Required packages, pulls from pip if needed; do not use for Conda deployment
     # platforms=['Linux',
