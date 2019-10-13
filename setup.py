@@ -5,6 +5,7 @@ Find low energy conformers using RDKit
 """
 import nrel_tools
 from setuptools import setup
+import versioneer
 
 DOCLINES = __doc__.split("\n")
 
@@ -13,11 +14,12 @@ requirements = ['progressbar2']
 setup(
     # Self-descriptive entries which should always be present
     name='nrel_tools',
-    version=nrel_tools.__version__,
     author='Heather B Mayes',
     author_email='hmayes@hmayes.com',
     description=DOCLINES[0],
     long_description="\n".join(DOCLINES[2:]),
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     license='MIT',
 
     # Which Python importable modules should be included when your package is installed
