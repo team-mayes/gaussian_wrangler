@@ -180,6 +180,8 @@ def main(argv=None):
         with open(args.list) as f:
             for line in f:
                 fname = line.strip()
+                if len(fname) == 0:
+                    continue
                 # check that each log file can be found
                 if os.path.isfile(fname):
                     gausslog_files.append(fname)

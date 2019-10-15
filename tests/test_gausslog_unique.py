@@ -93,6 +93,7 @@ class TestGausslogUnique(unittest.TestCase):
             self.assertTrue('Check convergence' in output)
 
     def testNoFreq(self):
+        # also tests that it can skip a blank line
         test_input = ["-l", LIST_NO_FREQ, "-n"]
         good_output = ''.join([HEADER, ENERGY_FIRST, MISSING_FREQ])
         with capture_stdout(main, test_input) as output:
