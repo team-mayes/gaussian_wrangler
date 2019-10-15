@@ -28,6 +28,7 @@ MISSING_FILE_LIST = os.path.join(SUB_DATA_DIR, 'list_with_missing_files.txt')
 TWO_MOL_LIST = os.path.join(SUB_DATA_DIR, 'list_two_molecules.txt')
 TWO_MORE_MOL_LIST = os.path.join(SUB_DATA_DIR, 'list_two_more_molecules.txt')
 SIMILAR_LIST = os.path.join(SUB_DATA_DIR, 'list_similar_molecules.txt')
+CALCALL_LIST = os.path.join(SUB_DATA_DIR, 'list_calcall.txt')
 
 
 class TestGausslogUniqueNoOut(unittest.TestCase):
@@ -135,6 +136,18 @@ class TestGausslogUnique(unittest.TestCase):
         good_result = 'me2pheoxprpnt_30.log,0.0139,-613.945900,-613.726343\n'
         good_output = ''.join([HEADER, good_result])
         test_input = ["-l", SIMILAR_LIST, "-n"]
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue(output == good_output)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue('' == output)
+
+    def testCalcAllOutput(self):
+        # make sure program sees the enthalpy when "CalcAll" is run instead of frequency
+        good_result = 'hexyl_acrylate_239.log,1.1100,-503.005111,-502.751977\n' \
+                      'hexyl_acrylate_419.log,0.0706,-503.004423,-502.751021\n'
+        good_output = ''.join([HEADER, good_result])
+        test_input = ["-l", CALCALL_LIST, "-n"]
+        # main(test_input)
         with capture_stdout(main, test_input) as output:
             self.assertTrue(output == good_output)
         with capture_stderr(main, test_input) as output:
