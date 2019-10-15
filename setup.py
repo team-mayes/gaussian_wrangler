@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-nrel_tools
-Find low energy conformers using RDKit
+Gaussian input/output tools
 """
-# import nrel_tools
 from setuptools import setup
 import versioneer
 
@@ -14,7 +12,6 @@ requirements = ['progressbar2']
 setup(
     # Self-descriptive entries which should always be present
     name='nrel_tools',
-    # version=nrel_tools.__version__,
     author='Heather B Mayes',
     author_email='hmayes@hmayes.com',
     description=DOCLINES[0],
