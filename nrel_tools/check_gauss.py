@@ -5,13 +5,15 @@ If appears to have failed, add to a text file for investigation.
 """
 
 from __future__ import print_function
+
+import csv
 import os
 import re
 import sys
 import argparse
 from common_wrangler.common import (InvalidDataError, warning, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                                    process_gausslog_file,
-                                    MAX_FORCE, RMS_FORCE, MAX_DISPL, RMS_DISPL, CONVERG, CONVERG_ERR)
+                                    process_gausslog_file, create_out_fname, write_csv,
+                                    MAX_FORCE, RMS_FORCE, MAX_DISPL, RMS_DISPL, CONVERG, CONVERG_ERR, CONVERG_STEP_DICT)
 
 try:
     # noinspection PyCompatibility
@@ -156,15 +158,18 @@ def check_convergence(check_file_list, step_converg):
         headers = FINAL_CONVERG_HEADERS
         print("{:36} {:11} {:}".format(*headers))
     for fname in check_file_list:
-        log_content = process_gausslog_file(fname, find_converg=True)
+        log_content = process_gausslog_file(fname, find_converg=True, find_step_converg=step_converg)
         log_content[F_NAME] = os.path.basename(fname)
         if step_converg:
-            pass
+            out_fname = create_out_fname(fname, prefix='', suffix='_conv_steps', ext='.csv')
+            # create list of dicts for each step
+            for step_num in log_content[CONVERG_STEP_DICT].keys():
+                pass
+            write_csv(log_content, out_fname, headers, extrasaction="ignore", mode='w',
+                      quote_style=csv.QUOTE_NONNUMERIC, round_digits=6)
         else:
             print("{:36} {:11.4f} {:}".format(log_content[headers[0]], log_content[headers[1]],
                                               log_content[headers[2]]))
-    # write_csv(data, out_fname, fieldnames, extrasaction="raise", mode='w', quote_style=csv.QUOTE_NONNUMERIC,
-    #           print_message=True, round_digits=False)
 
 
 def main(argv=None):

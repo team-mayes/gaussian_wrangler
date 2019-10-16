@@ -39,8 +39,6 @@ class TestGausslogUniqueNoOut(unittest.TestCase):
         with capture_stderr(main, test_input) as output:
             self.assertTrue("Problems reading file" in output)
 
-        # with capture_stderr(main, test_input) as output:
-        #     self.assertTrue("No files to process" in output)
     def testNoFiles(self):
         test_input = ["-l", EMPTY_LIST]
         # main(test_input)
@@ -69,7 +67,6 @@ class TestGausslogUnique(unittest.TestCase):
         test_input = ["-l", LOG_LIST]
         good_output = ''.join([HEADER, ALPHA_FIRST, ENERGY_FIRST])
         with capture_stdout(main, test_input) as output:
-            print(output)
             self.assertTrue(output == good_output)
         with capture_stderr(main, test_input) as output:
             self.assertTrue('Check convergence' in output)
@@ -79,7 +76,6 @@ class TestGausslogUnique(unittest.TestCase):
         test_input = ["-l", LOG_LIST, "-e"]
         good_output = ''.join([HEADER, ENERGY_FIRST, ALPHA_FIRST])
         with capture_stdout(main, test_input) as output:
-            print(output)
             self.assertTrue(output == good_output)
         with capture_stderr(main, test_input) as output:
             self.assertTrue('Check convergence' in output)
@@ -88,7 +84,6 @@ class TestGausslogUnique(unittest.TestCase):
         test_input = ["-l", LOG_LIST, '-n']
         good_output = ''.join([HEADER, ALPHA_FIRST, ENERGY_FIRST])
         with capture_stdout(main, test_input) as output:
-            print(output)
             self.assertTrue(output == good_output)
         with capture_stderr(main, test_input) as output:
             self.assertTrue('Check convergence' in output)
@@ -97,8 +92,8 @@ class TestGausslogUnique(unittest.TestCase):
         # also tests that it can skip a blank line
         test_input = ["-l", LIST_NO_FREQ, "-n"]
         good_output = ''.join([HEADER, ENERGY_FIRST, MISSING_FREQ])
+        main(test_input)
         with capture_stdout(main, test_input) as output:
-            print(output)
             self.assertTrue(output == good_output)
         with capture_stderr(main, test_input) as output:
             self.assertFalse('Check convergence' in output)

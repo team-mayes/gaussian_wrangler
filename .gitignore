@@ -159,3 +159,4 @@ tests/test_data/goodvibes_helper/aea_prod_vibes.dat
 /tests/test_data/gausslog2pdb/pet_mono_test_comb.pdb
 /tests/test_data/goodvibes_helper/tpa_testing_vibes.dat
 /tests/test_data/goodvibes_helper/tpa_testing.csv
+/tests/test_data/gausslog_unique/hexyl_acrylate_419_conv_steps.csv

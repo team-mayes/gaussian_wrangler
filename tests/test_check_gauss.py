@@ -116,9 +116,18 @@ class TestCheckGauss(unittest.TestCase):
 
     def testListFinalConvergence(self):
         test_input = ["-l", LIST_FILE, "-z"]
-        main(test_input)
+        # main(test_input)
         good_out = 'File                                 Convergence Convergence_Error\n' \
                    'hexyl_acrylate_419.log                    0.0706 False\n'\
                    'hexyl_acrylate_239.log                    1.1100 False\n'
         with capture_stdout(main, test_input) as output:
             self.assertTrue(output == good_out)
+
+    # def testListEachStepConvergence(self):
+    #     test_input = ["-l", LIST_FILE, "-s"]
+    #     main(test_input)
+        # good_out = 'File                                 Convergence Convergence_Error\n' \
+        #            'hexyl_acrylate_419.log                    0.0706 False\n' \
+        #            'hexyl_acrylate_239.log                    1.1100 False\n'
+        # with capture_stdout(main, test_input) as output:
+        #     self.assertTrue(output == good_out)
