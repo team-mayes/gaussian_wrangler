@@ -30,6 +30,7 @@ setup(
                   },
 
     entry_points={'console_scripts': ['gausscom2pdb = gaussian_wrangler.gausscom2pdb:main',
+                                      'gausscom2com = gaussian_wrangler.gausscom2com:main',
                                       'pdbs2gausscoms = gaussian_wrangler.pdbs2gausscoms:main',
                                       'gausslog2com = gaussian_wrangler.gausslog2com:main',
                                       'gausslog2pdb = gaussian_wrangler.gausslog2pdb:main',
