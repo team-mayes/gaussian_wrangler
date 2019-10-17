@@ -2,7 +2,7 @@
 
 cp calculation from fragment pair [18, 16] and tests/test_data/gauss_fragment/pet_dimer_tzvp.com
 
-0 1   0 2    0 2
+0 1   0 2   0 2
 O(Fragment=1)       3.311154    6.381109   -1.436288
 H(Fragment=1)       4.228087    6.137474   -1.281017
 C(Fragment=1)      -0.382044    2.461418    4.981603

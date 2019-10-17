@@ -1,0 +1,2 @@
+tests/test_data/goodvibes_helper/tpaegh1ats_ts_ircr_opt.log tests/test_data/goodvibes_helper/tpaegh1ats_ts.log
+tests/test_data/goodvibes_helper/tpaegh1ats_ts_ircr_opt_noeg.log tests/test_data/goodvibes_helper/ethygly2_tzvp.log tests/test_data/goodvibes_helper/tpaegh1ats_ts.log

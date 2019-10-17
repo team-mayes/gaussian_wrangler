@@ -1,0 +1,5 @@
+tests/test_data/gausslog2com/pet_mono_1_tzvp.log
+tests/test_data/gausslog2com/pet_mono_843_tzvp.log
+tests/test_data/gausslog_unique/lme2acetoxprpnt_ts3_ircf_opt.log
+tests/test_data/gausslog_unique/lme2acetoxypropionate_18_t.log
+tests/test_data/gausslog_unique/lme2acetoxypropionate_25_t.log

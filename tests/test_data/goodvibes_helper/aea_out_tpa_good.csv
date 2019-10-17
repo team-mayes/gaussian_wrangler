@@ -1,0 +1,3 @@
+"file1","file2","file3","file4","file5","A (1/s if uni)","Ea (kcal/mol)","ΔG temp (K)","ΔG‡ (kcal/mol)","ΔG_rxn (kcal/mol)","qh_A (1/s if uni)","qh_Ea (kcal/mol)","qh_ΔG‡ (kcal/mol)","qh_ΔG_rxn (kcal/mol)"
+"","","","tpaegh1ats_ts_ircr_opt.log","tpaegh1ats_ts.log",209620912391.44757,30.615678369064568,300.0,32.640532638295554,nan,1366331071430.627,31.178729191286173,32.07200905773789,nan
+"","","tpaegh1ats_ts_ircr_opt_noeg.log","ethygly2_tzvp.log","tpaegh1ats_ts.log",2902784.2677639388,27.39245147192964,300.0,36.01841612008866,nan,67328.80361680861,26.287436977668317,37.18558373604901,nan

@@ -1,6 +1,6 @@
 # m062x/Def2SVP nosymm scf=xqc opt guess=mix freq=noraman
 
-Low energy conformation from file /Users/hmayes/bee/code/python/nrel_tools/tests/test_data/gausslog2com/s12but_17_84_f2.log
+Low energy conformation from file tests/test_data/gausslog2com/s12but_17_84_f2.log
 
 0  3
 C              6.641666    8.847664    3.133623

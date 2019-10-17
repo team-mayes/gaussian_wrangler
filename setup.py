@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-nrel_tools
-Find low energy conformers using RDKit
+Gaussian input/output tools
 """
 from setuptools import setup
-# import versioneer
+import versioneer
 
 DOCLINES = __doc__.split("\n")
 
@@ -14,10 +13,11 @@ setup(
     # Self-descriptive entries which should always be present
     name='nrel_tools',
     author='Heather B Mayes',
+    author_email='hmayes@hmayes.com',
     description=DOCLINES[0],
     long_description="\n".join(DOCLINES[2:]),
-    # version=versioneer.get_version(),
-    # cmdclass=versioneer.get_cmdclass(),
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     license='MIT',
 
     # Which Python importable modules should be included when your package is installed
@@ -31,17 +31,21 @@ setup(
 
     entry_points={'console_scripts': ['gausscom2pdb = nrel_tools.gausscom2pdb:main',
                                       'pdbs2gausscoms = nrel_tools.pdbs2gausscoms:main',
-                                      'gausslog2pdb = nrel_tools.gausslog2pdb:main',
                                       'gausslog2com = nrel_tools.gausslog2com:main',
+                                      'gausslog2pdb = nrel_tools.gausslog2pdb:main',
+                                      'gausslog_unique = nrel_tools.gausslog_unique:main',
                                       'gauss_fragment = nrel_tools.gauss_fragment:main',
                                       'run_gauss = nrel_tools.run_gauss:main',
                                       'check_gauss = nrel_tools.check_gauss:main',
+                                      'goodvibes_helper = nrel_tools.goodvibes_helper:main',
+                                      'plot_steps = nrel_tools.plot_steps:main'
                                       ],
                   },     package_dir={'nrel_tools': 'nrel_tools'},
 
-    test_suite='tests', install_requires=['numpy', 'six']
+    test_suite='tests', install_requires=['numpy', 'six', 'matplotlib'],
+
+    # install_requires=requirements,
     # Additional entries you may want simply uncomment the lines you want and fill in the data
-    # author_email='me@place.org',      # Author email
     # url='http://www.my_package.com',  # Website
     # install_requires=[],              # Required packages, pulls from pip if needed; do not use for Conda deployment
     # platforms=['Linux',

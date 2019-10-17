@@ -2,7 +2,7 @@
 
 cp calculation from fragment pair [24, 18] and tests/test_data/gauss_fragment/pet_mono_1_tzvp.com
 
-0 1   0 3    0 3
+0 1   0 3   0 3
 O(Fragment=2)       3.601135    6.855796    0.997706
 H(Fragment=2)       3.115034    6.739670    1.820294
 C(Fragment=2)      -0.707784    2.428652    4.725402

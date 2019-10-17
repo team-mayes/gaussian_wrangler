@@ -11,11 +11,12 @@ from __future__ import print_function
 import os
 import sys
 import argparse
-from nrel_tools.common import (list_to_file, InvalidDataError, create_out_fname, process_cfg, warning,
-                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                               PDB_LINE_TYPE_LAST_CHAR, PDB_MOL_NUM_LAST_CHAR, PDB_Z_LAST_CHAR,
-                               PDB_BEFORE_ELE_LAST_CHAR, PDB_ELE_LAST_CHAR,
-                               process_gausscom_file, PDB_ATOM_NUM_LAST_CHAR, PDB_ATOM_TYPE_LAST_CHAR)
+from common_wrangler.common import (list_to_file, InvalidDataError, create_out_fname, process_cfg, warning,
+                                    GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, PDB_LINE_TYPE_LAST_CHAR,
+                                    PDB_MOL_NUM_LAST_CHAR, PDB_Z_LAST_CHAR, PDB_BEFORE_ELE_LAST_CHAR,
+                                    PDB_ELE_LAST_CHAR, PDB_ATOM_NUM_LAST_CHAR, PDB_ATOM_TYPE_LAST_CHAR,
+                                    process_gausscom_file, MAIN_SEC, SEC_HEAD, SEC_TAIL)
+
 try:
     # noinspection PyCompatibility
     from ConfigParser import ConfigParser, MissingSectionHeaderError
@@ -26,28 +27,21 @@ except ImportError:
 
 __author__ = 'hmayes'
 
-# Error Codes
-# The good status code
-GOOD_RET = 0
-INPUT_ERROR = 1
-IO_ERROR = 2
-INVALID_DATA = 3
 
 # Constants #
 
 # Config File Sections
-MAIN_SEC = 'main'
 
 # Config keys
 GAU_TPL_FILE = 'gau_tpl_file'
-PDBS_FILE = 'pdb_list_file'
+PDB_LIST_FILE = 'pdb_list_file'
 PDB_FILE = 'pdb_file'
 REMOVE_H = 'remove_final_h'
 FIRST_ONLY = 'first_only'
 
 # Defaults
 DEF_CFG_FILE = 'pdb2gau.ini'
-DEF_CFG_VALS = {PDBS_FILE: 'pdb_list.txt',
+DEF_CFG_VALS = {PDB_LIST_FILE: 'pdb_list.txt',
                 PDB_FILE: None,
                 REMOVE_H: False,
                 FIRST_ONLY: False,
@@ -55,14 +49,10 @@ DEF_CFG_VALS = {PDBS_FILE: 'pdb_list.txt',
 REQ_KEYS = {GAU_TPL_FILE: str,
             }
 
+CONFIG_NAME = 'config_fname'
 # From data template file
 NUM_ATOMS = 'num_atoms'
 ATOM_TYPE_DICT = 'atom_type_dict'
-
-# For data template file processing
-SEC_HEAD = 'head_section'
-SEC_ATOMS = 'atoms_section'
-SEC_TAIL = 'tail_section'
 
 
 def read_cfg(floc, cfg_proc=process_cfg):
@@ -76,9 +66,12 @@ def read_cfg(floc, cfg_proc=process_cfg):
     """
     config = ConfigParser()
     good_files = config.read(floc)
-    if not good_files:
-        raise IOError('Could not read file {}'.format(floc))
-    main_proc = cfg_proc(dict(config.items(MAIN_SEC)), def_cfg_vals=DEF_CFG_VALS, req_keys=REQ_KEYS)
+    if good_files:
+        main_proc = cfg_proc(dict(config.items(MAIN_SEC)), def_cfg_vals=DEF_CFG_VALS, req_keys=REQ_KEYS)
+    else:
+        main_proc = {GAU_TPL_FILE: None, CONFIG_NAME: floc}
+        for key, def_val in DEF_CFG_VALS.items():
+            main_proc[key] = def_val
     return main_proc
 
 
@@ -94,13 +87,52 @@ def parse_cmdline(argv):
     parser = argparse.ArgumentParser(description='Creates Gaussian input files from pdb files, given a template input '
                                                  'file. The required input file provides the name/location of the '
                                                  'template file and a file with a list of pdb files to convert.')
-    parser.add_argument("-c", "--config", help="The location of the configuration file. "
-                                               "The default file name is {}, located in the "
-                                               "base directory where the program as run.".format(DEF_CFG_FILE),
+    parser.add_argument("-c", "--config", help="Optional: the location of the configuration file. The default file "
+                                               "name is '{}', located in the base directory where the program as run. "
+                                               "If a config file is not provided, use the command-line options to "
+                                               "specify the '{}' (-t) and '{}' (-1) or '{}' (-p). The command lines "
+                                               "for the '{}' flag (-r) or only the first entry in the pdb ('{}', -a) "
+                                               "may also be specified.".format(DEF_CFG_FILE, GAU_TPL_FILE,
+                                                                               PDB_LIST_FILE, PDB_FILE,
+                                                                               REMOVE_H, FIRST_ONLY),
                         default=DEF_CFG_FILE, type=read_cfg)
+    parser.add_argument("-t", "--tpl_file", help="Only if a config file is not provided, this command is required to "
+                                                 "specify the '{}'".format(GAU_TPL_FILE),
+                        default=None)
+    parser.add_argument("-l", "--pdb_list_file", help="Only if a config file is not provided, this command can be used "
+                                                      "to specify a file with a list of pdbs ('{}') to convert (one "
+                                                      "file per line on the list).".format(PDB_LIST_FILE),
+                        default=None)
+    parser.add_argument("-p", "--pdb_file", help="Only if a config file is not provided, this command can be used to "
+                                                 "specify a pdb file ('{}') to convert.".format(PDB_FILE),
+                        default=None)
+    parser.add_argument("-r", "--remove_final_h", help="Only if a config file is not provided, this command can be "
+                                                       "used to specify removing the last H atom from the PDB file(s) "
+                                                       "when creating the gausscom files. The default is False.",
+                        action='store_true')
+    parser.add_argument("-a", "--first_only", help="Only read if a config file is not provided. This command can be "
+                                                   "used to specify only using the first set of coordinates in a pdb "
+                                                   "file to create gausscom file(s). The default is False.",
+                        action='store_true')
+
     args = None
     try:
         args = parser.parse_args(argv)
+        if args.config[GAU_TPL_FILE] is None:
+            if args.tpl_file is None:
+                raise InvalidDataError("Could not read config file: {}\n    and did not specify a 'tpl_file' "
+                                       "('-t' option). A tpl_file is needed to run this "
+                                       "script.".format(args.config[CONFIG_NAME]))
+            else:
+                args.config[GAU_TPL_FILE] = args.tpl_file
+                if args.first_only:
+                    args.config[FIRST_ONLY] = True
+                if args.remove_final_h:
+                    args.config[REMOVE_H] = True
+                if args.pdb_file:
+                    args.config[PDB_FILE] = args.pdb_file
+                if args.pdb_list_file:
+                    args.config[PDB_LIST_FILE] = args.pdb_list_file
     except IOError as e:
         warning("Problems reading file:", e)
         parser.print_help()
@@ -120,8 +152,10 @@ def process_pdb_files(cfg, gau_tpl_content):
     if cfg[PDB_FILE]:
         if os.path.isfile(cfg[PDB_FILE]):
             pdb_files.append(cfg[PDB_FILE])
-    if os.path.isfile(cfg[PDBS_FILE]):
-        with open(cfg[PDBS_FILE]) as f:
+        else:
+            raise IOError(cfg[PDB_FILE])
+    if os.path.isfile(cfg[PDB_LIST_FILE]):
+        with open(cfg[PDB_LIST_FILE]) as f:
             for pdb_file in f.readlines():
                 pdb_file = pdb_file.strip()
                 if len(pdb_file) > 0:

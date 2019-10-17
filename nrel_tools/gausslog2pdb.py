@@ -8,10 +8,10 @@ import os
 import copy
 import sys
 import argparse
-from nrel_tools.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file, process_pdb_file,
-                               SEC_HEAD, SEC_ATOMS, SEC_TAIL, PDB_FORMAT, NUM_ATOMS, ATOM_NUM_DICT,
-                               GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT,
-                               GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, silent_remove)
+from common_wrangler.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file,
+                                    process_pdb_file, MAIN_SEC, SEC_HEAD, SEC_ATOMS, SEC_TAIL, PDB_FORMAT, NUM_ATOMS,
+                                    ATOM_NUM_DICT, GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT, GOOD_RET, INPUT_ERROR,
+                                    IO_ERROR, INVALID_DATA, silent_remove)
 
 try:
     # noinspection PyCompatibility
@@ -25,7 +25,6 @@ __author__ = 'hmayes'
 # Constants #
 
 # Config File Sections
-MAIN_SEC = 'main'
 
 # Config keys
 PDB_TPL_FILE = 'pdb_tpl_file'
@@ -77,20 +76,10 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
     good_files = config.read(f_loc)
 
     if not good_files:
-        raise IOError('Could not read file {}'.format(f_loc))
+        return DEF_CFG_VALS
+        # raise IOError('Could not read file {}'.format(f_loc))
+
     main_proc = cfg_proc(dict(config.items(MAIN_SEC)), DEF_CFG_VALS, REQ_KEYS)
-
-    if main_proc[COMBINE_LOGS] and not main_proc[OUTFILE_NAME]:
-        raise InvalidDataError("When combining outputs from multiple log files into one pdb, specify the output "
-                               "file name")
-    if main_proc[COMBINE_LOGS] and not main_proc[ONLY_FINAL]:
-        warning("When combining outputs from multiple log files into one pdb, only the last coordinates of each "
-                "log file will be kept.")
-        main_proc[ONLY_FINAL] = True
-
-    if main_proc[OUT_BASE_DIR]:
-        if not os.path.exists(main_proc[OUT_BASE_DIR]):
-            os.makedirs(main_proc[OUT_BASE_DIR])
 
     return main_proc
 
@@ -106,9 +95,12 @@ def parse_cmdline(argv):
     # initialize the parser object:
     parser = argparse.ArgumentParser(description='Creates pdb files from Gaussian input files, given a template pdb '
                                                  'file.')
-    parser.add_argument("-c", "--config", help="The location of the configuration file in ini format. "
-                                               "The default file name is {}, located in the "
-                                               "base directory where the program as run.".format(DEF_CFG_FILE),
+    parser.add_argument("-c", "--config", help="The location of the (optional) configuration file in ini format. The "
+                                               "default file name is {}, located in the base directory where the " 
+                                               "program as run. The program will run using either the specifications "
+                                               "from the configuration file or from the command line. Command line "
+                                               "specifications will override those in the configuration "
+                                               "file.".format(DEF_CFG_FILE),
                         default=DEF_CFG_FILE, type=read_cfg)
 
     parser.add_argument("-f", "--file", help="The location of a Gaussian output file. Will override any '{}' entry in "
@@ -116,7 +108,11 @@ def parse_cmdline(argv):
     parser.add_argument("-l", "--list", help="The location of the list of Gaussian output files. Will override any "
                                              "'{}' entry in a configuration file.".format(GAUSSLOG_FILES_FILE),
                         default=None)
-    parser.add_argument("-o", "--out_dir", help="The directory where the output files will be placed. This will "
+    parser.add_argument("-o", "--out_fname", help="The name for the created pdb file. If none is provided, it will "
+                                                  "take the basename from the provided Gaussian output file name, "
+                                                  "with the '.pdb' extension.",
+                        default=None)
+    parser.add_argument("-d", "--out_dir", help="The directory where the output files will be placed. This will "
                                                 "override any '{}' entry in the configuration file. The default is "
                                                 "the same directory as the log file.".format(OUT_BASE_DIR),
                         default=None)
@@ -137,10 +133,6 @@ def parse_cmdline(argv):
     args = None
     try:
         args = parser.parse_args(argv)
-    except IOError as e:
-        warning("Problems reading file:", e)
-        parser.print_help()
-        return args, IO_ERROR
     except (KeyError, InvalidDataError, MissingSectionHeaderError, SystemExit) as e:
         if hasattr(e, 'code') and e.code == 0:
             return args, GOOD_RET
@@ -174,8 +166,7 @@ def check_and_print(cfg, atom_id, pdb_tpl_content, gausslog_file, pdb_data_secti
     if cfg[PDB_TPL_FILE]:
         if atom_id != pdb_tpl_content[NUM_ATOMS]:
             raise InvalidDataError('In gausscom file: {}\nfound {} atoms, but pdb expects {} ' 
-                                   'atoms'.format(gausslog_file, atom_id,
-                                                  pdb_tpl_content[NUM_ATOMS]))
+                                   'atoms'.format(gausslog_file, atom_id, pdb_tpl_content[NUM_ATOMS]))
     list_to_file(pdb_tpl_content[SEC_HEAD] + pdb_data_section + pdb_tpl_content[SEC_TAIL],
                  f_name, list_format=PDB_FORMAT, mode=mode, print_message=message)
 
@@ -270,6 +261,39 @@ def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
                         f_name, mode, message)
 
 
+def check_input(args, cfg):
+    # override config entries if command-line options used
+    if args.file:
+        cfg[GAUSSLOG_FILE] = args.file
+    if args.list:
+        cfg[GAUSSLOG_FILES_FILE] = args.list
+    if args.tpl:
+        cfg[PDB_TPL_FILE] = args.tpl
+    if args.out_dir:
+        cfg[OUT_BASE_DIR] = args.out_dir
+    if args.only_first:
+        cfg[ONLY_FIRST] = True
+    if args.only_final:
+        cfg[ONLY_FINAL] = True
+    if args.out_fname:
+        cfg[OUTFILE_NAME] = args.out_fname
+    if args.out_dir:
+        cfg[OUT_BASE_DIR] = args.out_dir
+
+    # checking
+    if cfg[COMBINE_LOGS] and not cfg[OUTFILE_NAME]:
+        raise InvalidDataError("When combining outputs from multiple log files into one pdb, specify the output "
+                               "file name")
+    if cfg[COMBINE_LOGS] and not cfg[ONLY_FINAL]:
+        warning("When combining outputs from multiple log files into one pdb, only the last coordinates of each "
+                "log file will be kept.")
+        cfg[ONLY_FINAL] = True
+
+    if cfg[OUT_BASE_DIR]:
+        if not os.path.exists(cfg[OUT_BASE_DIR]):
+            os.makedirs(cfg[OUT_BASE_DIR])
+
+
 def main(argv=None):
     # Read input
     args, ret = parse_cmdline(argv)
@@ -280,19 +304,8 @@ def main(argv=None):
 
     # Read template and data files
     try:
-        # override config entries if command-line options used
-        if args.file:
-            cfg[GAUSSLOG_FILE] = args.file
-        if args.list:
-            cfg[GAUSSLOG_FILES_FILE] = args.list
-        if args.tpl:
-            cfg[PDB_TPL_FILE] = args.tpl
-        if args.out_dir:
-            cfg[OUT_BASE_DIR] = args.out_dir
-        if args.only_first:
-            cfg[ONLY_FIRST] = True
-        if args.only_final:
-            cfg[ONLY_FINAL] = True
+        check_input(args, cfg)
+
         # set up list of files to process
         cfg[GAUSSLOG_FILES] = []
         if os.path.isfile(cfg[GAUSSLOG_FILES_FILE]):
@@ -307,7 +320,7 @@ def main(argv=None):
         if cfg[ONLY_FIRST] and cfg[ONLY_FINAL]:
             raise InvalidDataError("Cannot specify both '{}' and '{}'".format(ONLY_FIRST, ONLY_FINAL))
 
-        # no start the actual work
+        # now start the actual work
         if cfg[PDB_TPL_FILE]:
             pdb_tpl_content = process_pdb_file(cfg[PDB_TPL_FILE])
         else:

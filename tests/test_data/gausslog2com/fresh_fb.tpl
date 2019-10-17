@@ -2,6 +2,7 @@
 
 test BDE effect solvent
 
+0 1
 
-
+PDENS=7.0
 
