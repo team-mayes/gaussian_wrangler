@@ -1,6 +1,6 @@
 import unittest
 import os
-from nrel_tools.plot_steps import main
+from gaussian_wrangler.plot_steps import main
 from common_wrangler.common import capture_stdout, capture_stderr, silent_remove
 import logging
 

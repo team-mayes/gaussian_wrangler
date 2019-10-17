@@ -1,7 +1,7 @@
 import unittest
 import os
 from shutil import copyfile
-from nrel_tools.check_gauss import main
+from gaussian_wrangler.check_gauss import main
 from common_wrangler.common import capture_stdout, capture_stderr, diff_lines, silent_remove
 import logging
 
@@ -103,6 +103,8 @@ class TestCheckGauss(unittest.TestCase):
         silent_remove(MOVED_FILE, disable=DISABLE_REMOVE)
         try:
             # main(test_input)
+            # copyfile(NORM_TERM_LOG, TEMP_NORM_TERM_LOG)
+            # silent_remove(MOVED_FILE, disable=DISABLE_REMOVE)
             with capture_stdout(main, test_input) as output:
                 self.assertTrue(output == GOOD_OUT)
             self.assertFalse(diff_lines(MOVED_FILE, NORM_TERM_LOG))

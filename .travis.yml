@@ -41,11 +41,11 @@ install:
 
     # Build and install package
   - conda build --python=$PYTHON_VER devtools/conda-recipe
-  - conda install --use-local nrel_tools
+  - conda install --use-local gaussian_wrangler
 
 
 script:
-  - pytest -v --cov=nrel_tools tests/
+  - pytest -v --cov=gaussian_wrangler tests/
 
 notifications:
     email: false

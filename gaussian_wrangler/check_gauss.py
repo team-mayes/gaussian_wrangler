@@ -166,12 +166,12 @@ def check_convergence(check_file_list, step_converg):
             step_list = []
             for step_num in log_content[CONVERG_STEP_DICT].keys():
                 step_list.append({F_NAME: log_content[F_NAME], STEP_NUM: step_num,
-                                  MAX_FORCE:log_content[CONVERG_STEP_DICT][step_num][MAX_FORCE],
-                                  RMS_FORCE:log_content[CONVERG_STEP_DICT][step_num][RMS_FORCE],
-                                  MAX_DISPL:log_content[CONVERG_STEP_DICT][step_num][MAX_DISPL],
-                                  RMS_DISPL:log_content[CONVERG_STEP_DICT][step_num][RMS_DISPL],
-                                  CONVERG:log_content[CONVERG_STEP_DICT][step_num][CONVERG],
-                                  CONVERG_ERR:log_content[CONVERG_STEP_DICT][step_num][CONVERG_ERR],
+                                  MAX_FORCE: log_content[CONVERG_STEP_DICT][step_num][MAX_FORCE],
+                                  RMS_FORCE: log_content[CONVERG_STEP_DICT][step_num][RMS_FORCE],
+                                  MAX_DISPL: log_content[CONVERG_STEP_DICT][step_num][MAX_DISPL],
+                                  RMS_DISPL: log_content[CONVERG_STEP_DICT][step_num][RMS_DISPL],
+                                  CONVERG: log_content[CONVERG_STEP_DICT][step_num][CONVERG],
+                                  CONVERG_ERR: log_content[CONVERG_STEP_DICT][step_num][CONVERG_ERR],
                                   })
             write_csv(step_list, out_fname, headers, extrasaction="ignore", mode='w',
                       quote_style=csv.QUOTE_NONNUMERIC, round_digits=6)

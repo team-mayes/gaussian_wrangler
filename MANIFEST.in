@@ -1,2 +1,2 @@
 include versioneer.py
-include nrel_tools/_version.py
+include gaussian_wrangler/_version.py

@@ -1,6 +1,6 @@
 import unittest
 import os
-from nrel_tools.run_gauss import main
+from gaussian_wrangler.run_gauss import main
 from common_wrangler.common import diff_lines, silent_remove, capture_stdout, capture_stderr
 import logging
 

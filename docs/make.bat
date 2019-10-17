@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=nrel_tools
+set SPHINXPROJ=gaussian_wrangler
 
 if "%1" == "" goto help
 

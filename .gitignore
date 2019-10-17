@@ -104,7 +104,7 @@ ENV/
 # No swap files
 *.swp
 
-nrel_tools/rdkit_attempts/
+gaussian_wrangler/rdkit_attempts/
 .idea
 .idea/
 .idea/workspace.xml

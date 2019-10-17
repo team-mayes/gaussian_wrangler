@@ -40,7 +40,8 @@ BASIS_SET = 'Basis Set'
 SOLV = 'Solvent type'
 FREQ1 = 'Freq 1'
 FREQ2 = 'Freq 2'
-AWK_GRAB_GAUSS_VER = ['awk', '/\*\*\*/{getline; print; exit}']
+# noinspection PyPep8, PyPep8Naming
+AWK_GRAB_GAUSS_VER = ['awk', "/\*\*\*/{getline; print; exit}"]
 GAUSSIAN_SEPARATOR = '******************************************'
 GOODVIBES_OUT_FNAME = "Goodvibes_output.dat"
 GOODVIBES_ERROR_PAT = re.compile(r"x .*")
@@ -75,7 +76,7 @@ def parse_cmdline(argv):
     if argv is None:
         argv = sys.argv[1:]
 
-    hartree_help_string = "The command to run hartree (see https://github.com/team-mayes/hartree). The program will "\
+    hartree_help_string = "The command to run hartree (see https://github.com/team-mayes/hartree). The program will " \
                           "use bash to look for the program location with 'which hartree' and 'alias hartree'."
     # initialize the parser object:
     parser = argparse.ArgumentParser(description='Calculates A and Ea from Gaussian output files using GoodVibes. '
@@ -227,7 +228,7 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
                 raise InvalidDataError("Did not expect to read find reactant/product separator ('{}') as the first "
                                        "entry".format(REACT_PROD_SEP))
             else:
-                multiplicities[index] = multiplicities[index-1]
+                multiplicities[index] = multiplicities[index - 1]
             continue
 
         # now start checks by getting info from hartree

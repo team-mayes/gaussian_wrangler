@@ -11,7 +11,7 @@ requirements = ['progressbar2']
 
 setup(
     # Self-descriptive entries which should always be present
-    name='nrel_tools',
+    name='gaussian_wrangler',
     author='Heather B Mayes',
     author_email='hmayes@hmayes.com',
     description=DOCLINES[0],
@@ -21,26 +21,26 @@ setup(
     license='MIT',
 
     # Which Python importable modules should be included when your package is installed
-    packages=['nrel_tools'],
+    packages=['gaussian_wrangler'],
 
     # Optional include package data to ship with your package
     # Comment out this line to prevent the files from being packaged with your software
     # Extend/modify the list to include/exclude other items as need be
-    package_data={'nrel_tools': ["data/*.dat"]
+    package_data={'gaussian_wrangler': ["data/*.dat"]
                   },
 
-    entry_points={'console_scripts': ['gausscom2pdb = nrel_tools.gausscom2pdb:main',
-                                      'pdbs2gausscoms = nrel_tools.pdbs2gausscoms:main',
-                                      'gausslog2com = nrel_tools.gausslog2com:main',
-                                      'gausslog2pdb = nrel_tools.gausslog2pdb:main',
-                                      'gausslog_unique = nrel_tools.gausslog_unique:main',
-                                      'gauss_fragment = nrel_tools.gauss_fragment:main',
-                                      'run_gauss = nrel_tools.run_gauss:main',
-                                      'check_gauss = nrel_tools.check_gauss:main',
-                                      'goodvibes_helper = nrel_tools.goodvibes_helper:main',
-                                      'plot_steps = nrel_tools.plot_steps:main'
+    entry_points={'console_scripts': ['gausscom2pdb = gaussian_wrangler.gausscom2pdb:main',
+                                      'pdbs2gausscoms = gaussian_wrangler.pdbs2gausscoms:main',
+                                      'gausslog2com = gaussian_wrangler.gausslog2com:main',
+                                      'gausslog2pdb = gaussian_wrangler.gausslog2pdb:main',
+                                      'gausslog_unique = gaussian_wrangler.gausslog_unique:main',
+                                      'gauss_fragment = gaussian_wrangler.gauss_fragment:main',
+                                      'run_gauss = gaussian_wrangler.run_gauss:main',
+                                      'check_gauss = gaussian_wrangler.check_gauss:main',
+                                      'goodvibes_helper = gaussian_wrangler.goodvibes_helper:main',
+                                      'plot_steps = gaussian_wrangler.plot_steps:main'
                                       ],
-                  },     package_dir={'nrel_tools': 'nrel_tools'},
+                  },     package_dir={'gaussian_wrangler': 'gaussian_wrangler'},
 
     test_suite='tests', install_requires=['numpy', 'six', 'matplotlib'],
 

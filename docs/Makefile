@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SPHINXPROJ    = nrel_tools
+SPHINXPROJ    = gaussian_wrangler
 SOURCEDIR     = .
 BUILDDIR      = _build
 

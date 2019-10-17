@@ -1,9 +1,9 @@
-.. nrel_tools documentation master file, created by
+.. gaussian_wrangler documentation master file, created by
    sphinx-quickstart on Thu Mar 15 13:55:56 2018.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to nrel_tools's documentation!
+Welcome to gaussian_wrangler's documentation!
 =========================================================
 
 .. toctree::

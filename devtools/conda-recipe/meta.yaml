@@ -1,5 +1,5 @@
 package:
-  name: nrel_tools
+  name: gaussian_wrangler
   version: "0.0.0"
 
 source:
@@ -20,7 +20,7 @@ test:
   requires:
     - pytest
   imports:
-    - nrel_tools
+    - gaussian_wrangler
 
 about:
   home: add_url_here

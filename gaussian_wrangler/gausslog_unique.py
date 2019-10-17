@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-homolytic fragmenter
+if atoms are in the same order, checks for duplicate conformers
 """
 
 from __future__ import print_function
@@ -62,7 +62,7 @@ def parse_cmdline(argv):
                                              "run. This program assumes that all the given files have the same atom "
                                              "order.".format(DEF_LIST_FILE),
                         default=DEF_LIST_FILE)
-    parser.add_argument("-t", "--tol", help="The tolerance, in degrees, for concluding that dihedrals angles are "
+    parser.add_argument("-t", "--tol", help="The tolerance, in degrees, for concluding that dihedral angles are "
                                             "equivalent. The default value is {}.".format(DEF_DIH_TOL),
                         default=DEF_DIH_TOL)
     parser.add_argument("-e", "--energy", help="Sort output by lowest electronic energy (not ZPE corrected)."

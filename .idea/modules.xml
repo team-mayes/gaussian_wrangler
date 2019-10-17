@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/nrel_tools.iml" filepath="$PROJECT_DIR$/nrel_tools.iml" />
+      <module fileurl="file://$PROJECT_DIR$/gaussian_wrangler.iml" filepath="$PROJECT_DIR$/gaussian_wrangler.iml" />
     </modules>
   </component>
 </project>

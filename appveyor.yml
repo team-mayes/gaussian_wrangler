@@ -35,9 +35,9 @@ install:
 
     # Build and install package
   - conda build --quiet --python=%PYTHON_VERSION% devtools\\conda-recipe
-  - conda install --use-local nrel_tools
+  - conda install --use-local gaussian_wrangler
   
 build: false
 
 test_script:
-  - pytest -v --cov=nrel_tools nrel_tools\\tests
+  - pytest -v --cov=gaussian_wrangler gaussian_wrangler\\tests

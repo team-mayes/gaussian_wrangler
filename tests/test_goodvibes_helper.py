@@ -1,6 +1,6 @@
 import unittest
 import os
-from nrel_tools.goodvibes_helper import main
+from gaussian_wrangler.goodvibes_helper import main
 from common_wrangler.common import diff_lines, silent_remove, capture_stdout, capture_stderr
 import logging
 

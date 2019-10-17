@@ -1,6 +1,6 @@
 import unittest
 import os
-from nrel_tools.gausscom2pdb import main
+from gaussian_wrangler.gausscom2pdb import main
 from common_wrangler.common import diff_lines, silent_remove, capture_stdout, capture_stderr
 import logging
 
@@ -102,25 +102,3 @@ class TestGaussCom2pdb(unittest.TestCase):
         with capture_stderr(main, test_input) as output:
             self.assertTrue("Atom types do not match" in output)
         silent_remove(PDB_OUT, disable=DISABLE_REMOVE)
-
-    # def testGlu(self):
-    #     try:
-    #         gauscom2pdb.main(["-c", GLU_INI])
-    #         self.assertFalse(diff_lines(GLU_OUT, GOOD_GLU_OUT))
-    #     finally:
-    #         silent_remove(PDB_TPL_OUT)
-    #         silent_remove(GLU_OUT)
-    #
-    # def testGluDict(self):
-    #     try:
-    #         gauscom2pdb.main(["-c", GLU_DICT_INI])
-    #         self.assertFalse(diff_lines(GLU_OUT, GOOD_GLU_OUT))
-    #         with open(DEF_DICT_OUT, 'r') as d_file:
-    #             dict_test = json.load(d_file)
-    #         with open(GOOD_DICT, 'r') as d_file:
-    #             dict_good = json.load(d_file)
-    #         self.assertEqual(dict_test, dict_good)
-    #     finally:
-    #         silent_remove(PDB_TPL_OUT)
-    #         silent_remove(GLU_OUT)
-    #         silent_remove(DEF_DICT_OUT)

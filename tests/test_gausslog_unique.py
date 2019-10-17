@@ -1,6 +1,6 @@
 import unittest
 import os
-from nrel_tools.gausslog_unique import main
+from gaussian_wrangler.gausslog_unique import main
 from common_wrangler.common import capture_stdout, capture_stderr
 import logging
 
