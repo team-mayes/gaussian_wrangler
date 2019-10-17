@@ -13,7 +13,8 @@ import sys
 import argparse
 from common_wrangler.common import (InvalidDataError, warning, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                     process_gausslog_file, create_out_fname, write_csv,
-                                    MAX_FORCE, RMS_FORCE, MAX_DISPL, RMS_DISPL, CONVERG, CONVERG_ERR, CONVERG_STEP_DICT)
+                                    MAX_FORCE, RMS_FORCE, MAX_DISPL, RMS_DISPL, CONVERG, CONVERG_ERR, CONVERG_STEP_DICT,
+                                    check_file_and_file_list)
 
 try:
     # noinspection PyCompatibility
@@ -90,10 +91,6 @@ def parse_cmdline(argv):
         args = parser.parse_args(argv)
         if args.step_converg and args.final_converg:
             raise InvalidDataError("Choose either the '-s' or '-z' option.")
-    except IOError as e:
-        warning("Problems reading file:", e)
-        parser.print_help()
-        return args, IO_ERROR
     except (KeyError, InvalidDataError, MissingSectionHeaderError, SystemExit) as e:
         if hasattr(e, 'code') and e.code == 0:
             return args, GOOD_RET
@@ -190,12 +187,7 @@ def main(argv=None):
     try:
         # first make list of files to check, either by a directory search or from a specified file name and/or list
         if args.file_name or args.file_list:
-            if args.file_name:
-                check_file_list.append(args.file_name)
-            if args.file_list:
-                with open(args.file_list) as f:
-                    for line in f:
-                        check_file_list.append(line.strip())
+            check_file_list = check_file_and_file_list(args.file_name, args.file_list)
         else:
             # check input for specified search directory (if specified)
             if args.directory:

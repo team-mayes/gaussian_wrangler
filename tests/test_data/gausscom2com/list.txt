@@ -1,0 +1,2 @@
+tests/test_data/gausscom2com/acyl-min_ts_110.gjf
+tests/test_data/gausscom2com/acyl-min_ts_138.gjf

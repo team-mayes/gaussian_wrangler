@@ -134,19 +134,26 @@ def process_gausscom_file(cfg, gausscom_file, pdb_tpl_content):
             pdb_data_section = []
         section = SEC_HEAD
         atom_id = 0
-        lines_after_header = 4  # blank line, description, blank line, charge & multiplicity
 
         for line in d:
             line = line.strip()
             # not currently keeping anything from the header; just check num atoms
             if section == SEC_HEAD:
-                if GAU_HEADER_PAT.match(line):
-                    continue
-                elif lines_after_header > 0:
-                    lines_after_header -= 1
-                    if lines_after_header == 0:
-                        section = SEC_ATOMS
-                    continue
+                # there may be some instructions (which start with %, and can have some blank lines) before the
+                #    "route card lines" (which start with #)
+                while not GAU_HEADER_PAT.match(line):
+                    line = next(d).strip()
+                # skip first line of route card
+                line = next(d).strip()
+                # for "route card" and then description, there may be more than one header line; look for blank line
+                for i in range(2):
+                    while len(line) > 0:
+                        line = next(d).strip()
+                    # now move past the blank line, and get the content of the following line
+                    line = next(d).strip()
+                # now on charge, multiplicity line, which we also skip with the "continue"
+                section = SEC_ATOMS
+                continue
 
             elif section == SEC_ATOMS:
                 if len(line) == 0:

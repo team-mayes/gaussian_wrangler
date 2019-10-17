@@ -11,7 +11,7 @@ import argparse
 from common_wrangler.common import (InvalidDataError, warning, create_out_fname, list_to_file, ATOM_NUM_DICT,
                                     NUM_ATOMS, GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, GAU_CHARGE_PAT, BASE_NAME, SEC_HEAD,
-                                    SEC_ATOMS, SEC_TAIL)
+                                    SEC_ATOMS, SEC_TAIL, check_file_and_file_list)
 
 
 try:
@@ -28,9 +28,12 @@ __author__ = 'hmayes'
 
 
 # Config keys
-DEF_LIST_FILE = 'log_list.txt'
 GAUSSLOG_FILES_FILE = 'gausslog_list_file'
 OUT_BASE_DIR = 'output_directory'
+
+# for reading com files
+ATOM_TYPES = 'atom_type_dict'
+ATOM_HOLDER_PAT = re.compile(r"{atoms}")
 
 # For log file processing
 SEC_INITIAL_COORDINATES = 'initial_coordinates_section'
@@ -48,10 +51,8 @@ def parse_cmdline(argv):
     parser = argparse.ArgumentParser(description='Creates Gaussian input files from Gaussian output files, given a '
                                                  'template file.')
     parser.add_argument("-f", "--file", help="The location of the Gaussian output file.")
-    parser.add_argument("-l", "--list", help="The location of the list of Gaussian output files. "
-                                             "The default file name is {}, located in the "
-                                             "base directory where the program as run.".format(DEF_LIST_FILE),
-                        default=DEF_LIST_FILE)
+    parser.add_argument("-l", "--list", help="The location of the list of Gaussian output files. ",
+                        default=None)
     parser.add_argument("-t", "--tpl", help="The location of the Gaussian input template file.")
     parser.add_argument("-e", "--low_energy", help="Flag to take the lowest energy, rather than last, coordinates. "
                                                    "The default is {}.".format(False),
@@ -207,7 +208,7 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
 
 
 def process_gausscom_tpl(com_tpl_file, check_for_charge_mult):
-    com_tpl_content = {SEC_HEAD: [], SEC_ATOMS: [], SEC_TAIL: ['', ]}
+    com_tpl_content = {SEC_HEAD: [], SEC_ATOMS: [], SEC_TAIL: ['', ], ATOM_TYPES: []}
     section = SEC_HEAD
     num_blank_lines_read = 0
     with open(com_tpl_file) as d:
@@ -223,11 +224,13 @@ def process_gausscom_tpl(com_tpl_file, check_for_charge_mult):
                 if num_blank_lines_read == 2:
                     section = SEC_ATOMS
             elif section == SEC_ATOMS:
-                if len(line) == 0:
+                if len(line) == 0 or ATOM_HOLDER_PAT.match(line):
                     section = SEC_TAIL
                     continue
                 line_split = line.split()
-                # If there are 5 entries, that means that there is freeze/no freeze column to keep
+                # To just get the clean type, may have to remove (fragment=x)
+                com_tpl_content[ATOM_TYPES].append(line_split[0].split('(')[0])
+                # If there are 5 entries, that means that there is a freeze/no freeze column to keep
                 if len(line_split) == 5:
                     com_tpl_content[SEC_ATOMS].append("{:2}{:>8}".format(line_split[0], line_split[1]))
                 else:
@@ -267,17 +270,9 @@ def main(argv=None):
         return ret
 
     try:
-        # Make sure there are log files to process
-        gausslog_files = []
-        if os.path.isfile(args.list):
-            with open(args.list) as f:
-                for data_file in f:
-                    gausslog_files.append(data_file.strip())
-        if args.file is not None:
-            gausslog_files.append(args.file)
-        if len(gausslog_files) == 0:
-            raise InvalidDataError("No files to process: no single log file specified and "
-                                   "no list of files found")
+        # Make sure there are files to process
+        gausslog_files = check_file_and_file_list(args.file, args.list)
+
         # and a template file to process
         if not args.tpl:
             raise InvalidDataError("No template file ('-t' option) specified")

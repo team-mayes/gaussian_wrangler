@@ -90,12 +90,8 @@ class TestCheckGaussNoOut(unittest.TestCase):
 
     def testDirInsteadOfFile(self):
         test_input = ["-f", SUB_DATA_DIR, "-z"]
-        try:
-            with capture_stderr(main, test_input) as output:
-                self.assertTrue("Is a directory" in output)
-        finally:
-            silent_remove(FOR_HARTREE_DIR, disable=DISABLE_REMOVE)
-            pass
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("Problems reading file" in output)
 
 
 class TestCheckGauss(unittest.TestCase):

@@ -162,3 +162,6 @@ tests/test_data/goodvibes_helper/aea_prod_vibes.dat
 /tests/test_data/gausslog_unique/hexyl_acrylate_419_conv_steps.csv
 /tests/test_data/gausslog_unique/hexyl_acrylate_239_conv_steps.csv
 /tests/test_data/check_gauss/dioxolan4ol_ts4_ts_conv_steps.csv
+/tests/test_data/gausscom2com/acyl-min_ts_110.com
+/tests/test_data/gausscom2com/acyl-min_ts_138.com
+/tests/test_data/gausscom2com/pet_mono_901.com

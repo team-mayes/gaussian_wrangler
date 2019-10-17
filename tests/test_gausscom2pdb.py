@@ -81,7 +81,7 @@ class TestGaussCom2pdb(unittest.TestCase):
             main(test_input)
             self.assertFalse(diff_lines(PDB_OUT, GOOD_PDB_OUT))
         finally:
-            # silent_remove(PDB_OUT, disable=DISABLE_REMOVE)
+            silent_remove(PDB_OUT, disable=DISABLE_REMOVE)
             pass
 
     def testNoTplIni(self):
@@ -92,7 +92,6 @@ class TestGaussCom2pdb(unittest.TestCase):
             main(test_input)
             self.assertFalse(diff_lines(PDB_OUT, GOOD_NO_TPL_OUT))
         finally:
-            # silent_remove(PDB_TPL_OUT)
             silent_remove(PDB_OUT, disable=DISABLE_REMOVE)
 
     def testBadAtomIni(self):
