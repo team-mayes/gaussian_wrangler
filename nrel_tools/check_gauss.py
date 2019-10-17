@@ -163,9 +163,17 @@ def check_convergence(check_file_list, step_converg):
         if step_converg:
             out_fname = create_out_fname(fname, prefix='', suffix='_conv_steps', ext='.csv')
             # create list of dicts for each step
+            step_list = []
             for step_num in log_content[CONVERG_STEP_DICT].keys():
-                pass
-            write_csv(log_content, out_fname, headers, extrasaction="ignore", mode='w',
+                step_list.append({F_NAME: log_content[F_NAME], STEP_NUM: step_num,
+                                  MAX_FORCE:log_content[CONVERG_STEP_DICT][step_num][MAX_FORCE],
+                                  RMS_FORCE:log_content[CONVERG_STEP_DICT][step_num][RMS_FORCE],
+                                  MAX_DISPL:log_content[CONVERG_STEP_DICT][step_num][MAX_DISPL],
+                                  RMS_DISPL:log_content[CONVERG_STEP_DICT][step_num][RMS_DISPL],
+                                  CONVERG:log_content[CONVERG_STEP_DICT][step_num][CONVERG],
+                                  CONVERG_ERR:log_content[CONVERG_STEP_DICT][step_num][CONVERG_ERR],
+                                  })
+            write_csv(step_list, out_fname, headers, extrasaction="ignore", mode='w',
                       quote_style=csv.QUOTE_NONNUMERIC, round_digits=6)
         else:
             print("{:36} {:11.4f} {:}".format(log_content[headers[0]], log_content[headers[1]],

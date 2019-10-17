@@ -15,13 +15,19 @@ TEST_DIR = os.path.dirname(__file__)
 MAIN_DIR = os.path.dirname(TEST_DIR)
 DATA_DIR = os.path.join(TEST_DIR, 'test_data')
 SUB_DATA_DIR = os.path.join(DATA_DIR, 'check_gauss')
+ALT_DATA_DIR = os.path.join(DATA_DIR, 'gausslog_unique')
 
 NORM_TERM_LOG = os.path.join(SUB_DATA_DIR, 'pet_mono_637_tzvp.tpl')
 TEMP_NORM_TERM_LOG = os.path.join(SUB_DATA_DIR, 'pet_mono_637_tzvp.log')
 FOR_HARTREE_DIR = os.path.join(MAIN_DIR, 'for_hartree')
 MOVED_FILE = os.path.join(FOR_HARTREE_DIR, 'pet_mono_637_tzvp.log')
 SINGLE_FILE = os.path.join(SUB_DATA_DIR, 'me2propprpnt_7.log')
+
 LIST_FILE = os.path.join(SUB_DATA_DIR, 'list.txt')
+CONV_239_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_239_conv_steps.csv')
+CONV_419_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_419_conv_steps.csv')
+GOOD_CONV_239_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_239_conv_steps_good.csv')
+GOOD_CONV_419_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_419_conv_steps_good.csv')
 
 GOOD_OUT = "The following files completed normally:\n" \
            "    tests/test_data/check_gauss/pet_mono_637_tzvp.log\n" \
@@ -123,11 +129,13 @@ class TestCheckGauss(unittest.TestCase):
         with capture_stdout(main, test_input) as output:
             self.assertTrue(output == good_out)
 
-    # def testListEachStepConvergence(self):
-    #     test_input = ["-l", LIST_FILE, "-s"]
-    #     main(test_input)
-        # good_out = 'File                                 Convergence Convergence_Error\n' \
-        #            'hexyl_acrylate_419.log                    0.0706 False\n' \
-        #            'hexyl_acrylate_239.log                    1.1100 False\n'
-        # with capture_stdout(main, test_input) as output:
-        #     self.assertTrue(output == good_out)
+    def testListEachStepConvergence(self):
+        test_input = ["-l", LIST_FILE, "-s"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(CONV_239_OUT, GOOD_CONV_239_OUT))
+            self.assertFalse(diff_lines(CONV_419_OUT, GOOD_CONV_419_OUT))
+        finally:
+            silent_remove(CONV_239_OUT, disable=DISABLE_REMOVE)
+            silent_remove(CONV_419_OUT, disable=DISABLE_REMOVE)
+            pass
