@@ -23,12 +23,6 @@ FOR_HARTREE_DIR = os.path.join(MAIN_DIR, 'for_hartree')
 MOVED_FILE = os.path.join(FOR_HARTREE_DIR, 'pet_mono_637_tzvp.log')
 SINGLE_FILE = os.path.join(SUB_DATA_DIR, 'me2propprpnt_7.log')
 
-LIST_FILE = os.path.join(SUB_DATA_DIR, 'list.txt')
-CONV_239_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_239_conv_steps.csv')
-CONV_419_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_419_conv_steps.csv')
-GOOD_CONV_239_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_239_conv_steps_good.csv')
-GOOD_CONV_419_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_419_conv_steps_good.csv')
-
 GOOD_OUT = "The following files completed normally:\n" \
            "    tests/test_data/check_gauss/pet_mono_637_tzvp.log\n" \
            "The following files may have failed:\n" \
@@ -38,6 +32,15 @@ GOOD_OUT = "The following files completed normally:\n" \
            "    tests/test_data/check_gauss/pet_mono_872_tzvp.log\n" \
            "The following files may still be running:\n" \
            "    tests/test_data/check_gauss/pet_mono_671_tzvp.log\n"
+
+LIST_FILE = os.path.join(SUB_DATA_DIR, 'list.txt')
+CONV_239_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_239_conv_steps.csv')
+CONV_419_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_419_conv_steps.csv')
+GOOD_CONV_239_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_239_conv_steps_good.csv')
+GOOD_CONV_419_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_419_conv_steps_good.csv')
+
+DIOXOLAN_OUT = os.path.join(SUB_DATA_DIR, 'dioxolan4ol_ts4_ts_conv_steps.csv')
+GOOD_DIOXOLAN_OUT = os.path.join(SUB_DATA_DIR, 'dioxolan4ol_ts4_ts_conv_steps_good.csv')
 
 
 class TestCheckGaussNoOut(unittest.TestCase):
@@ -140,4 +143,14 @@ class TestCheckGauss(unittest.TestCase):
         finally:
             silent_remove(CONV_239_OUT, disable=DISABLE_REMOVE)
             silent_remove(CONV_419_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testOneEachStepOut(self):
+        # tests searching directory with checking convergence, plus using an alternate extension
+        test_input = ["-s", "-d", SUB_DATA_DIR, "-e", ".out"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(DIOXOLAN_OUT, GOOD_DIOXOLAN_OUT))
+        finally:
+            silent_remove(DIOXOLAN_OUT, disable=DISABLE_REMOVE)
             pass

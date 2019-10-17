@@ -28,7 +28,6 @@ __author__ = 'hmayes'
 # Constants #
 NORM_TERM_PAT = re.compile(r"Normal termination of Gaussian*")
 FAIL_OPEN_FILE = re.compile(r"open-new-file*")
-# FAIL_FILE_LEN = re.compile(r"File lengths (MBytes): RWF=*")
 FAIL_RDCARD = re.compile(r"In source file rdcard*")
 FAIL_NTR = re.compile(r"NtrErr Called from FileIO*")
 FAIL_LEN_PAT = re.compile(r"File lengths (MBytes): {2}RWF=.*")
