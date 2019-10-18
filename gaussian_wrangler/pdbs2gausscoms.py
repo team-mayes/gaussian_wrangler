@@ -15,7 +15,8 @@ from common_wrangler.common import (list_to_file, InvalidDataError, create_out_f
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, PDB_LINE_TYPE_LAST_CHAR,
                                     PDB_MOL_NUM_LAST_CHAR, PDB_Z_LAST_CHAR, PDB_BEFORE_ELE_LAST_CHAR,
                                     PDB_ELE_LAST_CHAR, PDB_ATOM_NUM_LAST_CHAR, PDB_ATOM_TYPE_LAST_CHAR,
-                                    process_gausscom_file, MAIN_SEC, SEC_HEAD, SEC_TAIL)
+                                    MAIN_SEC, SEC_HEAD, SEC_TAIL)
+from gaussian_wrangler.gw_common import (process_gausscom_file)
 
 try:
     # noinspection PyCompatibility

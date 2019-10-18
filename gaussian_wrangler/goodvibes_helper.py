@@ -15,7 +15,9 @@ import numpy as np
 # from goodvibes import GoodVibes
 from common_wrangler.common import (InvalidDataError, warning, RG, KB, H, EHPART_TO_KCAL_MOL,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                                    write_csv, silent_remove, create_out_fname, make_fig, CHARGE, MULT, STOICH)
+                                    write_csv, silent_remove, create_out_fname, make_fig, )
+from gaussian_wrangler.gw_common import (CHARGE, MULT, STOICH)
+
 
 try:
     # noinspection PyCompatibility

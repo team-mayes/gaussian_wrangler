@@ -10,8 +10,9 @@ import sys
 import argparse
 from common_wrangler.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file,
                                     process_pdb_file, MAIN_SEC, SEC_HEAD, SEC_ATOMS, SEC_TAIL, PDB_FORMAT, NUM_ATOMS,
-                                    ATOM_NUM_DICT, GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT, GOOD_RET, INPUT_ERROR,
-                                    IO_ERROR, INVALID_DATA, silent_remove)
+                                    ATOM_NUM_DICT, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, silent_remove)
+
+from gaussian_wrangler.gw_common import (GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT)
 
 try:
     # noinspection PyCompatibility

@@ -9,8 +9,9 @@ import sys
 import argparse
 from common_wrangler.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                                    ATOM_TYPE, ATOM_COORDS, process_gausscom_file, MAIN_SEC,
-                                    CHARGE, MULT, process_gausslog_file, calc_dist, SEC_ATOMS)
+                                    ATOM_TYPE, ATOM_COORDS, MAIN_SEC, calc_dist, SEC_ATOMS)
+
+from gaussian_wrangler.gw_common import process_gausscom_file, process_gausslog_file, CHARGE, MULT
 
 try:
     # noinspection PyCompatibility

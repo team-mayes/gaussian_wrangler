@@ -9,10 +9,11 @@ import argparse
 import os
 import sys
 
-from common_wrangler.common import (InvalidDataError, warning, create_out_fname, list_to_file, GAU_HEADER_PAT,
+from common_wrangler.common import (InvalidDataError, warning, create_out_fname, list_to_file,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, check_file_and_file_list)
 
 from gaussian_wrangler.gausslog2com import process_gausscom_tpl, ATOM_TYPES
+from gaussian_wrangler.gw_common import GAU_HEADER_PAT
 
 try:
     # noinspection PyCompatibility

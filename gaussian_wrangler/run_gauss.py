@@ -11,9 +11,11 @@ import re
 import os
 
 from common_wrangler.common import (InvalidDataError, warning, process_cfg, create_out_fname, GOOD_RET, INPUT_ERROR,
-                                    IO_ERROR, INVALID_DATA, GAU_HEADER_PAT, read_tpl, InvalidInputError, str_to_file,
+                                    IO_ERROR, INVALID_DATA, read_tpl, InvalidInputError, str_to_file,
                                     get_fname_root, OUT_DIR, MAIN_SEC)
 from common_wrangler.fill_tpl import fill_save_tpl
+
+from gaussian_wrangler.gw_common import GAU_HEADER_PAT
 
 try:
     # noinspection PyCompatibility

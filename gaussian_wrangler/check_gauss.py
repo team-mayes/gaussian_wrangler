@@ -12,9 +12,10 @@ import re
 import sys
 import argparse
 from common_wrangler.common import (InvalidDataError, warning, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                                    process_gausslog_file, create_out_fname, write_csv,
-                                    MAX_FORCE, RMS_FORCE, MAX_DISPL, RMS_DISPL, CONVERG, CONVERG_ERR, CONVERG_STEP_DICT,
-                                    check_file_and_file_list)
+                                    create_out_fname, write_csv, check_file_and_file_list)
+
+from gaussian_wrangler.gw_common import (MAX_FORCE, RMS_FORCE, MAX_DISPL, RMS_DISPL, CONVERG, CONVERG_ERR,
+                                         process_gausslog_file, CONVERG_STEP_DICT)
 
 try:
     # noinspection PyCompatibility

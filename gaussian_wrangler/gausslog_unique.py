@@ -8,8 +8,8 @@ import os
 import sys
 import argparse
 from common_wrangler.common import (InvalidDataError, warning,
-                                    GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, CONVERG, DIHES, STOICH,
-                                    process_gausslog_file, ENERGY, ENTHALPY, CONVERG_ERR)
+                                    GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, DIHES)
+from gaussian_wrangler.gw_common import (STOICH, CONVERG, ENERGY, ENTHALPY, CONVERG_ERR, process_gausslog_file)
 
 try:
     # noinspection PyCompatibility
