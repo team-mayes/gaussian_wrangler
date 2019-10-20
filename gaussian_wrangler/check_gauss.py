@@ -59,6 +59,8 @@ def parse_cmdline(argv):
     # initialize the parser object:
     parser = argparse.ArgumentParser(description='Checks for normal termination of Gaussian output files in a '
                                                  'specified directory, and moves them to a new location.')
+    parser.add_argument("-b", "--best", help="Check convergence of each step and list the convergence of the best 10 "
+                                             "steps, sorted by convergence.", action="store_true", default=False)
     parser.add_argument("-d", "--directory", help="The directory where to look for Gaussian output to check for "
                                                   "normal termination. The default is the current directory.",
                         default=None)
@@ -84,7 +86,8 @@ def parse_cmdline(argv):
                                                      "skipped. The default is False.",
                         action="store_true", default=False)
     parser.add_argument("-t", "--to_step", help="Check convergence of each step only to provided step number, and "
-                                                "before printing to standard out, sort by convergence.", default=False)
+                                                "before printing to standard out, sort by convergence.",
+                        default=False)
     parser.add_argument("-z", "--final_converg", help="Report the final convergence value for the files in the "
                                                       "directory or those specified with the '-f' or '-l' options. "
                                                       "When this option is chosen, the check for normal termination "
@@ -93,8 +96,9 @@ def parse_cmdline(argv):
     args = None
     try:
         args = parser.parse_args(argv)
-        if args.to_step:
+        if args.to_step or args.best:
             args.step_converg = True
+        if args.to_step:
             try:
                 args.to_step = int(args.to_step)
             except ValueError:
@@ -157,12 +161,13 @@ def check_termination(args, check_file_list):
             print("    {}".format(os.path.relpath(fname)))
 
 
-def check_convergence(check_file_list, step_converg, last_step):
+def check_convergence(check_file_list, step_converg, last_step, best_conv):
     """
     Reads a Gaussian output file to check convergence
     :param check_file_list: list of file names
     :param step_converg: boolean; if True, capture convergence of each step. If false, only the final convergence.
     :param last_step: None or int; if int, the last step number to check for convergence
+    :param best_conv: Boolean; if true, print ten steps with the best convergence
     :return: nothing: either saves a file or prints to stdout
     """
     if step_converg:
@@ -190,11 +195,19 @@ def check_convergence(check_file_list, step_converg, last_step):
                                   CONVERG: log_content[CONVERG_STEP_DICT][step_num][CONVERG],
                                   CONVERG_ERR: log_content[CONVERG_STEP_DICT][step_num][CONVERG_ERR],
                                   })
-            if last_step:
+            if last_step or best_conv:
                 sorted_by_converg = sorted(step_list, key=itemgetter(CONVERG))
-                print("Steps sorted by converged to step number {} for file: {}".format(last_step, log_content[F_NAME]))
+                if last_step:
+                    print("Steps sorted by convergence to step number {} for file: {}".format(last_step,
+                                                                                            log_content[F_NAME]))
+                    stop_step = last_step
+                else:
+                    print("Best (up to 10) steps sorted by convergence for file: {}".format(log_content[F_NAME]))
+                    stop_step = 10
                 print("    StepNum  Convergence")
-                for step_dict in sorted_by_converg:
+                for print_num, step_dict in enumerate(sorted_by_converg):
+                    if print_num == stop_step:
+                        return
                     print("    {:7} {:10.3f}".format(step_dict[STEP_NUM], step_dict[CONVERG]))
             else:
                 write_csv(step_list, out_fname, headers, extrasaction="ignore", round_digits=6)
@@ -234,7 +247,7 @@ def main(argv=None):
 
         # now check either for convergence or termination
         if args.step_converg or args.final_converg:
-            check_convergence(check_file_list, args.step_converg, args.to_step)
+            check_convergence(check_file_list, args.step_converg, args.to_step, args.best)
         else:
             # If output directory does not exist, make it:
             if not os.path.exists(args.output_directory):

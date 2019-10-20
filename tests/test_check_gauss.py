@@ -82,8 +82,9 @@ class TestCheckGaussNoOut(unittest.TestCase):
 
     def testConflictingOptions(self):
         test_input = ["-s", "-z"]
-        if logger.isEnabledFor(logging.DEBUG):
-            main(test_input)
+        main(test_input)
+        # if logger.isEnabledFor(logging.DEBUG):
+        #     main(test_input)
         with capture_stderr(main, test_input) as output:
             self.assertTrue("Choose either" in output)
         silent_remove(FOR_HARTREE_DIR, disable=DISABLE_REMOVE)
@@ -154,11 +155,32 @@ class TestCheckGauss(unittest.TestCase):
     def testOneEachStopAtStep(self):
         # tests searching directory with checking convergence, plus using an alternate extension
         test_input = ["-t", "37", "-d", SUB_DATA_DIR, "-e", ".out"]
-        good_output = "Steps sorted by converged to step number 37 for file: dioxolan4ol_ts4_ts.out\n" \
+        good_output = "Steps sorted by convergence to step number 37 for file: dioxolan4ol_ts4_ts.out\n" \
                       "    StepNum  Convergence\n" \
+                      "         35    161.099\n" \
                       "         37    211.219\n" \
                       "          1    342.935\n" \
-                      "         36    392.523\n"
-        main(test_input)
-        # with capture_stdout(main, test_input) as output:
-        #     self.assertTrue(output == good_output)
+                      "         36    392.523\n" \
+                      "         34    456.271\n"
+        # main(test_input)
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue(output == good_output)
+
+    def testBest10Steps(self):
+        # tests searching directory with checking convergence, plus using an alternate extension
+        test_input = ["-b", "-d", SUB_DATA_DIR, "-e", ".out"]
+        good_output = "Best (up to 10) steps sorted by convergence for file: dioxolan4ol_ts4_ts.out\n" \
+                      "    StepNum  Convergence\n" \
+                      "         43      1.031\n" \
+                      "         44      1.146\n" \
+                      "         42     42.515\n" \
+                      "         41     42.785\n" \
+                      "         40     56.686\n" \
+                      "         39    102.103\n" \
+                      "         35    161.099\n" \
+                      "         37    211.219\n" \
+                      "         38    252.513\n" \
+                      "          1    342.935\n"
+        # main(test_input)
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue(output == good_output)
