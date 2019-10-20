@@ -150,3 +150,15 @@ class TestCheckGauss(unittest.TestCase):
         finally:
             silent_remove(DIOXOLAN_OUT, disable=DISABLE_REMOVE)
             pass
+
+    def testOneEachStopAtStep(self):
+        # tests searching directory with checking convergence, plus using an alternate extension
+        test_input = ["-t", "37", "-d", SUB_DATA_DIR, "-e", ".out"]
+        good_output = "Steps sorted by converged to step number 37 for file: dioxolan4ol_ts4_ts.out\n" \
+                      "    StepNum  Convergence\n" \
+                      "         37    211.219\n" \
+                      "          1    342.935\n" \
+                      "         36    392.523\n"
+        main(test_input)
+        # with capture_stdout(main, test_input) as output:
+        #     self.assertTrue(output == good_output)

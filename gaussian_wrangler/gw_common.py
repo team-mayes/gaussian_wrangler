@@ -89,7 +89,8 @@ def process_gausscom_file(gausscom_file):
     return gausscom_content
 
 
-def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, find_step_converg=False):
+def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, find_step_converg=False,
+                          last_step_to_read=None):
     # Grabs and stores in gausslog_content as a dictionary with the keys:
     #    (fyi: unlike process_gausscom_file, no SEC_HEAD is collected)
     #    CHARGE: overall charge (only) as int
@@ -109,11 +110,12 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                 line = line.strip()
 
                 if section == SEC_HEAD:
-                    # first find charge & multiplicity
+                    # first find charge & multiplicity; first thing encountered to keep
                     if GAU_CHARGE_PAT.match(line):
                         split_line = line.split('=')
                         gausslog_content[CHARGE] = int(split_line[1].split()[0])
                         gausslog_content[MULT] = int(split_line[2].split()[0])
+                        # Dih is the next thing to encounter, which is found in "tail"
                         section = SEC_TAIL
 
                 elif section == SEC_TAIL:
@@ -152,15 +154,21 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                         line = next(d).strip()
 
                     # Sometimes there is energy & step number before hitting enthalpy, but not in CalcAll jobs
-                    while not (GAU_E_PAT.match(line) or GAU_H_PAT.match(line) or GAU_CONVERG_PAT.match(line)):
+                    while not (GAU_E_PAT.match(line) or GAU_H_PAT.match(line)):
                         line = next(d).strip()
                     if GAU_E_PAT.match(line):
                         gausslog_content[ENERGY] = float(line.split('=')[1].split()[0])
                         line = next(d).strip()
 
-                    # if thermo right after coordinates, could be CalcAll job, and then done
-                    # or in Freq job, thermo before step number. Thermo can also come after SCF in Freq job
-                    while not (GAU_E_PAT.match(line) or GAU_H_PAT.match(line) or GAU_STEP_PAT.match(line)):
+                    # In CalcAll job, thermo after Dih then coordinates, then done reading:
+                    #     first step: Charge, Coord, Dih, Stoich, SCF, Step, Converg
+                    #     then, if not last step: Coord, SCF, Step, Converg
+                    #     if last step: Coord, SCF, Step, Converg, Dih, Coord (repeat), Thermo
+                    # In Opt then Freq job:
+                    #     First and middle steps the same
+                    #     Importantly, in Freq: SCF, **Thermo**, then step, conv dih
+                    # Thus, Step always after SCF Done, but sometimes thermo in the middle
+                    while not (GAU_H_PAT.match(line) or GAU_STEP_PAT.match(line)):
                         line = next(d).strip()
                     if GAU_H_PAT.match(line):
                         gausslog_content[ENTHALPY] = float(line.split('=')[1].strip())
@@ -213,6 +221,11 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                                                                              RMS_DISPL: ind_converg[3],
                                                                              CONVERG: converg,
                                                                              CONVERG_ERR: converge_error}
+                            # if want to stop after a particular step in a job (so we only care when we are keeping
+                            #    track of steps), this is the place to do it,
+                            #    as the last thing kept from a middle step is convergence
+                            if last_step_to_read and last_step_to_read == step_num:
+                                return gausslog_content
                         else:
                             gausslog_content[CONVERG] = converg
                             gausslog_content[CONVERG_ERR] = converge_error
@@ -220,6 +233,6 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                     section = SEC_TAIL
                     atom_id = 1
         except StopIteration:
-            pass
+            return gausslog_content
 
     return gausslog_content

@@ -6,11 +6,12 @@ If appears to have failed, add to a text file for investigation.
 
 from __future__ import print_function
 
-import csv
 import os
 import re
 import sys
 import argparse
+from operator import itemgetter
+
 from common_wrangler.common import (InvalidDataError, warning, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                     create_out_fname, write_csv, check_file_and_file_list)
 
@@ -82,6 +83,8 @@ def parse_cmdline(argv):
                                                      "this option is chosen, the check for normal termination is "
                                                      "skipped. The default is False.",
                         action="store_true", default=False)
+    parser.add_argument("-t", "--to_step", help="Check convergence of each step only to provided step number, and "
+                                                "before printing to standard out, sort by convergence.", default=False)
     parser.add_argument("-z", "--final_converg", help="Report the final convergence value for the files in the "
                                                       "directory or those specified with the '-f' or '-l' options. "
                                                       "When this option is chosen, the check for normal termination "
@@ -90,8 +93,14 @@ def parse_cmdline(argv):
     args = None
     try:
         args = parser.parse_args(argv)
+        if args.to_step:
+            args.step_converg = True
+            try:
+                args.to_step = int(args.to_step)
+            except ValueError:
+                raise InvalidDataError("When the '-t' option is used, an integer but be provided.")
         if args.step_converg and args.final_converg:
-            raise InvalidDataError("Choose either the '-s' or '-z' option.")
+            raise InvalidDataError("Choose either the '-s', '-t', or '-z' option.")
     except (KeyError, InvalidDataError, MissingSectionHeaderError, SystemExit) as e:
         if hasattr(e, 'code') and e.code == 0:
             return args, GOOD_RET
@@ -148,17 +157,28 @@ def check_termination(args, check_file_list):
             print("    {}".format(os.path.relpath(fname)))
 
 
-def check_convergence(check_file_list, step_converg):
+def check_convergence(check_file_list, step_converg, last_step):
+    """
+    Reads a Gaussian output file to check convergence
+    :param check_file_list: list of file names
+    :param step_converg: boolean; if True, capture convergence of each step. If false, only the final convergence.
+    :param last_step: None or int; if int, the last step number to check for convergence
+    :return: nothing: either saves a file or prints to stdout
+    """
     if step_converg:
         headers = STEP_CONVERG_HEADERS
     else:
         headers = FINAL_CONVERG_HEADERS
         print("{:36} {:11} {:}".format(*headers))
     for fname in check_file_list:
-        log_content = process_gausslog_file(fname, find_converg=True, find_step_converg=step_converg)
+        log_content = process_gausslog_file(fname, find_converg=True, find_step_converg=step_converg,
+                                            last_step_to_read=last_step)
         log_content[F_NAME] = os.path.basename(fname)
         if step_converg:
-            out_fname = create_out_fname(fname, prefix='', suffix='_conv_steps', ext='.csv')
+            if last_step:
+                out_fname = sys.stdout
+            else:
+                out_fname = create_out_fname(fname, prefix='', suffix='_conv_steps', ext='.csv')
             # create list of dicts for each step
             step_list = []
             for step_num in log_content[CONVERG_STEP_DICT].keys():
@@ -170,8 +190,14 @@ def check_convergence(check_file_list, step_converg):
                                   CONVERG: log_content[CONVERG_STEP_DICT][step_num][CONVERG],
                                   CONVERG_ERR: log_content[CONVERG_STEP_DICT][step_num][CONVERG_ERR],
                                   })
-            write_csv(step_list, out_fname, headers, extrasaction="ignore", mode='w',
-                      quote_style=csv.QUOTE_NONNUMERIC, round_digits=6)
+            if last_step:
+                sorted_by_converg = sorted(step_list, key=itemgetter(CONVERG))
+                print("Steps sorted by converged to step number {} for file: {}".format(last_step, log_content[F_NAME]))
+                print("    StepNum  Convergence")
+                for step_dict in sorted_by_converg:
+                    print("    {:7} {:10.3f}".format(step_dict[STEP_NUM], step_dict[CONVERG]))
+            else:
+                write_csv(step_list, out_fname, headers, extrasaction="ignore", round_digits=6)
         else:
             print("{:36} {:11.4f} {:}".format(log_content[headers[0]], log_content[headers[1]],
                                               log_content[headers[2]]))
@@ -208,7 +234,7 @@ def main(argv=None):
 
         # now check either for convergence or termination
         if args.step_converg or args.final_converg:
-            check_convergence(check_file_list, args.step_converg)
+            check_convergence(check_file_list, args.step_converg, args.to_step)
         else:
             # If output directory does not exist, make it:
             if not os.path.exists(args.output_directory):
@@ -219,7 +245,7 @@ def main(argv=None):
         warning("Problems reading file:", e)
         return IO_ERROR
     except InvalidDataError as e:
-        warning("Problems reading data:", e)
+        warning("", e)
         return INVALID_DATA
 
     return GOOD_RET  # success

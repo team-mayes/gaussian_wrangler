@@ -1155,6 +1155,161 @@
  FormGI is forming the generalized inverse of G from B-inverse, IUseBI=4.
  Internal  Forces:  Max     0.000969927 RMS     0.000159571
  Search for a saddle point.
+ Step number  38 out of a maximum of  120
+ All quantities printed in internal units (Hartrees-Bohrs-Radians)
+ Swapping is turned off.
+ Update second derivatives using D2CorX and points   33   34   36   37   38
+ ITU=  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ ITU=  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+     Eigenvalues ---   -0.02965   0.00047   0.00342   0.00486   0.01122
+ ...
+ All quantities printed in internal units (Hartrees-Bohrs-Radians)
+ Swapping is turned off.
+ Update second derivatives using D2CorX and points   33   34   36   37   38
+ ITU=  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ ITU=  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+     Eigenvalues ---   -0.02965   0.00047   0.00342   0.00486   0.01122
+     Eigenvalues ---    0.47426   0.52875   0.57026   0.65819
+ Eigenvectors required to have negative eigenvalues:
+                          R13       R10       D13       D30       D27
+   1                   -0.59727   0.35681   0.18466  -0.16537   0.16531
+                          A18       A21       D43       R3        D46
+   1                   -0.15985   0.15832   0.14978  -0.14814  -0.14202
+ RFO step:  Lambda0=1.887175198D-05 Lambda=-3.26849732D-04.
+ Linear search not attempted -- option 19 set.
+ Iteration  1 RMS(Cart)=  0.06236495 RMS(Int)=  0.00578718
+ Iteration  2 RMS(Cart)=  0.00599535 RMS(Int)=  0.00008768
+ Iteration  3 RMS(Cart)=  0.00004781 RMS(Int)=  0.00007658
+ Iteration  4 RMS(Cart)=  0.00000000 RMS(Int)=  0.00007658
+ Variable       Old X    -DE/DX   Delta X   Delta X   Delta X     New X
+                                 (Linear)    (Quad)   (Total)
+    R1        2.44360  -0.00027   0.00000   0.00290   0.00290   2.44650
+    R2        2.44189  -0.00004   0.00000   0.00340   0.00340   2.44529
+...
+   D50       -3.10972   0.00008   0.00000   0.00055   0.00054  -3.10918
+   D51       -0.12978   0.00005   0.00000   0.00399   0.00398  -0.12580
+         Item               Value     Threshold  Converged?
+ Maximum Force            0.001483     0.000450     NO
+ RMS     Force            0.000204     0.000300     YES
+ Maximum Displacement     0.352043     0.001800     NO
+ RMS     Displacement     0.063549     0.001200     NO
+ Predicted change in Energy=-2.164573D-04
+ GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
+
+                          Input orientation:
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          6           0       -0.723142    0.334655    0.595130
+      2          8           0       -0.768409   -0.883690    1.030620
+      3          8           0       -1.111653    1.261619    1.410124
+      4          6           0       -1.466993    0.889417    2.755162
+      5          1           0       -2.284528    0.172957    2.738076
+      6          1           0       -0.602475    0.459508    3.256378
+      7          1           0       -1.771458    1.813799    3.232595
+      8          6           0       -0.149379    0.646679   -0.681530
+      9          1           0        1.084536    0.528826   -0.399433
+     10          8           0       -0.146417   -0.508592   -1.468287
+     11          6           0        1.079206   -1.231885   -1.210418
+     12          8           0        1.974786   -0.484814   -0.705819
+     13          6           0        1.009956   -2.555679   -1.440761
+     14          1           0       -0.430199   -1.512598    0.345854
+     15          1           0        0.135139   -2.967103   -1.919062
+     16          1           0        1.882264   -3.167721   -1.281422
+     17          6           0       -0.501223    1.933499   -1.375107
+     18          1           0       -0.580938    2.749489   -0.658531
+     19          1           0        0.277424    2.175478   -2.095694
+     20          1           0       -1.448055    1.838265   -1.908845
+ ---------------------------------------------------------------------
+                    Distance matrix (angstroms):
+                    1          2          3          4          5
+     1  C    0.000000
+     2  O    1.294630   0.000000
+     3  O    1.293993   2.205492   0.000000
+     4  C    2.350917   2.570209   1.440114   0.000000
+     5  H    2.656367   2.516054   2.079489   1.087184   0.000000
+...
+    20  H    6.045212   1.091071   1.773557   1.768023   0.000000
+ Symmetry turned off by external request.
+ Stoichiometry    C6H10O4
+ Framework group  C1[X(C6H10O4)]
+ Deg. of freedom    54
+ Full point group                 C1      NOp   1
+ Rotational constants (GHZ):           2.2246804           0.9384350           0.7683053
+ Standard basis: def2TZVP (5D, 7F)
+   370 basis functions,   590 primitive gaussians,   420 cartesian basis functions
+    39 alpha electrons       39 beta electrons
+       nuclear repulsion energy       579.5053287181 Hartrees.
+ NAtoms=   20 NActive=   20 NUniq=   20 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
+ Integral buffers will be    131072 words long.
+ Raffenetti 2 integral format.
+ Two-electron integral symmetry is turned off.
+ One-electron integrals computed using PRISM.
+   1 Symmetry operations used in ECPInt.
+ ECPInt:  NShTT=   11325 NPrTT=   34180 LenC2=   10875 LenP2D=   25338.
+ LDataN:  DoStor=T MaxTD1= 6 Len=  172
+ NBasis=   370 RedAO= T EigKep=  9.13D-05  NBF=   370
+ NBsUse=   370 1.00D-06 EigRej= -1.00D+00 NBFU=   370
+ Initial guess from the checkpoint file:  "/dev/shm/dioxolan4ol_ts4_ts.chk"
+ B after Tr=    -0.009206    0.002963   -0.003996
+         Rot=    0.999997    0.000367   -0.001941    0.001275 Ang=   0.27 deg.
+ ExpMin= 9.52D-02 ExpMax= 2.70D+04 ExpMxC= 9.22D+02 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
+ Harris functional with IExCor= 1009 and IRadAn=       5 diagonalized for initial guess.
+ HarFok:  IExCor= 1009 AccDes= 0.00D+00 IRadAn=         5 IDoV= 1 UseB2=F ITyADJ=14
+ ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
+ FoFCou: FMM=F IPFlag=           0 FMFlag=      100000 FMFlg1=           0
+         NFxFlg=           0 DoJE=T BraDBF=F KetDBF=T FulRan=T
+         wScrn=  0.000000 ICntrl=       500 IOpCl=  0 I1Cent=   200000004 NGrid=           0
+         NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
+ Symmetry not used in FoFCou.
+ Requested convergence on RMS density matrix=1.00D-08 within 400 cycles.
+ Requested convergence on MAX density matrix=1.00D-06.
+ Requested convergence on             energy=1.00D-06.
+ No special actions if energy rises.
+ Integral accuracy reduced to 1.0D-05 until final iterations.
+ Initial convergence to 1.0D-05 achieved.  Increase integral accuracy.
+ SCF Done:  E(RM062X) =  -535.455480862     A.U. after   13 cycles
+            NFock= 13  Conv=0.28D-08     -V/T= 2.0045
+ QCSCF skips out because SCF is already converged.
+   1 Symmetry operations used in ECPInt.
+ ECPInt:  NShTT=   11325 NPrTT=   34180 LenC2=   10875 LenP2D=   25338.
+ LDataN:  DoStor=T MaxTD1= 7 Len=  274
+ Calling FoFJK, ICntrl=      2127 FMM=F ISym2X=0 I1Cent= 0 IOpClX= 0 NMat=1 NMatS=1 NMatT=0.
+ LDataN:  DoStor=T MaxTD1= 7 Len=  274
+ Calling FoFJK, ICntrl=      2127 FMM=F ISym2X=0 I1Cent= 0 IOpClX= 0 NMat=1 NMatS=1 NMatT=0.
+ -------------------------------------------------------------------
+ Center     Atomic                   Forces (Hartrees/Bohr)
+ Number     Number              X              Y              Z
+ -------------------------------------------------------------------
+      1        6           0.003192916    0.002212643   -0.006676107
+      2        8           0.000753617   -0.000821087   -0.000301538
+      3        8          -0.000525647   -0.000190754    0.000194625
+      4        6           0.000181030    0.000299853    0.000130209
+      5        1          -0.000067513    0.000130942    0.000019568
+      6        1          -0.000085377   -0.000066572   -0.000028001
+      7        1           0.000072905    0.000017328   -0.000010857
+      8        6          -0.007382790   -0.002313322    0.006505728
+      9        1           0.004229412   -0.001106482    0.000450912
+     10        8           0.000468241    0.000172683    0.000078048
+     11        6          -0.001613236   -0.000374990   -0.001157987
+     12        8           0.000835079    0.001552880    0.001480733
+     13        6          -0.000056578    0.000425979    0.000000864
+     14        1          -0.000406322    0.000282439    0.000022447
+     15        1          -0.000029127    0.000037263    0.000022489
+     16        1           0.000002154   -0.000024087   -0.000005357
+     17        6           0.000119717   -0.000446212   -0.000570123
+     18        1           0.000363627   -0.000020289    0.000033137
+     19        1          -0.000050030    0.000136361   -0.000255212
+     20        1          -0.000002079    0.000095423    0.000066421
+ -------------------------------------------------------------------
+ Cartesian Forces:  Max     0.007382790 RMS     0.001797533
+
+ GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
+ Berny optimization.
+ FormGI is forming the generalized inverse of G from B-inverse, IUseBI=4.
+ Internal  Forces:  Max     0.005655871 RMS     0.000762428
+ Search for a saddle point.
  ...
  Step number  43 out of a maximum of  120
  All quantities printed in internal units (Hartrees-Bohrs-Radians)
