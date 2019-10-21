@@ -207,7 +207,8 @@ def check_convergence(check_file_list, step_converg, last_step, best_conv):
                 print("    StepNum  Convergence")
                 for print_num, step_dict in enumerate(sorted_by_converg):
                     if print_num == stop_step:
-                        return
+                        # break so can go to next file, if there is one
+                        break
                     print("    {:7} {:10.3f}".format(step_dict[STEP_NUM], step_dict[CONVERG]))
             else:
                 write_csv(step_list, out_fname, headers, extrasaction="ignore", round_digits=6)

@@ -184,3 +184,21 @@ class TestCheckGauss(unittest.TestCase):
         # main(test_input)
         with capture_stdout(main, test_input) as output:
             self.assertTrue(output == good_output)
+
+    def testBest10StepsList(self):
+        # tests searching directory with checking convergence, plus using an alternate extension
+        test_input = ["-b", "-l", LIST_FILE]
+        good_output = "Best (up to 10) steps sorted by convergence for file: hexyl_acrylate_419.log\n" \
+                      "    StepNum  Convergence\n" \
+                      "          8      0.071\n" \
+                      "          7      4.319\n" \
+                      "          1    666.063\n" \
+                      "Best (up to 10) steps sorted by convergence for file: hexyl_acrylate_239.log\n" \
+                      "    StepNum  Convergence\n" \
+                      "         17      1.110\n" \
+                      "         16      1.138\n" \
+                      "          1    749.248\n"
+        # main(test_input)
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue(output == good_output)
+            pass
