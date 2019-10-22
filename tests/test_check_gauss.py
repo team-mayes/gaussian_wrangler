@@ -42,6 +42,8 @@ GOOD_CONV_419_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_419_conv_steps_go
 DIOXOLAN_OUT = os.path.join(SUB_DATA_DIR, 'dioxolan4ol_ts4_ts_conv_steps.csv')
 GOOD_DIOXOLAN_OUT = os.path.join(SUB_DATA_DIR, 'dioxolan4ol_ts4_ts_conv_steps_good.csv')
 
+NOT_FROM_CHK_FILE = os.path.join(SUB_DATA_DIR, 'acyl-min_ts5.out')
+
 
 class TestCheckGaussNoOut(unittest.TestCase):
     # These test failure cases that do not produce output files
@@ -160,7 +162,7 @@ class TestCheckGauss(unittest.TestCase):
 
     def testOneEachStepOut(self):
         # tests searching directory with checking convergence, plus using an alternate extension
-        test_input = ["-s", "-d", SUB_DATA_DIR, "-e", ".out"]
+        test_input = ["-s", "-d", SUB_DATA_DIR, "-e", "ts.out"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(DIOXOLAN_OUT, GOOD_DIOXOLAN_OUT))
@@ -170,7 +172,7 @@ class TestCheckGauss(unittest.TestCase):
 
     def testOneEachStopAtStep(self):
         # tests searching directory with checking convergence, plus using an alternate extension
-        test_input = ["-t", "37", "-d", SUB_DATA_DIR, "-e", ".out"]
+        test_input = ["-t", "37", "-d", SUB_DATA_DIR, "-e", "ts.out"]
         good_output = "Steps sorted by convergence to step number 37 for file: dioxolan4ol_ts4_ts.out\n" \
                       "    StepNum  Convergence\n" \
                       "         35    161.099\n" \
@@ -184,7 +186,7 @@ class TestCheckGauss(unittest.TestCase):
 
     def testBest10Steps(self):
         # tests searching directory with checking convergence, plus using an alternate extension
-        test_input = ["-b", "-d", SUB_DATA_DIR, "-e", ".out"]
+        test_input = ["-b", "-d", SUB_DATA_DIR, "-e", "ts.out"]
         good_output = "Best (up to 10) steps sorted by convergence for file: dioxolan4ol_ts4_ts.out\n" \
                       "    StepNum  Convergence\n" \
                       "         43      1.031\n" \
@@ -230,6 +232,20 @@ class TestCheckGauss(unittest.TestCase):
                       "          1    749.248\n" \
                       "         16      1.138\n" \
                       "         17      1.110\n"
+        # main(test_input)
+        with capture_stdout(main, test_input) as output:
+            print(output)
+            self.assertTrue(output == good_output)
+            pass
+
+    def testAllStepsNotFromChk(self):
+        # if not reading from checkpoint, stoich comes before Coordinates; let's still catch that first step
+        test_input = ["-a", "-f", NOT_FROM_CHK_FILE]
+        good_output = "Convergence of all steps for file: acyl-min_ts5.out\n" \
+                      "    StepNum  Convergence\n" \
+                      "          1    120.064\n" \
+                      "          2    248.641\n" \
+                      "          3    310.534\n"
         # main(test_input)
         with capture_stdout(main, test_input) as output:
             print(output)
