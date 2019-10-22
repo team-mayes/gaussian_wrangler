@@ -82,12 +82,28 @@ class TestCheckGaussNoOut(unittest.TestCase):
 
     def testConflictingOptions(self):
         test_input = ["-s", "-z"]
-        main(test_input)
+        # main(test_input)
         # if logger.isEnabledFor(logging.DEBUG):
         #     main(test_input)
         with capture_stderr(main, test_input) as output:
             self.assertTrue("Choose either" in output)
         silent_remove(FOR_HARTREE_DIR, disable=DISABLE_REMOVE)
+
+    def testNoLastStepNum(self):
+        test_input = ["-t"]
+        # main(test_input)
+        # if logger.isEnabledFor(logging.DEBUG):
+        #     main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("expected one argument" in output)
+
+    def testNonIntLastStepNum(self):
+        test_input = ["-t", "ghost"]
+        # main(test_input)
+        # if logger.isEnabledFor(logging.DEBUG):
+        #     main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("integer must be provided" in output)
 
     def testDirInsteadOfFile(self):
         test_input = ["-f", SUB_DATA_DIR, "-z"]
@@ -186,7 +202,6 @@ class TestCheckGauss(unittest.TestCase):
             self.assertTrue(output == good_output)
 
     def testBest10StepsList(self):
-        # tests searching directory with checking convergence, plus using an alternate extension
         test_input = ["-b", "-l", LIST_FILE]
         good_output = "Best (up to 10) steps sorted by convergence for file: hexyl_acrylate_419.log\n" \
                       "    StepNum  Convergence\n" \
@@ -200,5 +215,23 @@ class TestCheckGauss(unittest.TestCase):
                       "          1    749.248\n"
         # main(test_input)
         with capture_stdout(main, test_input) as output:
+            self.assertTrue(output == good_output)
+            pass
+
+    def testAllStepsStdOutList(self):
+        test_input = ["-a", "-l", LIST_FILE]
+        good_output = "Convergence of all steps for file: hexyl_acrylate_419.log\n" \
+                      "    StepNum  Convergence\n" \
+                      "          1    666.063\n" \
+                      "          7      4.319\n" \
+                      "          8      0.071\n" \
+                      "Convergence of all steps for file: hexyl_acrylate_239.log\n" \
+                      "    StepNum  Convergence\n" \
+                      "          1    749.248\n" \
+                      "         16      1.138\n" \
+                      "         17      1.110\n"
+        # main(test_input)
+        with capture_stdout(main, test_input) as output:
+            print(output)
             self.assertTrue(output == good_output)
             pass
