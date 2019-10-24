@@ -98,6 +98,8 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
     #    SEC_ATOMS: atoms as a dict of dicts, with atom_id as key to dict with
     #        ATOM_TYPE: atom_type (str), ATOM_COORDS: (np array)
     #    SEC_TAIL: everything including and after the blank line following SEC_ATOMS
+
+    # The mode argument is optional; 'r' will be assumed if it’s omitted. (so read-only below)
     with open(gausslog_file) as d:
         gausslog_content = {SEC_ATOMS: {}, BASE_NAME: get_fname_root(gausslog_file), STOICH: None,
                             ENERGY: None, ENTHALPY: None, CONVERG_STEP_DICT: collections.OrderedDict()}

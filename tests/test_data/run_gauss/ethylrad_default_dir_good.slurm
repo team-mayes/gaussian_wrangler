@@ -13,10 +13,6 @@
 
 # Load Gaussian module to set environment
 module load gaussian/G16B
-# Run gaussian Peregrine script (performs much of the Gaussian setup)
-g16_eagle
-
-cd $SLURM_SUBMIT_DIR
 
 SCRATCH=/tmp/scratch/$SLURM_JOB_ID
 mkdir $SCRATCH

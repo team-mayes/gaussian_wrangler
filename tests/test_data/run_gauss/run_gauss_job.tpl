@@ -27,8 +27,7 @@ else
     cat $INPUT_FILE >> $INFILE
 fi
 
-# Run gaussian Peregrine script (performs much of the Gaussian setup)
-g16_eagle
+
 
 # Set required Gaussian environment variables
 if [ $SLURM_JOB_NUM_NODES -gt 1 ]; then
