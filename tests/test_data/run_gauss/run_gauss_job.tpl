@@ -4,15 +4,15 @@ INPUT_BASENAME={job_name}
 INPUT_FILE={input_file}
 GAUSSIAN_EXEC=g16
 MEMSIZE=5GB
-SCRATCH=/tmp/scratch/$SLURM_JOB_ID
+SCRATCH=/scratch/{user}/{job_name}_$SLURM_JOB_ID
 SCRATCH2=/dev/shm
 INFILE=infile_$INPUT_BASENAME
-#
+
+mkdir $SCRATCH
 # Check on editing input file. If scratch directories
 # are listed then file is used un-changed, if 3-line
 # header not present, then script prepends these lines
 # to the input file to be used in execution line
-#
 NUMRWFLINES=`grep "RWF" $INPUT_FILE | wc -l`
 if [ $NUMRWFLINES -eq 1 ]; then
     echo "standard file found"
@@ -23,7 +23,8 @@ else
     echo "%NoSave" >> $INFILE
     {old_check_echo}
     echo "%Chk=$SCRATCH2/{job_name}.chk" >> $INFILE
-    echo " " >> $INFILE
+    echo "%CPU={proc_list}" >> $INFILE
+    echo "%Mem={mem_alloc}KB" >> $INFILE
     cat $INPUT_FILE >> $INFILE
 fi
 
@@ -35,17 +36,17 @@ if [ $SLURM_JOB_NUM_NODES -gt 1 ]; then
     export GAUSS_EXEDIR=$g16root/g16/linda-exe:$GAUSS_EXEDIR
 fi
 export GAUSS_SCRDIR=$SCRATCH2
-#
+
 # Gaussian needs scratch directories
-# Note: sometimes files may have been left behind in
-# on-node memory by other jobs that terminated incorrectly
-# so clean these to make sure there is enough space.
-#
+# If desired, make sure scratch is clear before starting
 # rm $SCRATCH2/*
 
 # Run Gaussian job
 $GAUSSIAN_EXEC < $INFILE >& $INPUT_BASENAME.log
+
 rm $INFILE
 cp $SCRATCH2/$INPUT_BASENAME.chk .
 
+# If desired, clean-up files or remove folder
 # rm $SCRATCH/*
+rm -r $SCRATCH
