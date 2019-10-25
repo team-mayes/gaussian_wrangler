@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # Set script variables
-INPUT_BASENAME=ethylrad
-INPUT_FILE=tests/test_data/run_gauss/ethylrad.com
+INPUT_BASENAME=ethylrad_opt
+INPUT_FILE=tests/test_data/run_gauss/opt.tpl
 GAUSSIAN_EXEC=g16
 MEMSIZE=5GB
-SCRATCH=/scratch/hmayes/ethylrad_${SLURM_JOB_ID}
+SCRATCH=/scratch/hmayes/ethylrad_opt_${SLURM_JOB_ID}
 SCRATCH2=/dev/shm
 INFILE=infile_${INPUT_BASENAME}
+HesYourHost
 
 mkdir ${SCRATCH}
 # Check on editing input file. If scratch directories
@@ -21,8 +22,8 @@ else
     echo "prepending lines to input file"
     echo "%RWF=${SCRATCH2}/,$MEMSIZE,${SCRATCH}/,-1" > ${INFILE}
     echo "%NoSave" >> ${INFILE}
-    echo "%OldChk=tests/test_data/run_gauss/pvc_at1.chk" >> ${INFILE}
-    echo "%Chk=${SCRATCH2}/ethylrad.chk" >> ${INFILE}
+    echo "%OldChk=ethylrad.chk" >> ${INFILE}
+    echo "%Chk=${SCRATCH2}/ethylrad_opt.chk" >> ${INFILE}
     echo "%CPU=0-23" >> ${INFILE}
     echo "%Mem=72GB" >> ${INFILE}
     cat ${INPUT_FILE} >> ${INFILE}

@@ -9,12 +9,10 @@ import argparse
 import subprocess
 import re
 import os
-
 from common_wrangler.common import (InvalidDataError, warning, process_cfg, create_out_fname, GOOD_RET, INPUT_ERROR,
                                     IO_ERROR, INVALID_DATA, read_tpl, InvalidInputError, str_to_file,
                                     get_fname_root, OUT_DIR, MAIN_SEC)
 from common_wrangler.fill_tpl import fill_save_tpl
-
 from gaussian_wrangler.gw_common import GAU_HEADER_PAT
 
 try:
@@ -44,6 +42,9 @@ PARTITION = 'partition'
 RUN_TIME = 'run_time'
 ACCOUNT = 'account'
 EMAIL = 'email'
+USER = 'user'
+MEM = 'mem'
+PROC_LIST = 'proc_list'
 ALL_NEW = 'all_new'
 OPT_OLD_JOB_NAME = 'opt_old_name'
 RUN_GAUSS_INI = 'run_gauss_ini'
@@ -53,7 +54,8 @@ SETUP_SUBMIT = 'setup_submit'
 START_FROM_SAME_CHK = 'start_from_job_name_chk'
 NO_SUBMIT = 'no_submit'
 CHECK_FOR_CHK = "check_for_chk"
-KEYS_FOR_SPAWNING_SBATCH = [JOB_RUN_TPL, PARTITION, QOS, RUN_TIME, ACCOUNT, SBATCH_TPL, EMAIL, ALL_NEW]
+KEYS_FOR_SPAWNING_SBATCH = [JOB_RUN_TPL, PARTITION, QOS, RUN_TIME, ACCOUNT, SBATCH_TPL, EMAIL, ALL_NEW,
+                            USER, PROC_LIST, MEM]
 KEYS_FOR_SPAWNING_INIS = [OUT_DIR, FIRST_JOB_CHK, OLD_CHECK_ECHO]
 
 DEF_CFG_FILE = 'run_gauss.ini'
@@ -66,7 +68,7 @@ DEF_ACCOUNT = 'bpms'
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 DEF_SBATCH_TPL = os.path.join(DATA_DIR, 'sbatch.tpl')
 DEF_FOLLOW_JOBS_LIST = None
-DEF_OLD_CHK_STR = 'echo "%OldChk={}.chk" >> $INFILE'
+DEF_OLD_CHK_STR = 'echo "%OldChk={}.chk" >> ${{INFILE}}'
 
 # Set notation
 DEF_CFG_VALS = {OUT_DIR: None,
@@ -85,6 +87,9 @@ DEF_CFG_VALS = {OUT_DIR: None,
                 START_FROM_SAME_CHK: False,
                 OLD_CHECK_ECHO: DEF_OLD_CHK_STR,
                 CHECK_FOR_CHK: True,
+                USER: None,
+                PROC_LIST: None,
+                MEM: None,
                 }
 REQ_KEYS = {
             }
@@ -251,8 +256,21 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
     print("Running {}".format(new_job_name))
 
     tpl_dict[JOB_NAME] = new_job_name
+    for key_name in [USER, MEM, PROC_LIST]:
+        if key_name in cfg:
+            tpl_dict[key_name] = cfg[key_name]
     tpl_str = read_tpl(tpl_file)
-    fill_save_tpl(cfg, tpl_str, tpl_dict, tpl_file, job_runner_fname)
+    move_on = False
+    while not move_on:
+        try:
+            fill_save_tpl(cfg, tpl_str, tpl_dict, tpl_file, job_runner_fname)
+            move_on = True
+        except KeyError as e:
+            missing_key = e.args[0].split("\'")[1]
+            if missing_key in cfg:
+                tpl_dict[missing_key] = cfg[missing_key]
+            else:
+                raise e
     subprocess.call(["chmod", "+x", job_runner_fname])
     p1 = subprocess.Popen(job_runner_fname)
     p1.wait()
@@ -318,7 +336,9 @@ def create_ini_tpl_with_req_keys(thread, tpl_dict, cfg, new_ini_fname):
     # This is the minimum needed; more added later if needed
     job_list_string = ','.join(thread)
     # we always need the header, job_list, and job_run_tpl
-    tpl_str = '[main]\njob_run_tpl = {}\njob_list = {}'.format(cfg[JOB_RUN_TPL], job_list_string)
+    # also want user = hmayes', '+ proc_list = 0-23', '+ mem
+    tpl_str = '[main]\njob_run_tpl = {}\njob_list = {}\nuser = {}\nproc_list = {}' \
+              '\nmem = {}'.format(cfg[JOB_RUN_TPL], job_list_string, cfg[USER], cfg[PROC_LIST], cfg[MEM])
 
     if len(cfg[FOLLOW_JOBS_LIST]) > 0 and (cfg[SETUP_SUBMIT] or cfg[LIST_OF_JOBS]):
         thread_list = []
@@ -363,7 +383,10 @@ def setup_and_submit(cfg, suffix, thread, tpl_dict, current_job_list, chk_warn):
     sbatch_dict = create_sbatch_dict(cfg, tpl_dict, os.path.relpath(new_ini_fname), current_job_list,
                                      start_from_job_name_chk=cfg[START_FROM_SAME_CHK], ignore_chk_warning=chk_warn)
     tpl_str = read_tpl(cfg[SBATCH_TPL])
-    fill_save_tpl(cfg, tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
+    try:
+        fill_save_tpl(cfg, tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
+    except KeyError as e:
+        print(e)
 
     # read ini_tpl and check if it has fields for submitting spawned jobs, if needed
     create_ini_tpl_with_req_keys(thread, cfg[TPL_DICT], cfg, new_ini_fname)
@@ -435,7 +458,7 @@ def main(argv=None):
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR
-    except subprocess.CalledProcessError as e:
+    except (subprocess.CalledProcessError, KeyError) as e:
         warning("", e)
     except InvalidInputError as e:
         warning("Check input:", e)

@@ -8,16 +8,19 @@
 #SBATCH --account=nwu150
 #SBATCH --qos=normal
 
+#SBATCH --signal=B:USR1@30
+
+copy_chk_before_exit()
+{
+    scp ${SLURM_JOB_NODELIST}:/dev/shm/*chk ${SLURM_SUBMIT_DIR}
+    echo "function copy_chk_before_exit called at $(date)"
+}
+trap 'copy_chk_before_exit' EXIT
+trap 'copy_chk_before_exit' USR1
 
 # Load Gaussian module to set environment
 module load gaussian/G16B
 
-SCRATCH=/tmp/scratch/$SLURM_JOB_ID
-mkdir $SCRATCH
-
-cd $SLURM_SUBMIT_DIR
+cd ${SLURM_SUBMIT_DIR}
 
 run_gauss water -o water -c water.ini
-
-rm $SCRATCH2/*
-rmdir $SCRATCH

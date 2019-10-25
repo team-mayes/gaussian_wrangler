@@ -33,6 +33,10 @@ OPT_STABLE_SH_OUT = os.path.join(MAIN_DIR, 'ethylrad_opt_stable.sh')
 GOOD_OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt.sh')
 GOOD_OPT_STABLE_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt_stable.sh')
 
+MISSING_KEY_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde_missing_key.ini')
+HAS_EXTRA_KEY_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde_has_extra_key.ini')
+GOOD_OPT_EXTRA_KEY_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt_extra_key.sh')
+
 SPAWN_INI = os.path.join(SUB_DATA_DIR, 'run_spawn.ini')
 SPAWN1_INI = os.path.join(SUB_DATA_DIR, 'run_spawn1.ini')
 SPAWN2_INI = os.path.join(SUB_DATA_DIR, 'run_spawn2.ini')
@@ -48,6 +52,8 @@ NO_CHK_CHECK_INI = os.path.join(MAIN_DIR, 'ethylrad_restart.ini')
 NO_CHK_CHECK_SLM = os.path.join(MAIN_DIR, 'ethylrad_restart.slurm')
 GOOD_NO_CHK_CHECK_INI = os.path.join(SUB_DATA_DIR, 'good_ethylrad_restart.ini')
 GOOD_NO_CHK_CHECK_SLM = os.path.join(SUB_DATA_DIR, 'good_ethylrad_restart.slurm')
+SUBMIT_NO_CHK_CHECK_EXTRA_PARAM_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_no_chk_chk_extra_param.ini')
+NO_CHK_CHECK_EXTRA_PARAM_INI = os.path.join(MAIN_DIR, 'ethylrad_restart_extra_param.ini')
 
 SPAWN_GIVE_OLD_CHK_STR_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str.ini')
 SPAWN1_GIVE_CHK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str1.ini')
@@ -176,6 +182,11 @@ class TestRunGaussNoOut(unittest.TestCase):
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
+    def testMissingKeyIni(self):
+        test_input = [ETHYLRAD, "-c", MISSING_KEY_INI]
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("required for template file" in output)
+
 
 class TestRunGauss(unittest.TestCase):
     # These test/demonstrate different options
@@ -197,6 +208,16 @@ class TestRunGauss(unittest.TestCase):
         finally:
             silent_remove(DEF_SH_OUT, disable=DISABLE_REMOVE)
             silent_remove(DEF_LOG_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testNeedsExtraKeyIni(self):
+        test_input = [ETHYLRAD, "-c", HAS_EXTRA_KEY_INI, "-t"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(OPT_SH_OUT, GOOD_OPT_EXTRA_KEY_SH_OUT))
+        finally:
+            for fname in [DEF_SH_OUT, DEF_LOG_OUT, OPT_SH_OUT, OPT_LOG_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
     def testOneNewJobIni(self):
@@ -343,7 +364,6 @@ class TestRunGauss(unittest.TestCase):
                 f.write("# for test only")
 
         test_input = ['ethylrad', "-c", SETUP_DEF_TPL_INI, "-s", "-o", 'ethyl', '-n', '-t']
-        main(test_input)
         try:
             main(test_input)
             self.assertFalse(diff_lines(SETUP_INI_DEF_DIR_OUT, GOOD_DEF_TPL_INI_OUT))
