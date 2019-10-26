@@ -115,6 +115,12 @@ GOOD_SETUP_IRCF_SLM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_ircf_good.slurm')
 SETUP_GET_MEM_INI = os.path.join(SUB_DATA_DIR, 'set_up_submit_get_mem.ini')
 SETUP_GET_PROCS_INI = os.path.join(SUB_DATA_DIR, 'set_up_submit_get_procs.ini')
 SETUP_GET_MEM_PROCS_INI = os.path.join(SUB_DATA_DIR, 'set_up_submit_get_mem_procs.ini')
+GOOD_MEM_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_get_mem.sh')
+GOOD_PROC_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_get_proc.sh')
+GOOD_MEM_PROC_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_get_mem_proc.sh')
+GOOD_MEM_OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt_get_mem.sh')
+GOOD_PROC_OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt_get_proc.sh')
+GOOD_MEM_PROC_OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_get_opt_mem_proc.sh')
 
 
 class TestRunGaussNoOut(unittest.TestCase):
@@ -263,8 +269,9 @@ class TestRunGaussNoOut(unittest.TestCase):
 
 class TestRunGauss(unittest.TestCase):
     # These test/demonstrate different options
+    # Note: the testing mode ("-t") is key to not accidentally submitting a slurm job or running Gaussian
     def testDefIni(self):
-        test_input = [ETHYLRAD, "-c", DEF_INI]
+        test_input = [ETHYLRAD, "-c", DEF_INI, "-t"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_SH_OUT))
@@ -486,22 +493,53 @@ class TestRunGauss(unittest.TestCase):
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
+    def testFindNodeMem(self):
+        test_input = [ETHYLRAD, "-c", SETUP_GET_MEM_INI, "-t"]
+        try:
+            # main(test_input)
+            with capture_stdout(main, test_input) as output:
+                # each assert from a different print command
+                self.assertTrue("the whole node will" in output)
+                self.assertTrue("Will allocate up to 63124196 kB" in output)
+                self.assertFalse("0-35" in output)
+                self.assertTrue("user may override these" in output)
+            self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_MEM_SH_OUT))
+            self.assertFalse(diff_lines(OPT_SH_OUT, GOOD_MEM_OPT_SH_OUT))
+        finally:
+            for fname in [DEF_SH_OUT, OPT_SH_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testFindNodeProc(self):
+        test_input = [ETHYLRAD, "-c", SETUP_GET_PROCS_INI, "-t"]
+        try:
+            # main(test_input)
+            with capture_stdout(main, test_input) as output:
+                # each assert from a different print command
+                self.assertTrue("the whole node will" in output)
+                self.assertFalse("Will allocate up to 63124196 kB" in output)
+                self.assertTrue("0-35" in output)
+                self.assertTrue("user may override these" in output)
+            self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_PROC_SH_OUT))
+            self.assertFalse(diff_lines(OPT_SH_OUT, GOOD_PROC_OPT_SH_OUT))
+        finally:
+            for fname in [DEF_SH_OUT, OPT_SH_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
     def testFindNodeProcsMem(self):
-        temp_file_list = ['ethylrad.com', ]
-        for fname in temp_file_list:
-            with open(fname, 'w') as f:
-                f.write("# for test only\n\n")
-        test_input = ['ethylrad', "-c", SETUP_GET_MEM_INI, "-s", ]
+        test_input = [ETHYLRAD, "-c", SETUP_GET_MEM_PROCS_INI, "-t"]
         try:
             main(test_input)
-            # self.assertFalse(diff_lines(SETUP_IRCR_INI_OUT, GOOD_SETUP_IRCR_INI_OUT))
-            # self.assertFalse(diff_lines(SETUP_IRCR_SLM_OUT, GOOD_SETUP_IRCR_SLM_OUT))
-            # self.assertFalse(diff_lines(SETUP_IRCF_INI_OUT, GOOD_SETUP_IRCF_INI_OUT))
-            # self.assertFalse(diff_lines(SETUP_IRCF_SLM_OUT, GOOD_SETUP_IRCF_SLM_OUT))
+            # with capture_stdout(main, test_input) as output:
+            #     # each assert from a different print command
+            #     self.assertTrue("the whole node will" in output)
+            #     self.assertTrue("Will allocate up to 63124196 kB" in output)
+            #     self.assertTrue("0-35" in output)
+            #     self.assertTrue("user may override these" in output)
+            # self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_MEM_PROC_SH_OUT))
+            # self.assertFalse(diff_lines(OPT_SH_OUT, GOOD_MEM_PROC_OPT_SH_OUT))
         finally:
-            # for fname in temp_file_list + [SETUP_IRCR_INI_OUT, SETUP_IRCR_SLM_OUT,
-            #                                SETUP_IRCF_INI_OUT, SETUP_IRCF_SLM_OUT]:
+            # for fname in [DEF_SH_OUT, OPT_SH_OUT]:
             #     silent_remove(fname, disable=DISABLE_REMOVE)
             pass
-        # test_input = ['ethylrad', "-c", SETUP_GET_PROCS_INI, "-s", "-n"]
-        # test_input = ['ethylrad', "-c", SETUP_GET_MEM_PROCS_INI, "-s", "-n"]

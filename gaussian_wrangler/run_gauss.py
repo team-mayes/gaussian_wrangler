@@ -27,6 +27,16 @@ __author__ = 'hmayes'
 
 # Constants #
 
+# For checking unix node memory and cpu, specifically for this script
+SOURCE_DIR = os.path.dirname(__file__)
+DATA_DIR = os.path.join(SOURCE_DIR, 'data')
+
+MEMINFO_FILE = os.path.join(DATA_DIR, 'meminfo')
+CPUINFO_FILE = os.path.join(DATA_DIR, 'cpuinfo')
+
+MEM_TOT_PAT = re.compile(r"MemTotal.*")
+MEM_FREE_PAT = re.compile(r"MemFree.*")
+
 # Config keys
 CONFIG_FILE = 'config_file_name'
 JOB_LIST = 'job_list'
@@ -236,7 +246,73 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
+def get_node_procs(testing_mode):
+    """
+    Read standard linux /proc/cpuinfo file, and return list of procs in format Gaussian wants
+    # :param hostname: string, used to report where the information was retrieved
+    :param testing_mode: flag to not actually look for the running machine's /proc/cpuinfo during testing,
+              as this would fail for non-unix machines, and give different results for different machines.
+              Instead, it will read a file that is part of the package, which is a copy of a file from a unix machine
+    :return: string: list of procs in format Gaussian wants
+    """
+    if testing_mode:
+        cpu_info_file = CPUINFO_FILE
+    else:
+        # as noted above, do not want to run this in testing mode, so will not be covered
+        cpu_info_file = "/proc/cpuinfo"
+    # avoiding multiple subprocess calls to get detailed processor info, and being extra careful to check obtained data
+    raw_proc_info = subprocess.check_output(["grep", "^processor", cpu_info_file]).decode("utf-8").strip().split('\n')
+
+    num_procs = len(raw_proc_info)
+    first_proc = int(raw_proc_info[0].split()[-1])
+    last_proc = int(raw_proc_info[-1].split()[-1])
+
+    assert (last_proc - first_proc + 1) == num_procs
+    proc_list = "{}-{}".format(first_proc, last_proc)
+
+    print("    Found {} processors. Will allow use of cpus {}.\n".format(num_procs, proc_list))
+
+    return proc_list
+
+
+def get_node_mem(testing_mode):
+    """
+    Read standard linux /proc/meminfo file, and return list of procs in format Gaussian wants
+    # :param hostname: string, used to report where the information was retrieved
+    :param testing_mode: flag to not actually look for the running machine's /proc/cpuinfo during testing,
+              as this would fail for non-unix machines, and give different results for different machines.
+              Instead, it will read a file that is part of the package, which is a copy of a file from a unix machine
+    :return: string: maximum memory that Gaussian may allocation, in form Gaussian wants
+    """
+    if testing_mode:
+        mem_info_file = MEMINFO_FILE
+    else:
+        # as noted above, do not want to run this in testing mode, so will not be covered
+        mem_info_file = "/proc/meminfo"
+
+    # To make IDE happy, and check that both pieces of info have been obtained
+    mem_tot, mem_free = 0, 0
+
+    raw_mem_info = subprocess.check_output(["cat", mem_info_file]).decode("utf-8").split('\n')
+    # not relying on expected order, even though likely okay
+    for line in raw_mem_info:
+        if MEM_TOT_PAT.match(line) or MEM_FREE_PAT.match(line):
+            split_line = line.split()
+            assert split_line[-1] == 'kB'
+            if MEM_TOT_PAT.match(line):
+                mem_tot = int(split_line[1])
+            else:
+                mem_free = int(split_line[1])
+            if mem_tot and mem_free:
+                # no other info needed, so stop iteration
+                break
+    mem_alloc = int(min(mem_tot * .75, mem_free * .85))
+    print("    Found {} kB total memory, and {} kB available memory.\n    Will allocate up to {} kB (the lessor of 75% "
+          "of MemTotal or 85% of MemFree).\n".format(mem_tot, mem_free, mem_alloc))
+    return "{}KB".format(mem_alloc)
+
+
+def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_mode):
     # Determine if it will run fresh or from an old checkpoint
     if job == '':
         new_job_name = tpl_dict[JOB_NAME]
@@ -260,10 +336,27 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
         if key_name in cfg:
             tpl_dict[key_name] = cfg[key_name]
 
-    # if either MEM or PROC_LIST is the default, get from the node
-
-
     tpl_str = read_tpl(tpl_file)
+    # if either MEM or PROC_LIST is the default (Nonetype), and is used to run the job, get info from the node before
+    #    creating the job script
+    mem_required = '{' + MEM + '}' in tpl_str
+    proc_required = '{' + PROC_LIST + '}' in tpl_str
+    if (mem_required or proc_required) and (not tpl_dict[MEM] or not tpl_dict[PROC_LIST]):
+        if testing_mode:
+            hostname = subprocess.check_output(["echo", "r1i7n35"]).decode("utf-8").strip()
+        else:
+            #  Will not be covered in testing mode, as is not part of written code to be tested
+            hostname = subprocess.check_output(["hostname"]).decode("utf-8").strip()
+        print("Obtaining available memory and/or number of processors on node {}.\n    "
+              "Note: this program assumes the whole node will be allocated to Gaussian.\n".format(hostname))
+        if mem_required and not tpl_dict[MEM]:
+            tpl_dict[MEM] = get_node_mem(testing_mode)
+        # explicitly check both, because one or both can be needed
+        if proc_required and not tpl_dict[PROC_LIST]:
+            tpl_dict[PROC_LIST] = get_node_procs(testing_mode)
+        print("    The user may override these values by specifying the '{}' and/or '{}' keywords in the configuration "
+              "file.\n    Be sure to use the formatting Gaussian expects.".format(MEM, PROC_LIST))
+
     move_on = False
     while not move_on:
         try:
@@ -276,15 +369,16 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
             else:
                 raise e
     subprocess.call(["chmod", "+x", job_runner_fname])
-    p1 = subprocess.Popen(job_runner_fname)
-    p1.wait()
-    if testing_flag:
-        print("Testing mode; did not check for normal Gaussian termination.")
+    if testing_mode:
+        print("Testing mode; did not run job script or check Gaussian output for normal termination.\n")
     else:
+        # do not want this tested, as actually running Gaussian would take too long, and not what should be tested
+        p1 = subprocess.Popen(job_runner_fname)
+        p1.wait()
         out_file = tpl_dict[JOB_NAME] + ".log"
         last_line = subprocess.check_output(["tail", "-1",  out_file]).strip().decode("utf-8")
         if GAU_GOOD_PAT.match(last_line):
-            print("Successfully completed {}".format(out_file))
+            print("Successfully completed {}\n".format(out_file))
             os.remove(job_runner_fname)
         else:
             raise InvalidDataError('Job failed: {}'.format(out_file))
@@ -381,9 +475,7 @@ def create_ini_with_req_keys(thread, tpl_dict, cfg, new_ini_fname):
                 else:
                     tpl_str += '\n{} = {}'.format(key_word, cfg[key_word])
 
-
-
-    # job locations will be needed
+    # job tpl locations will be needed
     tpl_loc_list_tuples = sorted(tpl_dict.items(), key=lambda x: x[1])
     for job, tpl_loc in tpl_loc_list_tuples:
         if job != '' and job in tpl_str:
@@ -392,7 +484,7 @@ def create_ini_with_req_keys(thread, tpl_dict, cfg, new_ini_fname):
     str_to_file(tpl_str, new_ini_fname, print_info=True)
 
 
-def setup_and_submit(cfg, current_job_list, tpl_dict, chk_warn):
+def setup_and_submit(cfg, current_job_list, tpl_dict, testing_mode, chk_warn):
     if len(current_job_list) == 1 and current_job_list[0] == '':
         suffix = ''
     else:
@@ -414,11 +506,15 @@ def setup_and_submit(cfg, current_job_list, tpl_dict, chk_warn):
     create_ini_with_req_keys(current_job_list, cfg[TPL_DICT], cfg, new_ini_fname)
 
     if not cfg[NO_SUBMIT]:
-        try:
-            sbatch_result = subprocess.check_output(["sbatch", new_sbatch_fname]).strip().decode("utf-8")
-            print(sbatch_result)
-        except IOError as e:
-            print(e)
+        # Do not want to actually (attempt to) submit a job during testing; this way, do not have to specify both
+        #   testing mode and NO_SUBMIT (could make NO_SUBMIT if in testing mode, but no real advantage to that
+        if testing_mode:
+            sbatch_result = subprocess.check_output(["echo", "Running in testing mode: "
+                                                             "'sbatch' not called"]).decode("utf-8").strip()
+        else:
+            #  Will not be covered in testing mode, as is not part of written code to be tested
+            sbatch_result = subprocess.check_output(["sbatch", new_sbatch_fname]).decode("utf-8").strip()
+        print(sbatch_result)
 
 
 def main(argv=None):
@@ -451,7 +547,7 @@ def main(argv=None):
                     base_name = get_fname_root(line.strip())
                     tpl_dict = {JOB_NAME: base_name, INPUT_FILE: input_job_file}
                     for thread_index, thread in enumerate(cfg[JOB_LIST]):
-                        setup_and_submit(cfg, thread, tpl_dict, args.ignore_chk_warning)
+                        setup_and_submit(cfg, thread, tpl_dict, args.testing, args.ignore_chk_warning)
             return GOOD_RET
 
         # otherwise, job_name is actually the job name. We can to ignore any extension on it
@@ -463,7 +559,7 @@ def main(argv=None):
 
         if args.setup_submit:
             for thread_index, thread in enumerate(cfg[JOB_LIST]):
-                setup_and_submit(cfg, thread, tpl_dict, args.ignore_chk_warning)
+                setup_and_submit(cfg, thread, tpl_dict, args.testing, args.ignore_chk_warning)
             return GOOD_RET
 
         for job in cfg[JOB_LIST]:
@@ -473,7 +569,7 @@ def main(argv=None):
             for thread_index, thread in enumerate(cfg[FOLLOW_JOBS_LIST]):
                 if thread_index == 0 and not cfg[ALL_NEW]:
                     continue
-                setup_and_submit(cfg, thread, tpl_dict, args.ignore_chk_warning)
+                setup_and_submit(cfg, thread, tpl_dict, args.testing, args.ignore_chk_warning)
 
         if len(cfg[FOLLOW_JOBS_LIST]) > 0 and not cfg[ALL_NEW]:
             for job in cfg[FOLLOW_JOBS_LIST][0]:

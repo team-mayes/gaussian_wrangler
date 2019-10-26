@@ -41,6 +41,19 @@ one atom from each of the two molecules.
 creates a PDB from them. If a template PDB file is provided, it will replace the coordinates in that PDB with those
 from the Gaussian input file. Otherwise, it will created a generic one. .py
 
+**run_gauss**: This script prepares inputs and runs Gaussian jobs, or (with '-s' and '-l' options) prepares and submits
+slurm jobs to run Gaussian. It can be used to run (and/or submit) a series of Gaussian jobs.
+
+The script includes functions to determine inputs to Gaussian based on the specifications of the machine running the 
+job. For example, if the '{default_route}' parameter is included in the 'job_run_tpl', the script will 
+determine a MaxDisk and Cachesize based on the running systems's specifications: specifically, 90% of free diskspace 
+and Gaussian's cache size algorithm of ('cache size' * 1024)/num_procs. The calculations assume the whole node will be 
+used for the Gaussian job.  These calculations are used to create a Default.Route file for Gaussian to read. 
+
+The program will also determine an appropriate amount of memory to allocate and max number of cores to use (also 
+assuming the whole node is used for the Gaussian job) if a '{mem}' and/or '{proc_list}' parameter is included in the 
+'job_run_tpl' and not specified in the configuration file.
+
 
 ### Copyright
 
