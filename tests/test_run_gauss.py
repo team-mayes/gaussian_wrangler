@@ -101,7 +101,8 @@ SETUP_F_TS_INI_OUT = os.path.join(MAIN_DIR, 'ethylrad_f_ts.ini')
 SETUP_F_TS_SLM_OUT = os.path.join(MAIN_DIR, 'ethylrad_f_ts.slurm')
 GOOD_SETUP_F_TS_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_f_ts_good.ini')
 GOOD_SETUP_F_TS_SLM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_f_ts_good.slurm')
-
+GOOD_F_TS_INI_OUT = os.path.join(SUB_DATA_DIR, 'alt_ethylrad_f_ts_good.ini')
+GOOD_F_TS_SLM_OUT = os.path.join(SUB_DATA_DIR, 'alt_ethylrad_f_ts_good.slurm')
 
 SETUP_SLURM_DEF_DIR_OUT = os.path.join(MAIN_DIR, 'ethylrad.slurm')
 GOOD_DEF_DIR_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_default_dir_good.ini')
@@ -361,14 +362,14 @@ class TestRunGauss(unittest.TestCase):
             self.assertFalse(diff_lines(SETUP_F_TS_INI_OUT, GOOD_SETUP_F_TS_INI_OUT))
             self.assertFalse(diff_lines(SETUP_F_TS_SLM_OUT, GOOD_SETUP_F_TS_SLM_OUT))
         finally:
-            # for fname in temp_file_list + [SETUP_INI_DEF_DIR_OUT, SETUP_SLURM_DEF_DIR_OUT]:
-            #     silent_remove(fname, disable=DISABLE_REMOVE)
+            for fname in temp_file_list + [SETUP_F_TS_INI_OUT, SETUP_F_TS_SLM_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
 
     def testSubmitDefDirIni(self):
         # Checking alternate input from above
-        temp_file_list = ['ethylrad.com', 'f.tpl', 'ts.tpl', 'ethyl.chk']
+        temp_file_list = ['ethylrad.com', 'f.tpl', 'ts.tpl']
         for fname in temp_file_list:
             with open(fname, 'w') as f:
                 f.write("# for test only\n")
@@ -376,8 +377,8 @@ class TestRunGauss(unittest.TestCase):
         test_input = ['ethylrad', "-c", SETUP_DEF_TPL_INI, "-s", "-o", 'ethyl.chk', '-n', '-t']
         try:
             main(test_input)
-            self.assertFalse(diff_lines(SETUP_F_TS_INI_OUT, GOOD_SETUP_F_TS_INI_OUT))
-            self.assertFalse(diff_lines(SETUP_F_TS_SLM_OUT, GOOD_SETUP_F_TS_SLM_OUT))
+            self.assertFalse(diff_lines(SETUP_F_TS_INI_OUT, GOOD_F_TS_INI_OUT))
+            self.assertFalse(diff_lines(SETUP_F_TS_SLM_OUT, GOOD_F_TS_SLM_OUT))
         finally:
             for fname in temp_file_list + [SETUP_F_TS_INI_OUT, ]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
