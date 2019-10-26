@@ -59,7 +59,7 @@ CHECK_FOR_CHK = "check_for_chk"
 CHK_EXT = '.chk'
 KEYS_FOR_SPAWNING_SBATCH = [JOB_RUN_TPL, PARTITION, QOS, RUN_TIME, ACCOUNT, SBATCH_TPL, EMAIL, ALL_NEW,
                             USER, PROC_LIST, MEM]
-KEYS_FOR_SPAWNING_INIS = [OUT_DIR, FIRST_JOB_CHK, OLD_CHECK_ECHO]
+KEYS_FOR_SPAWNING_INIS = [USER, PROC_LIST, MEM, FIRST_JOB_CHK, OLD_CHECK_ECHO]
 
 DEF_CFG_FILE = 'run_gauss.ini'
 DEF_JOB_RUN_TPL = 'run_gauss_job.tpl'
@@ -250,8 +250,6 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
         tpl_dict[OLD_JOB_NAME] = tpl_dict[JOB_NAME]
         tpl_dict[OLD_CHECK_ECHO] = cfg[OLD_CHECK_ECHO].format(tpl_dict[OLD_JOB_NAME])
         tpl_dict[INPUT_FILE] = cfg[TPL_DICT][job]
-    if not os.path.isfile(tpl_dict[INPUT_FILE]):
-        raise IOError(tpl_dict[INPUT_FILE])
 
     tpl_file = cfg[JOB_RUN_TPL]
     job_runner_fname = create_out_fname(new_job_name, ext=".sh", base_dir=cfg[OUT_DIR])
@@ -261,6 +259,10 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
     for key_name in [USER, MEM, PROC_LIST, ]:
         if key_name in cfg:
             tpl_dict[key_name] = cfg[key_name]
+
+    # if either MEM or PROC_LIST is the default, get from the node
+
+
     tpl_str = read_tpl(tpl_file)
     move_on = False
     while not move_on:
@@ -297,8 +299,8 @@ def create_sbatch_dict(cfg, tpl_dict, new_ini_fname, current_job_list, start_fro
 
     if cfg[FIRST_JOB_CHK]:
         if not os.path.isfile(cfg[FIRST_JOB_CHK] + CHK_EXT):
-            raise InvalidDataError("Could not find specified '{}': {}".format(FIRST_JOB_CHK,
-                                                                              cfg[FIRST_JOB_CHK] + CHK_EXT))
+            raise InvalidInputError("Could not find specified '{}': {}".format(FIRST_JOB_CHK,
+                                                                               cfg[FIRST_JOB_CHK] + CHK_EXT))
         sbatch_dict[OLD_CHECK_ECHO] = '-o ' + cfg[FIRST_JOB_CHK]
     elif start_from_job_name_chk:
         fname_to_check = tpl_dict[JOB_NAME] + CHK_EXT
@@ -312,10 +314,12 @@ def create_sbatch_dict(cfg, tpl_dict, new_ini_fname, current_job_list, start_fro
             # IOError is already caught; no don't need to add a try loop
             with open(tpl_dict[INPUT_FILE]) as f:
                 try:
+                    read_route = False
                     for line in f:
                         line = line.strip()
                         # route can be multiple lines, so first fine the line, then continue until a blank is reached
                         if GAU_HEADER_PAT.match(line):
+                            read_route = True
                             while line != '':
                                 if GUESS_READ_OR_GEOM_CHK_PAT.match(line) and not ignore_chk_warning:
                                     raise InvalidDataError("Did not find an old checkpoint file to read, but the "
@@ -323,6 +327,8 @@ def create_sbatch_dict(cfg, tpl_dict, new_ini_fname, current_job_list, start_fro
                                                            "and fail to read from a checkpoint:\n   file:  {}\n"
                                                            "  route:  {} ".format(tpl_dict[INPUT_FILE], line))
                                 line = next(f).strip()
+                    if not read_route:
+                        raise StopIteration
                 except StopIteration:
                     raise InvalidDataError('The specified input file does not appear valid: {}'
                                            ''.format(tpl_dict[INPUT_FILE]))
@@ -336,7 +342,7 @@ def create_sbatch_dict(cfg, tpl_dict, new_ini_fname, current_job_list, start_fro
     return sbatch_dict
 
 
-def create_ini_tpl_with_req_keys(thread, tpl_dict, cfg, new_ini_fname):
+def create_ini_with_req_keys(thread, tpl_dict, cfg, new_ini_fname):
     """
     Adds to the ini_tpl if a non-default parameter needs to be specified, and is not already included
     :param thread: the jobs to be run, to check that if a location of the tpl is specified, it gets included
@@ -349,9 +355,7 @@ def create_ini_tpl_with_req_keys(thread, tpl_dict, cfg, new_ini_fname):
     # This is the minimum needed; more added later if needed
     job_list_string = ','.join(thread)
     # we always need the header, job_list, and job_run_tpl
-    # also want user = hmayes', '+ proc_list = 0-23', '+ mem
-    tpl_str = '[main]\njob_run_tpl = {}\njob_list = {}\nuser = {}\nproc_list = {}' \
-              '\nmem = {}'.format(cfg[JOB_RUN_TPL], job_list_string, cfg[USER], cfg[PROC_LIST], cfg[MEM])
+    tpl_str = '[main]\njob_run_tpl = {}\njob_list = {}'.format(cfg[JOB_RUN_TPL], job_list_string, )
 
     if len(cfg[FOLLOW_JOBS_LIST]) > 0 and (cfg[SETUP_SUBMIT] or cfg[LIST_OF_JOBS]):
         thread_list = []
@@ -368,6 +372,7 @@ def create_ini_tpl_with_req_keys(thread, tpl_dict, cfg, new_ini_fname):
                     if not (key_word in tpl_str):
                         # might as well just fill in the value here; easier than setting it up to be filled later
                         tpl_str += '\n{} = {}'.format(key_word, cfg[key_word])
+    # Add the following keywords only if they are not the default values
     for key_word in KEYS_FOR_SPAWNING_INIS:
         if key_word not in tpl_str:
             if cfg[key_word] != DEF_CFG_VALS[key_word]:
@@ -375,6 +380,8 @@ def create_ini_tpl_with_req_keys(thread, tpl_dict, cfg, new_ini_fname):
                     tpl_str += '\n{} = {}'.format(key_word, cfg[key_word].replace('%', '%%'))
                 else:
                     tpl_str += '\n{} = {}'.format(key_word, cfg[key_word])
+
+
 
     # job locations will be needed
     tpl_loc_list_tuples = sorted(tpl_dict.items(), key=lambda x: x[1])
@@ -404,7 +411,7 @@ def setup_and_submit(cfg, current_job_list, tpl_dict, chk_warn):
     fill_save_tpl(cfg, tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
 
     # read ini_tpl and check if it has fields for submitting spawned jobs, if needed
-    create_ini_tpl_with_req_keys(current_job_list, cfg[TPL_DICT], cfg, new_ini_fname)
+    create_ini_with_req_keys(current_job_list, cfg[TPL_DICT], cfg, new_ini_fname)
 
     if not cfg[NO_SUBMIT]:
         try:
@@ -422,20 +429,20 @@ def main(argv=None):
 
     cfg = args.config
 
-    args_key_map = [(args.list_of_jobs, False, LIST_OF_JOBS),
-                    (args.old_chk_fname, None, FIRST_JOB_CHK),
-                    (args.setup_submit, False, SETUP_SUBMIT)]
-    for arg_val, arg_default, cfg_key in args_key_map:
-        if arg_val != arg_default:
-            cfg[cfg_key] = arg_val
-    # The following do not have default config options, so overwrite
-    cfg[NO_SUBMIT] = args.no_submit
-    if cfg[FIRST_JOB_CHK]:
-        # remove extension (if any) from cfg[FIRST_JOB_CHK]
-        cfg[FIRST_JOB_CHK] = os.path.splitext(cfg[FIRST_JOB_CHK])[0]
-
-    # Read template and data files
     try:
+        # overwrite default values from reading config if they were specified in command line
+        args_key_map = [(args.list_of_jobs, False, LIST_OF_JOBS),
+                        (args.old_chk_fname, None, FIRST_JOB_CHK),
+                        (args.setup_submit, False, SETUP_SUBMIT)]
+        for arg_val, arg_default, cfg_key in args_key_map:
+            if arg_val != arg_default:
+                cfg[cfg_key] = arg_val
+        # The following do not have default config options, so overwrite
+        cfg[NO_SUBMIT] = args.no_submit
+        if cfg[FIRST_JOB_CHK]:
+            # remove extension (if any) from cfg[FIRST_JOB_CHK]
+            cfg[FIRST_JOB_CHK] = os.path.splitext(cfg[FIRST_JOB_CHK])[0]
+
         # for the "list_of_jobs" option, "job_name" is actually the name of the name of file with the list of jobs
         if args.list_of_jobs:
             with open(args.job_name) as f:

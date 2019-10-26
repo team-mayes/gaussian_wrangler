@@ -23,8 +23,13 @@ DEF_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde.ini')
 DEF_SH_OUT = os.path.join(MAIN_DIR, 'ethylrad.sh')
 GOOD_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad.sh')
 DEF_LOG_OUT = os.path.join(PARENT_DIR, 'ethylrad.log')
-ONE_JOB_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde_one_job.ini')
+ONE_JOB_INI = os.path.join(SUB_DATA_DIR, 'run_one_job.ini')
+ONE_INI_OUT = os.path.join(MAIN_DIR, 'ethylrad.ini')
+ONE_SLM_OUT = os.path.join(MAIN_DIR, 'ethylrad.slurm')
 GOOD_ONE_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_one.sh')
+GOOD_ONE_INI_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_one.ini')
+GOOD_ONE_SLM_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_one.slurm')
+ONE_JOB_FROM_CHK_INI = os.path.join(SUB_DATA_DIR, 'run_one_job_from_chk.ini')
 
 MISSING_TPL_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_missing_tpl.ini')
 ONE_NEW_JOB_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_one.ini')
@@ -89,7 +94,7 @@ GOOD_ETHYL_SPAWN_INI_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_spawn.ini')
 GOOD_ETHYL_SPAWN_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_spawn.slurm')
 GOOD_WATER_SPAWN_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'water_spawn_good.slurm')
 
-SETUP_DEF_TPL_INI = os.path.join(SUB_DATA_DIR, 'submit_current_f_ts.ini')
+SETUP_F_TS_INI_IN = os.path.join(SUB_DATA_DIR, 'submit_current_f_ts.ini')
 SETUP_F_TS_INI_OUT = os.path.join(MAIN_DIR, 'ethylrad_f_ts.ini')
 SETUP_F_TS_SLM_OUT = os.path.join(MAIN_DIR, 'ethylrad_f_ts.slurm')
 GOOD_SETUP_F_TS_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_f_ts_good.ini')
@@ -106,6 +111,10 @@ GOOD_SETUP_IRCR_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_ircr_good.ini')
 GOOD_SETUP_IRCR_SLM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_ircr_good.slurm')
 GOOD_SETUP_IRCF_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_ircf_good.ini')
 GOOD_SETUP_IRCF_SLM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_ircf_good.slurm')
+
+SETUP_GET_MEM_INI = os.path.join(SUB_DATA_DIR, 'set_up_submit_get_mem.ini')
+SETUP_GET_PROCS_INI = os.path.join(SUB_DATA_DIR, 'set_up_submit_get_procs.ini')
+SETUP_GET_MEM_PROCS_INI = os.path.join(SUB_DATA_DIR, 'set_up_submit_get_mem_procs.ini')
 
 
 class TestRunGaussNoOut(unittest.TestCase):
@@ -145,7 +154,7 @@ class TestRunGaussNoOut(unittest.TestCase):
         temp_file_list = ['ethylrad.com', 'ircr.tpl', 'ircf.tpl', 'opt.tpl']
         for fname in temp_file_list:
             with open(fname, 'w') as f:
-                f.write("# for test only")
+                f.write("# for test only\n")
         test_input = ['ethylrad', "-c", SETUP_IRCS_INI, "-o", 'ethyl']
         if logger.isEnabledFor(logging.DEBUG):
             main(test_input)
@@ -158,22 +167,36 @@ class TestRunGaussNoOut(unittest.TestCase):
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
-    def testNoChk(self):
-        # Checking alternate input from above
-        temp_file_list = ['ethylrad.com', 'f.tpl', 'ts.tpl']
+    def testInvalidGaussianInputFile(self):
+        # Create and submit more than one ini
+        temp_file_list = ['ethylrad.com', ]
         for fname in temp_file_list:
             with open(fname, 'w') as f:
-                f.write("# for test only")
-
-        test_input = ['tests/test_data/run_gauss/ethylrad_restart', "-c", SPAWN_INI, "-s"]
+                f.write(" ")
+        test_input = ['ethylrad', "-c", ONE_JOB_INI, "-s"]
         try:
             # main(test_input)
             with capture_stderr(main, test_input) as output:
-                self.assertTrue("old checkpoint" in output)
+                self.assertTrue("specified input file does not appear valid" in output)
         finally:
-            for fname in temp_file_list:
+            for fname in temp_file_list + [ONE_INI_OUT, ONE_SLM_OUT]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
+
+    def testMissingChkFileStartFromChkName(self):
+        # Make sure chk is not there from a different test
+        silent_remove("ethylrad.chk", disable=DISABLE_REMOVE)
+        test_input = [ETHYLRAD, "-c", ONE_JOB_FROM_CHK_INI, "-s", ]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("Could not find required checkpoint file" in output)
+
+    def testNoChk(self):
+        # Checking alternate input from above
+        test_input = ['tests/test_data/run_gauss/ethylrad_restart', "-c", ONE_JOB_INI, "-s"]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("old checkpoint" in output)
 
     def testMissingKeyIni(self):
         test_input = [ETHYLRAD, "-c", MISSING_KEY_INI]
@@ -197,7 +220,7 @@ class TestRunGaussNoOut(unittest.TestCase):
         for fname in temp_file_list:
             with open(fname, 'w') as f:
                 f.write("# for test only\n")
-        test_input = ['ethylrad', "-c", SETUP_DEF_TPL_INI, "-s", "-o", 'ethyl.chk', '-n', '-t']
+        test_input = ['ethylrad', "-c", SETUP_F_TS_INI_IN, "-s", "-o", 'ethyl.chk', '-n', '-t']
         try:
             # main(test_input)
             with capture_stderr(main, test_input) as output:
@@ -211,8 +234,8 @@ class TestRunGaussNoOut(unittest.TestCase):
         temp_file_list = ['f.tpl', 'ts.tpl', 'ethylrad.com', 'ethyl.chk']
         for fname in temp_file_list:
             with open(fname, 'w') as f:
-                f.write("# for test only")
-        test_input = ['ethylrad', "-c", SETUP_DEF_TPL_INI, "-s", "-l", "-o", 'ethyl.chk', '-n', '-t']
+                f.write("# for test only\n")
+        test_input = ['ethylrad', "-c", SETUP_F_TS_INI_IN, "-s", "-l", "-o", 'ethyl.chk', '-n', '-t']
         try:
             # main(test_input)
             with capture_stderr(main, test_input) as output:
@@ -226,8 +249,8 @@ class TestRunGaussNoOut(unittest.TestCase):
         temp_file_list = ['f.tpl', 'ts.tpl', 'ethylrad.com', 'ethyl.chk']
         for fname in temp_file_list:
             with open(fname, 'w') as f:
-                f.write("# for test only")
-        test_input = ['ghost', "-c", SETUP_DEF_TPL_INI, "-l", "-o", 'ethyl.chk', '-n', '-t']
+                f.write("# for test only\n")
+        test_input = ['ghost', "-c", SETUP_F_TS_INI_IN, "-l", "-o", 'ethyl.chk', '-n', '-t']
         try:
             # main(test_input)
             with capture_stderr(main, test_input) as output:
@@ -258,6 +281,17 @@ class TestRunGauss(unittest.TestCase):
         finally:
             silent_remove(DEF_SH_OUT, disable=DISABLE_REMOVE)
             silent_remove(DEF_LOG_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testSetupOneJobIni(self):
+        test_input = [ETHYLRAD, "-c", ONE_JOB_INI, "-t", "-s"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(ONE_INI_OUT, GOOD_ONE_INI_OUT))
+            self.assertFalse(diff_lines(ONE_SLM_OUT, GOOD_ONE_SLM_OUT))
+        finally:
+            silent_remove(ONE_INI_OUT, disable=DISABLE_REMOVE)
+            silent_remove(ONE_SLM_OUT, disable=DISABLE_REMOVE)
             pass
 
     def testNeedsExtraKeyIni(self):
@@ -386,7 +420,7 @@ class TestRunGauss(unittest.TestCase):
         temp_file_list = ['water.chk', 'ethylrad.chk']
         for fname in temp_file_list:
             with open(fname, 'w') as f:
-                f.write("# for test only")
+                f.write("# for test only\n")
         test_input = [LIST, "-l", "-c", SETUP_SUBMIT_SPAWN_INI, "-n"]
         try:
             main(test_input)
@@ -404,8 +438,8 @@ class TestRunGauss(unittest.TestCase):
         temp_file_list = ['f.tpl', 'ts.tpl']
         for fname in temp_file_list:
             with open(fname, 'w') as f:
-                f.write("# for test only")
-        test_input = ['tests/test_data/run_gauss/ethylrad.com', "-c", SETUP_DEF_TPL_INI, "-s",
+                f.write("# for test only\n")
+        test_input = ['tests/test_data/run_gauss/ethylrad.com', "-c", SETUP_F_TS_INI_IN, "-s",
                       "-o", 'tests/test_data/run_gauss/ethyl.chk', "-n"]
         try:
             main(test_input)
@@ -423,7 +457,7 @@ class TestRunGauss(unittest.TestCase):
             with open(fname, 'w') as f:
                 f.write("# for test only\n")
 
-        test_input = ['ethylrad', "-c", SETUP_DEF_TPL_INI, "-s", "-o", 'ethyl.chk', '-n', '-t']
+        test_input = ['ethylrad', "-c", SETUP_F_TS_INI_IN, "-s", "-o", 'ethyl.chk', '-n', '-t']
         try:
             main(test_input)
             self.assertFalse(diff_lines(SETUP_F_TS_INI_OUT, GOOD_F_TS_INI_OUT))
@@ -438,7 +472,7 @@ class TestRunGauss(unittest.TestCase):
         temp_file_list = ['ethylrad.com', 'ircr.tpl', 'ircf.tpl', 'opt.tpl', 'ethylrad.chk']
         for fname in temp_file_list:
             with open(fname, 'w') as f:
-                f.write("# for test only")
+                f.write("# for test only\n")
         test_input = ['ethylrad', "-c", SETUP_IRCS_INI, "-s", "-n"]
         try:
             main(test_input)
@@ -453,11 +487,11 @@ class TestRunGauss(unittest.TestCase):
             pass
 
     def testFindNodeProcsMem(self):
-        # temp_file_list = ['ethylrad.com', 'ircr.tpl', 'ircf.tpl', 'opt.tpl', 'ethylrad.chk']
-        # for fname in temp_file_list:
-        #     with open(fname, 'w') as f:
-        #         f.write("# for test only")
-        test_input = ['ethylrad', "-c", SETUP_IRCS_INI, "-s", "-n"]
+        temp_file_list = ['ethylrad.com', ]
+        for fname in temp_file_list:
+            with open(fname, 'w') as f:
+                f.write("# for test only\n\n")
+        test_input = ['ethylrad', "-c", SETUP_GET_MEM_INI, "-s", ]
         try:
             main(test_input)
             # self.assertFalse(diff_lines(SETUP_IRCR_INI_OUT, GOOD_SETUP_IRCR_INI_OUT))
@@ -469,3 +503,5 @@ class TestRunGauss(unittest.TestCase):
             #                                SETUP_IRCF_INI_OUT, SETUP_IRCF_SLM_OUT]:
             #     silent_remove(fname, disable=DISABLE_REMOVE)
             pass
+        # test_input = ['ethylrad', "-c", SETUP_GET_PROCS_INI, "-s", "-n"]
+        # test_input = ['ethylrad', "-c", SETUP_GET_MEM_PROCS_INI, "-s", "-n"]
