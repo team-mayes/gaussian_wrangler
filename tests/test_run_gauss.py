@@ -38,6 +38,7 @@ GOOD_OPT_STABLE_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt_stable.sh
 MISSING_KEY_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde_missing_key.ini')
 HAS_EXTRA_KEY_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde_has_extra_key.ini')
 GOOD_OPT_EXTRA_KEY_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt_extra_key.sh')
+MISSING_JOB_TPL_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_missing_job_tpl.ini')
 
 SPAWN_INI = os.path.join(SUB_DATA_DIR, 'run_spawn.ini')
 SPAWN1_INI = os.path.join(MAIN_DIR, 'ethylrad_opt_opt_freq.ini')
@@ -178,6 +179,63 @@ class TestRunGaussNoOut(unittest.TestCase):
         test_input = [ETHYLRAD, "-c", MISSING_KEY_INI]
         with capture_stderr(main, test_input) as output:
             self.assertTrue("required for template file" in output)
+
+    def testMissingJobTpl(self):
+        test_input = [ETHYLRAD, "-c", MISSING_JOB_TPL_INI]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("For job 'stable', could not find a template file 'stable.tpl" in output)
+
+    def testNoSuchListFile(self):
+        test_input = ["ghost", "-l", "-c", DEF_INI]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("Problems reading file" in output)
+
+    def testMissingChkFile(self):
+        temp_file_list = ['ethylrad.com', 'f.tpl', 'ts.tpl']
+        for fname in temp_file_list:
+            with open(fname, 'w') as f:
+                f.write("# for test only\n")
+        test_input = ['ethylrad', "-c", SETUP_DEF_TPL_INI, "-s", "-o", 'ethyl.chk', '-n', '-t']
+        try:
+            # main(test_input)
+            with capture_stderr(main, test_input) as output:
+                self.assertTrue("Could not find specified 'chk_for_first_job'" in output)
+        finally:
+            for fname in temp_file_list:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testFileAndList(self):
+        temp_file_list = ['f.tpl', 'ts.tpl', 'ethylrad.com', 'ethyl.chk']
+        for fname in temp_file_list:
+            with open(fname, 'w') as f:
+                f.write("# for test only")
+        test_input = ['ethylrad', "-c", SETUP_DEF_TPL_INI, "-s", "-l", "-o", 'ethyl.chk', '-n', '-t']
+        try:
+            # main(test_input)
+            with capture_stderr(main, test_input) as output:
+                self.assertTrue("Cannot choose both" in output)
+        finally:
+            for fname in temp_file_list:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testMissingList(self):
+        temp_file_list = ['f.tpl', 'ts.tpl', 'ethylrad.com', 'ethyl.chk']
+        for fname in temp_file_list:
+            with open(fname, 'w') as f:
+                f.write("# for test only")
+        test_input = ['ghost', "-c", SETUP_DEF_TPL_INI, "-l", "-o", 'ethyl.chk', '-n', '-t']
+        try:
+            # main(test_input)
+            with capture_stderr(main, test_input) as output:
+                self.assertTrue("list of jobs. Could not read" in output)
+        finally:
+            for fname in temp_file_list:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
 
 
 class TestRunGauss(unittest.TestCase):
@@ -347,7 +405,6 @@ class TestRunGauss(unittest.TestCase):
         for fname in temp_file_list:
             with open(fname, 'w') as f:
                 f.write("# for test only")
-
         test_input = ['tests/test_data/run_gauss/ethylrad.com', "-c", SETUP_DEF_TPL_INI, "-s",
                       "-o", 'tests/test_data/run_gauss/ethyl.chk', "-n"]
         try:
@@ -393,4 +450,22 @@ class TestRunGauss(unittest.TestCase):
             for fname in temp_file_list + [SETUP_IRCR_INI_OUT, SETUP_IRCR_SLM_OUT,
                                            SETUP_IRCF_INI_OUT, SETUP_IRCF_SLM_OUT]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testFindNodeProcsMem(self):
+        # temp_file_list = ['ethylrad.com', 'ircr.tpl', 'ircf.tpl', 'opt.tpl', 'ethylrad.chk']
+        # for fname in temp_file_list:
+        #     with open(fname, 'w') as f:
+        #         f.write("# for test only")
+        test_input = ['ethylrad', "-c", SETUP_IRCS_INI, "-s", "-n"]
+        try:
+            main(test_input)
+            # self.assertFalse(diff_lines(SETUP_IRCR_INI_OUT, GOOD_SETUP_IRCR_INI_OUT))
+            # self.assertFalse(diff_lines(SETUP_IRCR_SLM_OUT, GOOD_SETUP_IRCR_SLM_OUT))
+            # self.assertFalse(diff_lines(SETUP_IRCF_INI_OUT, GOOD_SETUP_IRCF_INI_OUT))
+            # self.assertFalse(diff_lines(SETUP_IRCF_SLM_OUT, GOOD_SETUP_IRCF_SLM_OUT))
+        finally:
+            # for fname in temp_file_list + [SETUP_IRCR_INI_OUT, SETUP_IRCR_SLM_OUT,
+            #                                SETUP_IRCF_INI_OUT, SETUP_IRCF_SLM_OUT]:
+            #     silent_remove(fname, disable=DISABLE_REMOVE)
             pass

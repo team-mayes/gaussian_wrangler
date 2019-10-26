@@ -210,8 +210,9 @@ def parse_cmdline(argv):
             raise InvalidDataError("Cannot choose both 'setup_submit' and 'list_of_jobs' options")
         if args.list_of_jobs:
             if not os.path.isfile(args.job_name):
-                raise IOError("When using the 'list_of_jobs' option, the first positional argument ('job_name') must "
-                              "be the name of the file with the list of jobs. Could not read: {}".format(args.job_name))
+                raise IOError("When using the 'list_of_jobs' option, the first positional argument \n    ('job_name') "
+                              "must be the name of the file with the list of jobs. "
+                              "Could not read: {}".format(args.job_name))
 
         if not (args.list_of_jobs or args.setup_submit):
             if len(args.config[JOB_LIST]) > 1:
@@ -221,9 +222,6 @@ def parse_cmdline(argv):
             elif len(args.config[JOB_LIST]) == 1:
                 args.config[JOB_LIST] = args.config[JOB_LIST][0]
 
-        # commenting below made the current directory the default
-        # if not args.config[OUT_DIR]:
-        #     args.config[OUT_DIR] = os.path.dirname(args.config[CONFIG_FILE])
     except IOError as e:
         warning("Problems reading file:", e)
         parser.print_help()
