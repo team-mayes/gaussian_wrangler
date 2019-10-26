@@ -122,6 +122,12 @@ GOOD_MEM_OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt_get_mem.sh')
 GOOD_PROC_OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt_get_proc.sh')
 GOOD_MEM_PROC_OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_get_opt_mem_proc.sh')
 
+SETUP_GET_MEM_PROCS_ROUTE_INI = os.path.join(SUB_DATA_DIR, 'set_up_submit_get_mem_procs_default.ini')
+DEF_ROUTE_LOC = os.path.join(SUB_DATA_DIR, 'Default.Route')
+GOOD_DEF_ROUTE_LOC = os.path.join(SUB_DATA_DIR, 'default_route_good.txt')
+GOOD_MEM_PROC_ROUTE_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_get_mem_proc_route.sh')
+GOOD_MEM_PROC_ROUTE_OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_get_opt_mem_proc_route.sh')
+
 
 class TestRunGaussNoOut(unittest.TestCase):
     # These all test failure cases
@@ -275,9 +281,11 @@ class TestRunGauss(unittest.TestCase):
         try:
             main(test_input)
             self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_SH_OUT))
+            self.assertFalse(diff_lines(OPT_SH_OUT, GOOD_OPT_SH_OUT))
+            self.assertFalse(diff_lines(OPT_STABLE_SH_OUT, GOOD_OPT_STABLE_SH_OUT))
         finally:
-            silent_remove(DEF_SH_OUT, disable=DISABLE_REMOVE)
-            silent_remove(DEF_LOG_OUT, disable=DISABLE_REMOVE)
+            for file in [DEF_SH_OUT, DEF_LOG_OUT, OPT_SH_OUT, OPT_STABLE_SH_OUT]:
+                silent_remove(file, disable=DISABLE_REMOVE)
             pass
 
     def testOneJobIni(self):
@@ -528,18 +536,20 @@ class TestRunGauss(unittest.TestCase):
             pass
 
     def testFindNodeProcsMem(self):
-        test_input = [ETHYLRAD, "-c", SETUP_GET_MEM_PROCS_INI, "-t"]
+        test_input = [ETHYLRAD, "-c", SETUP_GET_MEM_PROCS_ROUTE_INI, "-t"]
         try:
-            main(test_input)
-            # with capture_stdout(main, test_input) as output:
-            #     # each assert from a different print command
-            #     self.assertTrue("the whole node will" in output)
-            #     self.assertTrue("Will allocate up to 63124196 kB" in output)
-            #     self.assertTrue("0-35" in output)
-            #     self.assertTrue("user may override these" in output)
-            # self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_MEM_PROC_SH_OUT))
-            # self.assertFalse(diff_lines(OPT_SH_OUT, GOOD_MEM_PROC_OPT_SH_OUT))
+            # main(test_input)
+            with capture_stdout(main, test_input) as output:
+                # each assert from a different print command
+                self.assertTrue("the whole node will" in output)
+                self.assertTrue("Will allocate up to 63124196 kB" in output)
+                self.assertTrue("0-35" in output)
+                self.assertTrue("user may override these" in output)
+                self.assertTrue("CacheSize=720896 and MaxDisk=40.50G" in output)
+            self.assertFalse(diff_lines(DEF_ROUTE_LOC, GOOD_DEF_ROUTE_LOC))
+            self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_MEM_PROC_ROUTE_SH_OUT))
+            self.assertFalse(diff_lines(OPT_SH_OUT, GOOD_MEM_PROC_ROUTE_OPT_SH_OUT))
         finally:
-            # for fname in [DEF_SH_OUT, OPT_SH_OUT]:
-            #     silent_remove(fname, disable=DISABLE_REMOVE)
+            for fname in [DEF_ROUTE_LOC, DEF_SH_OUT, OPT_SH_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
             pass

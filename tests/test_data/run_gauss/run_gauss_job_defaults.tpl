@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Set script variables
+INPUT_BASENAME={job_name}
+INPUT_FILE={input_file}
+GAUSSIAN_EXEC=g16
+MEMSIZE=5GB
+SCRATCH=/scratch/{user}/{job_name}_${{SLURM_JOB_ID}}
+SCRATCH2=/dev/shm
+INFILE=infile_${{INPUT_BASENAME}}
+
+mkdir ${{SCRATCH}}
+{default_route}
+# Check on editing input file. If scratch directories
+# are listed then file is used un-changed, if 3-line
+# header not present, then script prepends these lines
+# to the input file to be used in execution line
+NUMRWFLINES=`grep "RWF" ${{INPUT_FILE}} | wc -l`
+if [ ${{NUMRWFLINES}} -eq 1 ]; then
+    echo "standard file found"
+    cp ${{INPUT_FILE}} ${{INFILE}}
+else
+    echo "prepending lines to input file"
+    echo "%RWF=${{SCRATCH2}}/,$MEMSIZE,${{SCRATCH}}/,-1" > ${{INFILE}}
+    echo "%NoSave" >> ${{INFILE}}
+    {old_check_echo}
+    echo "%Chk=${{SCRATCH2}}/{job_name}.chk" >> ${{INFILE}}
+    echo "%CPU={proc_list}" >> ${{INFILE}}
+    echo "%Mem={mem}" >> ${{INFILE}}
+    cat ${{INPUT_FILE}} >> ${{INFILE}}
+fi
+
+
+# Set required Gaussian environment variables
+if [ $SLURM_JOB_NUM_NODES -gt 1 ]; then
+    export GAUSS_LFLAGS='-vv -opt "Tsnet.Node.lindarsharg: ssh"'
+    export GAUSS_EXEDIR=$g16root/g16/linda-exe:${{GAUSS_EXEDIR}}
+fi
+export GAUSS_SCRDIR=${{SCRATCH2}}
+
+# Gaussian needs scratch directories
+# If desired, make sure scratch is clear before starting
+# rm ${{SCRATCH2}}/*
+
+# Run Gaussian job
+${{GAUSSIAN_EXEC}} < ${{INFILE}} >& ${{INPUT_BASENAME}}.log
+
+rm ${{INFILE}}
+cp ${{SCRATCH2}}/${{INPUT_BASENAME}}.chk .
+
+# If desired, clean-up files or remove folder
+# rm ${{SCRATCH}}/*
+rm -r ${{SCRATCH}}

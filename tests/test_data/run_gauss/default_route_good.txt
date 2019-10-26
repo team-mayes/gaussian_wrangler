@@ -1,0 +1,2 @@
+-#- CacheSize=720896
+-#- MaxDisk=40.50G

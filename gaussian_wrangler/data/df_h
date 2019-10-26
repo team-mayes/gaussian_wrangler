@@ -1,0 +1,12 @@
+Filesystem                                                                   Size  Used Avail Use% Mounted on
+tmpfs                                                                         47G  2.3G   45G   5% /
+devtmpfs                                                                      47G     0   47G   0% /dev
+tmpfs                                                                         47G   76M   47G   1% /dev/shm
+tmpfs                                                                         47G  133M   47G   1% /run
+tmpfs                                                                         47G     0   47G   0% /sys/fs/cgroup
+tmpfs                                                                        150M     0  150M   0% /tmp
+lead-eth:/var/lib/sgi/per-host/ice-centos7.4-slurm-1/1/i7n35/var/log/memlog  2.0G   63M  2.0G   4% /var/log/memlog
+/dev/sda1                                                                    932G   33M  932G   1% /tmp/scratch
+10.148.67.8:/home                                                            182T   21T  162T  12% /home
+10.148.67.8:/nopt                                                            182T   21T  162T  12% /nopt
+10.148.66.1@o2ib:10.148.66.2@o2ib:/eaglefs                                    16P  5.2P   11P  34% /lustre/eaglefs

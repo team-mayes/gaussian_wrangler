@@ -48,7 +48,9 @@ The script includes functions to determine inputs to Gaussian based on the speci
 job. For example, if the '{default_route}' parameter is included in the 'job_run_tpl', the script will 
 determine a MaxDisk and Cachesize based on the running systems's specifications: specifically, 90% of free diskspace 
 and Gaussian's cache size algorithm of ('cache size' * 1024)/num_procs. The calculations assume the whole node will be 
-used for the Gaussian job.  These calculations are used to create a Default.Route file for Gaussian to read. 
+used for the Gaussian job.  These calculations are used to create a Default.Route file for Gaussian to read. This file 
+will be created in the current directory, or in a directory specified with the 'scratch_dir' parameter in the 
+configuration file.
 
 The program will also determine an appropriate amount of memory to allocate and max number of cores to use (also 
 assuming the whole node is used for the Gaussian job) if a '{mem}' and/or '{proc_list}' parameter is included in the 

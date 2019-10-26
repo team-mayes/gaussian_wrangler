@@ -11,7 +11,7 @@ import re
 import os
 from common_wrangler.common import (InvalidDataError, warning, process_cfg, create_out_fname, GOOD_RET, INPUT_ERROR,
                                     IO_ERROR, INVALID_DATA, read_tpl, InvalidInputError, str_to_file,
-                                    get_fname_root, OUT_DIR, MAIN_SEC)
+                                    get_fname_root, OUT_DIR, MAIN_SEC, list_to_file)
 from common_wrangler.fill_tpl import fill_save_tpl
 from gaussian_wrangler.gw_common import GAU_HEADER_PAT
 
@@ -33,9 +33,15 @@ DATA_DIR = os.path.join(SOURCE_DIR, 'data')
 
 MEMINFO_FILE = os.path.join(DATA_DIR, 'meminfo')
 CPUINFO_FILE = os.path.join(DATA_DIR, 'cpuinfo')
+DF_H = os.path.join(DATA_DIR, 'df_h')
 
 MEM_TOT_PAT = re.compile(r"MemTotal.*")
 MEM_FREE_PAT = re.compile(r"MemFree.*")
+CACHE_PAT = re.compile(r"cache size.*")
+PROC_PAT = re.compile(r"processor.*")
+
+SCRATCH_DIR = 'scratch_dir'
+DEF_ROUTE = 'default_route'
 
 # Config keys
 CONFIG_FILE = 'config_file_name'
@@ -105,6 +111,7 @@ DEF_CFG_VALS = {OUT_DIR: None,
                 MEM: None,
                 SETUP_SUBMIT: False,
                 LIST_OF_JOBS: False,
+                SCRATCH_DIR: None,
                 }
 REQ_KEYS = {
             }
@@ -246,33 +253,46 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def get_node_procs(testing_mode):
+def get_proc_info(testing_mode):
     """
     Read standard linux /proc/cpuinfo file, and return list of procs in format Gaussian wants
     # :param hostname: string, used to report where the information was retrieved
     :param testing_mode: flag to not actually look for the running machine's /proc/cpuinfo during testing,
               as this would fail for non-unix machines, and give different results for different machines.
               Instead, it will read a file that is part of the package, which is a copy of a file from a unix machine
-    :return: string: list of procs in format Gaussian wants
+    :return: string: list of procs in format Gaussian wants, and max_cache according to Gaussian's algorithm
     """
     if testing_mode:
         cpu_info_file = CPUINFO_FILE
     else:
         # as noted above, do not want to run this in testing mode, so will not be covered
         cpu_info_file = "/proc/cpuinfo"
-    # avoiding multiple subprocess calls to get detailed processor info, and being extra careful to check obtained data
-    raw_proc_info = subprocess.check_output(["grep", "^processor", cpu_info_file]).decode("utf-8").strip().split('\n')
+    # minimize subprocess calls specific processor info, and being extra careful to check obtained data
+    raw_proc_info = subprocess.check_output(["cat", cpu_info_file]).decode("utf-8").split('\n')
 
-    num_procs = len(raw_proc_info)
-    first_proc = int(raw_proc_info[0].split()[-1])
-    last_proc = int(raw_proc_info[-1].split()[-1])
+    raw_proc_list = []
+    # Gaussian default (conservative) is 1024 * 1024
+    cache_size = 1024
+    for line in raw_proc_info:
+        if PROC_PAT.match(line) or CACHE_PAT.match(line):
+            split_line = line.split()
+            if CACHE_PAT.match(line):
+                # fine that it overwrites every time; would be weird if different
+                assert split_line[-1] == 'KB'
+                cache_size = int(split_line[-2])
+            else:
+                raw_proc_list.append(int(split_line[-1]))
+
+    num_procs = len(raw_proc_list)
+    first_proc = raw_proc_list[0]
+    last_proc = raw_proc_list[-1]
 
     assert (last_proc - first_proc + 1) == num_procs
     proc_list = "{}-{}".format(first_proc, last_proc)
 
-    print("    Found {} processors. Will allow use of cpus {}.\n".format(num_procs, proc_list))
+    max_cache = (cache_size * 1024) / num_procs
 
-    return proc_list
+    return num_procs, proc_list, max_cache
 
 
 def get_node_mem(testing_mode):
@@ -312,6 +332,39 @@ def get_node_mem(testing_mode):
     return "{}KB".format(mem_alloc)
 
 
+def get_max_disk(testing_mode):
+    """
+    Read standard linux /proc/meminfo file, and return list of procs in format Gaussian wants
+    :param testing_mode: flag to not actually look for the running machine's /proc/cpuinfo during testing,
+              as this would fail for non-unix machines, and give different results for different machines.
+              Instead, it will read a file that is part of the package, which is a copy of a file from a unix machine
+    :return: string: maximum disk space that Gaussian may use, in form Gaussian wants
+    """
+    if testing_mode:
+        raw_disk_info = subprocess.check_output(["cat", DF_H]).decode("utf-8").split('\n')
+    else:
+        # as noted above, do not want to run this in testing mode, so will not be covered
+        raw_disk_info = subprocess.check_output(["df", "-h"]).decode("utf-8").split('\n')
+
+    # this is conservative for Eagle and Comet
+    raw_avail = '6G'
+    for line_num, line in enumerate(raw_disk_info):
+        split_line = line.split()
+        if line_num == 0:
+            assert split_line[-4] == "Avail"
+            assert split_line[-2] == "Mounted"
+        else:
+            if split_line[-1] == '/':
+                raw_avail = split_line[-3]
+                break
+    avail_list = re.split('([\d.]+)(\w+)', raw_avail)
+    max_disk_num = 0.9 * float(avail_list[1])
+    max_disk_unit = avail_list[2]
+    max_disk = "{:.2f}{}".format(max_disk_num, max_disk_unit)
+
+    return max_disk
+
+
 def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_mode):
     # Determine if it will run fresh or from an old checkpoint
     if job == '':
@@ -340,8 +393,18 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_mode):
     # if either MEM or PROC_LIST is the default (Nonetype), and is used to run the job, get info from the node before
     #    creating the job script
     mem_required = '{' + MEM + '}' in tpl_str
+    get_mem = mem_required and not tpl_dict[MEM]
+
     proc_required = '{' + PROC_LIST + '}' in tpl_str
-    if (mem_required or proc_required) and (not tpl_dict[MEM] or not tpl_dict[PROC_LIST]):
+    get_proc = proc_required and not tpl_dict[PROC_LIST]
+
+    default_gauss_required = '{' + DEF_ROUTE + '}' in tpl_str
+
+    num_procs = 1  # to make IDE happy
+    proc_list = '0'  # to make IDE happy
+
+    if get_mem or get_proc or default_gauss_required:
+        # explicitly check each possible required info flag, because any or all can be requested
         if testing_mode:
             hostname = subprocess.check_output(["echo", "r1i7n35"]).decode("utf-8").strip()
         else:
@@ -349,13 +412,29 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_mode):
             hostname = subprocess.check_output(["hostname"]).decode("utf-8").strip()
         print("Obtaining available memory and/or number of processors on node {}.\n    "
               "Note: this program assumes the whole node will be allocated to Gaussian.\n".format(hostname))
-        if mem_required and not tpl_dict[MEM]:
+        if get_mem:
             tpl_dict[MEM] = get_node_mem(testing_mode)
-        # explicitly check both, because one or both can be needed
-        if proc_required and not tpl_dict[PROC_LIST]:
-            tpl_dict[PROC_LIST] = get_node_procs(testing_mode)
-        print("    The user may override these values by specifying the '{}' and/or '{}' keywords in the configuration "
-              "file.\n    Be sure to use the formatting Gaussian expects.".format(MEM, PROC_LIST))
+
+        max_cache = 1024 * 1024  # to make IDE happy; Gaussian default (conservative) is 1024 * 1024
+        if get_proc or default_gauss_required:
+            num_procs, proc_list, max_cache = get_proc_info(testing_mode)
+        if get_proc:
+            tpl_dict[PROC_LIST] = proc_list
+            print("    Found {} processors. Will allow use of cpus {}.\n".format(num_procs, proc_list))
+
+        if get_mem or get_proc:
+            print("    The user may override these values by specifying the '{}' and/or '{}' keywords in the "
+                  "configuration file.\n    Be sure to use the formatting Gaussian expects.\n".format(MEM, PROC_LIST))
+
+        if default_gauss_required:
+            max_disk = get_max_disk(testing_mode)
+            max_cache = int(max_cache)
+            print("Since '{}' found in the {}, read machine specs to determine CacheSize={} and "
+                  "MaxDisk={}".format(DEF_ROUTE, JOB_RUN_TPL, max_cache, max_disk))
+            default_route_list = ["-#- CacheSize={}".format(max_cache), "-#- MaxDisk={}".format(max_disk)]
+            fname = create_out_fname('Default.Route', base_dir=cfg[SCRATCH_DIR])
+            list_to_file(default_route_list, fname)
+            tpl_dict[DEF_ROUTE] = ''   # there is an action triggered, not a value needed, so replaced with blank space
 
     move_on = False
     while not move_on:
