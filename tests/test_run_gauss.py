@@ -376,7 +376,7 @@ class TestRunGauss(unittest.TestCase):
 
     def testSubmitDefDirIni(self):
         # Checking alternate input from above
-        temp_file_list = ['ethylrad.com', 'f.tpl', 'ts.tpl']
+        temp_file_list = ['ethylrad.com', 'f.tpl', 'ts.tpl', 'ethyl.chk']
         for fname in temp_file_list:
             with open(fname, 'w') as f:
                 f.write("# for test only\n")
@@ -387,7 +387,7 @@ class TestRunGauss(unittest.TestCase):
             self.assertFalse(diff_lines(SETUP_F_TS_INI_OUT, GOOD_F_TS_INI_OUT))
             self.assertFalse(diff_lines(SETUP_F_TS_SLM_OUT, GOOD_F_TS_SLM_OUT))
         finally:
-            for fname in temp_file_list + [SETUP_F_TS_INI_OUT, ]:
+            for fname in temp_file_list + [SETUP_F_TS_INI_OUT, SETUP_F_TS_SLM_OUT]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
