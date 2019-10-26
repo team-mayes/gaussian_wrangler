@@ -7,23 +7,60 @@ Assumptions:
    - Running on one node, and the whole node
 """
 import argparse
+import os
+import re
 import subprocess
 import sys
-from common_wrangler.common import (GOOD_RET, INPUT_ERROR, warning, InvalidDataError)
+from common_wrangler.common import (GOOD_RET, INPUT_ERROR, warning, InvalidDataError, IO_ERROR)
+
+SOURCE_DIR = os.path.dirname(__file__)
+DATA_DIR = os.path.join(SOURCE_DIR, 'data')
+
+MEMINFO_FILE = os.path.join(DATA_DIR, 'meminfo')
+CPUINFO_FILE = os.path.join(DATA_DIR, 'cpuinfo')
+
+MEM_TOT_PAT = re.compile(r"MemTotal.*")
+MEM_FREE_PAT = re.compile(r"MemFree.*")
 
 
-def get_node_info(node_name):
-    print(node_name)
-    num_procs = subprocess.check_output(["grep", "-c", "^processor", "/proc/meminfo"])
-    # 97311328 kB
-    # r1i6n14
-    # cat  /proc/meminfo
-    # num_processors = grep -c ^processor /proc/cpuinfo
-    # sinfo -n r1i6n14 --format="%e %m"
-    max_mem = 1000
-    free_mem = 900
-    alloc_mem = min(max_mem * .75, free_mem * .85)
-    return num_procs, max_mem, free_mem, alloc_mem
+def get_node_info(node_name, testing_mode):
+    if testing_mode:
+        mem_info_file = MEMINFO_FILE
+        cpu_info_file = CPUINFO_FILE
+    else:
+        mem_info_file = "/proc/meminfo"
+        cpu_info_file = "/proc/cpuinfo"
+
+    # To make IDE happy
+    mem_tot, mem_free = 0, 0
+
+    # avoiding multiple subprocess calls to get detailed processor info, and being extra careful to check obtained data
+    raw_proc_info = subprocess.check_output(["grep", "^processor", cpu_info_file]).decode("utf-8").strip().split('\n')
+    print(raw_proc_info)
+    num_procs = len(raw_proc_info)
+    first_proc = int(raw_proc_info[0].split()[-1])
+    last_proc = int(raw_proc_info[-1].split()[-1])
+    assert (last_proc - first_proc + 1) == num_procs
+    proc_list = "{}-{}".format(first_proc, last_proc)
+
+    raw_mem_info = subprocess.check_output(["cat", mem_info_file]).decode("utf-8").split('\n')
+    # not relying on expected order, even though likely okay
+    for line in raw_mem_info:
+        if MEM_TOT_PAT.match(line) or MEM_FREE_PAT.match(line):
+            split_line = line.split()
+            assert split_line[-1] == 'kB'
+            if MEM_TOT_PAT.match(line):
+                mem_tot = int(split_line[1])
+            else:
+                mem_free = int(split_line[1])
+                # no other info needed, so stop iteration
+                break
+    mem_alloc = int(min(mem_tot * .75, mem_free * .85))
+    print('On node {}, Found {} processors, {} kB total memory and {} kB free memory.\n'
+          'Will instruct Gaussian to use up to {} processors and {} kB of memory.'.format(node_name, num_procs,
+                                                                                          mem_tot, mem_free,
+                                                                                          num_procs, mem_alloc))
+    return proc_list, mem_alloc
 
 
 def parse_cmdline(argv):
@@ -82,19 +119,16 @@ def main(argv=None):
     args, ret = parse_cmdline(argv)
     if ret != GOOD_RET or args is None:
         return ret
-    #
-    # cfg = args.config
 
-    num_procs, max_mem, free_mem, alloc_mem = get_node_info(args.node_name)
-    print("NumProcs: {}".format(num_procs))
-    print("MemTotal: {:14} kB\nMemFree:  {:14} kB\n"
-          "MemToGauss: {:12} kB".format(num_procs, max_mem, free_mem, alloc_mem))
+    try:
+        num_procs, mem_alloc = get_node_info(args.node_name, args.testing)
+        print(num_procs, mem_alloc)
 
-    # except IOError as e:
-    #     warning("Problems reading file:", e)
-    #     return IO_ERROR
-    # except subprocess.CalledProcessError as e:
-    #     warning("", e)
+    except IOError as e:
+        warning("Problems reading file:", e)
+        return IO_ERROR
+    except (subprocess.CalledProcessError, ValueError) as e:
+        warning("", e)
     # except InvalidInputError as e:
     #     warning("Check input:", e)
     #     return INVALID_DATA

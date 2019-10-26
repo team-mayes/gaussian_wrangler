@@ -38,6 +38,7 @@ FIRST_JOB_CHK = 'chk_for_first_job'
 OLD_CHECK_ECHO = 'old_check_echo'
 # config keys for spawning additional jobs
 SBATCH_TPL = 'sbatch_tpl'
+JOB_DESCRIP = 'job_descrip'
 PARTITION = 'partition'
 RUN_TIME = 'run_time'
 ACCOUNT = 'account'
@@ -46,7 +47,8 @@ USER = 'user'
 MEM = 'mem'
 PROC_LIST = 'proc_list'
 ALL_NEW = 'all_new'
-OPT_OLD_JOB_NAME = 'opt_old_name'
+CHK_BASENAME = 'chk_base_name'
+READ_CHK_OPTION = 'read_chk_option'
 RUN_GAUSS_INI = 'run_gauss_ini'
 QOS = 'qos'
 LIST_OF_JOBS = 'list_of_jobs'
@@ -54,6 +56,7 @@ SETUP_SUBMIT = 'setup_submit'
 START_FROM_SAME_CHK = 'start_from_job_name_chk'
 NO_SUBMIT = 'no_submit'
 CHECK_FOR_CHK = "check_for_chk"
+CHK_EXT = '.chk'
 KEYS_FOR_SPAWNING_SBATCH = [JOB_RUN_TPL, PARTITION, QOS, RUN_TIME, ACCOUNT, SBATCH_TPL, EMAIL, ALL_NEW,
                             USER, PROC_LIST, MEM]
 KEYS_FOR_SPAWNING_INIS = [OUT_DIR, FIRST_JOB_CHK, OLD_CHECK_ECHO]
@@ -90,6 +93,8 @@ DEF_CFG_VALS = {OUT_DIR: None,
                 USER: None,
                 PROC_LIST: None,
                 MEM: None,
+                SETUP_SUBMIT: False,
+                LIST_OF_JOBS: False,
                 }
 REQ_KEYS = {
             }
@@ -186,8 +191,9 @@ def parse_cmdline(argv):
                                                      " The default is False.", action="store_true", default=False)
     parser.add_argument("-n", "--no_submit", help="Set up jobs without submitting them. This flag only effects the "
                                                   "'-s' and '-l' options.", action="store_true", default=False)
-    parser.add_argument("-o", "--old_chk_file", help="The base name of the checkpoint file (do not include '.chk')"
-                                                     "to be used for the first job (optional).", default=None)
+    parser.add_argument("-o", "--old_chk_fname", help="The name of the checkpoint file (will use base name plus "
+                                                      "'.chk' whether or not an extension of any type is provided) "
+                                                      "to be used for the first job (optional).", default=None)
     parser.add_argument("-s", "--setup_submit", help="The script will setup and submit, rather than run, the provided "
                                                      "'job_name'. Any extension, or none, can be included in the job "
                                                      "name. If a 'single_job' or 'list_of_jobs' are not specified, "
@@ -206,8 +212,6 @@ def parse_cmdline(argv):
             if not os.path.isfile(args.job_name):
                 raise IOError("When using the 'list_of_jobs' option, the first positional argument ('job_name') must "
                               "be the name of the file with the list of jobs. Could not read: {}".format(args.job_name))
-        if args.old_chk_file:
-            args.config[FIRST_JOB_CHK] = os.path.splitext(args.old_chk_file)[0]
 
         if not (args.list_of_jobs or args.setup_submit):
             if len(args.config[JOB_LIST]) > 1:
@@ -256,7 +260,7 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
     print("Running {}".format(new_job_name))
 
     tpl_dict[JOB_NAME] = new_job_name
-    for key_name in [USER, MEM, PROC_LIST]:
+    for key_name in [USER, MEM, PROC_LIST, ]:
         if key_name in cfg:
             tpl_dict[key_name] = cfg[key_name]
     tpl_str = read_tpl(tpl_file)
@@ -289,30 +293,41 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_flag):
 def create_sbatch_dict(cfg, tpl_dict, new_ini_fname, current_job_list, start_from_job_name_chk=True,
                        ignore_chk_warning=False):
     sbatch_dict = {PARTITION: cfg[PARTITION], RUN_TIME: cfg[RUN_TIME], ACCOUNT: cfg[ACCOUNT],
-                   JOB_NAME: tpl_dict[JOB_NAME], RUN_GAUSS_INI: new_ini_fname, QOS: cfg[QOS]
+                   JOB_NAME: tpl_dict[JOB_NAME], RUN_GAUSS_INI: new_ini_fname, QOS: cfg[QOS],
+                   JOB_DESCRIP: tpl_dict[JOB_DESCRIP],
                    }
 
     if cfg[FIRST_JOB_CHK]:
-        sbatch_dict[OPT_OLD_JOB_NAME] = '-o ' + cfg[FIRST_JOB_CHK]
+        if not os.path.isfile(cfg[FIRST_JOB_CHK] + CHK_EXT):
+            raise InvalidDataError("Could not find specified '{}': {}".format(FIRST_JOB_CHK,
+                                                                              cfg[FIRST_JOB_CHK] + CHK_EXT))
+        sbatch_dict[OLD_CHECK_ECHO] = '-o ' + cfg[FIRST_JOB_CHK]
     elif start_from_job_name_chk:
-        sbatch_dict[OPT_OLD_JOB_NAME] = '-o ' + tpl_dict[JOB_NAME]
+        fname_to_check = tpl_dict[JOB_NAME] + CHK_EXT
+        if not os.path.isfile(fname_to_check):
+            raise InvalidDataError("Could not find required checkpoint file: {}".format(fname_to_check))
+        sbatch_dict[OLD_CHECK_ECHO] = '-o ' + tpl_dict[JOB_NAME]
     else:
-        sbatch_dict[OPT_OLD_JOB_NAME] = ''
+        sbatch_dict[OLD_CHECK_ECHO] = ''
         if current_job_list[0] == '' and cfg[CHECK_FOR_CHK]:
             # in the case when there is no old_check_file, make sure the first input file does not try to read from chk
             # IOError is already caught; no don't need to add a try loop
-            with open(tpl_dict[INPUT_FILE], "r") as f:
-                for line in f:
-                    line = line.strip()
-                    # route can be multiple lines, so first fine the line, then continue until a blank is reached
-                    if GAU_HEADER_PAT.match(line):
-                        while line != '':
-                            if GUESS_READ_OR_GEOM_CHK_PAT.match(line) and not ignore_chk_warning:
-                                raise InvalidDataError("Did not find an old checkpoint file to read, but the "
-                                                       "Gaussian input header indicates that Gaussian will attempt "
-                                                       "and fail to read from a checkpoint:\n   file:  {}\n"
-                                                       "  route:  {} ".format(tpl_dict[INPUT_FILE], line))
-                            line = next(f).strip()
+            with open(tpl_dict[INPUT_FILE]) as f:
+                try:
+                    for line in f:
+                        line = line.strip()
+                        # route can be multiple lines, so first fine the line, then continue until a blank is reached
+                        if GAU_HEADER_PAT.match(line):
+                            while line != '':
+                                if GUESS_READ_OR_GEOM_CHK_PAT.match(line) and not ignore_chk_warning:
+                                    raise InvalidDataError("Did not find an old checkpoint file to read, but the "
+                                                           "Gaussian input header indicates that Gaussian will attempt "
+                                                           "and fail to read from a checkpoint:\n   file:  {}\n"
+                                                           "  route:  {} ".format(tpl_dict[INPUT_FILE], line))
+                                line = next(f).strip()
+                except StopIteration:
+                    raise InvalidDataError('The specified input file does not appear valid: {}'
+                                           ''.format(tpl_dict[INPUT_FILE]))
 
     if cfg[EMAIL]:
         sbatch_dict[EMAIL] = '#SBATCH --mail-type=FAIL\n#SBATCH --mail-type=END\n' \
@@ -364,32 +379,34 @@ def create_ini_tpl_with_req_keys(thread, tpl_dict, cfg, new_ini_fname):
                     tpl_str += '\n{} = {}'.format(key_word, cfg[key_word])
 
     # job locations will be needed
-    for job, tpl_loc in tpl_dict.items():
+    tpl_loc_list_tuples = sorted(tpl_dict.items(), key=lambda x: x[1])
+    for job, tpl_loc in tpl_loc_list_tuples:
         if job != '' and job in tpl_str:
             tpl_str += '\n{} = {}'.format(job, tpl_loc)
 
     str_to_file(tpl_str, new_ini_fname, print_info=True)
 
 
-def setup_and_submit(cfg, suffix, thread, tpl_dict, current_job_list, chk_warn):
-    if cfg[SETUP_SUBMIT] or cfg[LIST_OF_JOBS]:
-        base_name = tpl_dict[JOB_NAME]
+def setup_and_submit(cfg, current_job_list, tpl_dict, chk_warn):
+    if len(current_job_list) == 1 and current_job_list[0] == '':
+        suffix = ''
     else:
-        base_name = cfg[CONFIG_FILE]
+        if current_job_list[0] == '':
+            suffix = '_' + '_'.join(current_job_list[1:])
+        else:
+            suffix = '_' + '_'.join(current_job_list)
+    tpl_dict[JOB_DESCRIP] = tpl_dict[JOB_NAME] + suffix
 
-    new_ini_fname = create_out_fname(base_name, suffix=str(suffix), ext='.ini', base_dir=cfg[OUT_DIR])
-    new_sbatch_fname = create_out_fname(base_name, suffix=str(suffix), ext='.slurm', base_dir=cfg[OUT_DIR])
+    new_ini_fname = create_out_fname(tpl_dict[JOB_DESCRIP], ext='.ini', base_dir=cfg[OUT_DIR])
+    new_sbatch_fname = create_out_fname(tpl_dict[JOB_DESCRIP], ext='.slurm', base_dir=cfg[OUT_DIR])
 
     sbatch_dict = create_sbatch_dict(cfg, tpl_dict, os.path.relpath(new_ini_fname), current_job_list,
                                      start_from_job_name_chk=cfg[START_FROM_SAME_CHK], ignore_chk_warning=chk_warn)
     tpl_str = read_tpl(cfg[SBATCH_TPL])
-    try:
-        fill_save_tpl(cfg, tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
-    except KeyError as e:
-        print(e)
+    fill_save_tpl(cfg, tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
 
     # read ini_tpl and check if it has fields for submitting spawned jobs, if needed
-    create_ini_tpl_with_req_keys(thread, cfg[TPL_DICT], cfg, new_ini_fname)
+    create_ini_tpl_with_req_keys(current_job_list, cfg[TPL_DICT], cfg, new_ini_fname)
 
     if not cfg[NO_SUBMIT]:
         try:
@@ -406,10 +423,18 @@ def main(argv=None):
         return ret
 
     cfg = args.config
-    # to keep these values handy
-    cfg[LIST_OF_JOBS] = args.list_of_jobs
-    cfg[SETUP_SUBMIT] = args.setup_submit
+
+    args_key_map = [(args.list_of_jobs, False, LIST_OF_JOBS),
+                    (args.old_chk_fname, None, FIRST_JOB_CHK),
+                    (args.setup_submit, False, SETUP_SUBMIT)]
+    for arg_val, arg_default, cfg_key in args_key_map:
+        if arg_val != arg_default:
+            cfg[cfg_key] = arg_val
+    # The following do not have default config options, so overwrite
     cfg[NO_SUBMIT] = args.no_submit
+    if cfg[FIRST_JOB_CHK]:
+        # remove extension (if any) from cfg[FIRST_JOB_CHK]
+        cfg[FIRST_JOB_CHK] = os.path.splitext(cfg[FIRST_JOB_CHK])[0]
 
     # Read template and data files
     try:
@@ -420,36 +445,30 @@ def main(argv=None):
                     input_job_file = os.path.splitext(line.strip())[0] + cfg[GAUSS_IN_EXT]
                     base_name = get_fname_root(line.strip())
                     tpl_dict = {JOB_NAME: base_name, INPUT_FILE: input_job_file}
-                    for index, thread in enumerate(cfg[JOB_LIST]):
-                        if len(cfg[JOB_LIST]) == 1:
-                            suffix = ''
-                        else:
-                            suffix = index
-                        setup_and_submit(cfg, suffix, thread, tpl_dict, thread, args.ignore_chk_warning)
+                    for thread_index, thread in enumerate(cfg[JOB_LIST]):
+                        setup_and_submit(cfg, thread, tpl_dict, args.ignore_chk_warning)
             return GOOD_RET
 
         # otherwise, job_name is actually the job name. We can to ignore any extension on it
         job_name_perhaps_with_dir = os.path.splitext(args.job_name)[0]
         job_name = os.path.basename(job_name_perhaps_with_dir)
         tpl_dict = {JOB_NAME: job_name, INPUT_FILE: job_name_perhaps_with_dir + cfg[GAUSS_IN_EXT]}
+        if not os.path.isfile(tpl_dict[INPUT_FILE]):
+            raise IOError("Could not find input file: {}".format(tpl_dict[INPUT_FILE]))
 
         if args.setup_submit:
-            for index, thread in enumerate(cfg[JOB_LIST]):
-                if len(cfg[JOB_LIST]) == 1:
-                    suffix = ''
-                else:
-                    suffix = index
-                setup_and_submit(cfg, suffix, thread, tpl_dict, thread, args.ignore_chk_warning)
+            for thread_index, thread in enumerate(cfg[JOB_LIST]):
+                setup_and_submit(cfg, thread, tpl_dict, args.ignore_chk_warning)
             return GOOD_RET
 
         for job in cfg[JOB_LIST]:
             run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, args.testing)
 
         if len(cfg[FOLLOW_JOBS_LIST]) > 1:
-            for index, thread in enumerate(cfg[FOLLOW_JOBS_LIST]):
-                if index == 0 and not cfg[ALL_NEW]:
+            for thread_index, thread in enumerate(cfg[FOLLOW_JOBS_LIST]):
+                if thread_index == 0 and not cfg[ALL_NEW]:
                     continue
-                setup_and_submit(cfg, index, thread, tpl_dict, thread, args.ignore_chk_warning)
+                setup_and_submit(cfg, thread, tpl_dict, args.ignore_chk_warning)
 
         if len(cfg[FOLLOW_JOBS_LIST]) > 0 and not cfg[ALL_NEW]:
             for job in cfg[FOLLOW_JOBS_LIST][0]:
@@ -464,7 +483,7 @@ def main(argv=None):
         warning("Check input:", e)
         return INVALID_DATA
     except InvalidDataError as e:
-        warning("Problems reading data:", e)
+        warning("Invalid data:", e)
         return INVALID_DATA
 
     return GOOD_RET  # success

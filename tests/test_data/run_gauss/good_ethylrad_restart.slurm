@@ -2,9 +2,9 @@
 #SBATCH --partition=compute
 #SBATCH --time=4:00:00
 #SBATCH --nodes=1
-#SBATCH --job-name=ethylrad_restart
-#SBATCH --output=ethylrad_restart.out
-#SBATCH --error=ethylrad_restart.err
+#SBATCH --job-name=ethylrad_restart_opt
+#SBATCH --output=ethylrad_restart_opt.out
+#SBATCH --error=ethylrad_restart_opt.err
 #SBATCH --account=nwu150
 #SBATCH --qos=normal
 #SBATCH --mail-type=FAIL
@@ -25,4 +25,4 @@ module load gaussian/G16B
 
 cd ${SLURM_SUBMIT_DIR}
 
-run_gauss ethylrad_restart  -c ethylrad_restart.ini
+run_gauss ethylrad_restart  -c ethylrad_restart_opt.ini

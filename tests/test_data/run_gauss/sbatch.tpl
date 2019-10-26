@@ -2,9 +2,9 @@
 #SBATCH --partition={partition}
 #SBATCH --time={run_time}
 #SBATCH --nodes=1
-#SBATCH --job-name={job_name}
-#SBATCH --output={job_name}.out
-#SBATCH --error={job_name}.err
+#SBATCH --job-name={job_descrip}
+#SBATCH --output={job_descrip}.out
+#SBATCH --error={job_descrip}.err
 #SBATCH --account={account}
 #SBATCH --qos={qos}
 {email}
@@ -23,4 +23,4 @@ module load gaussian/G16B
 
 cd ${{SLURM_SUBMIT_DIR}}
 
-run_gauss {job_name} {opt_old_name} -c {run_gauss_ini}
+run_gauss {job_name} {old_check_echo} -c {run_gauss_ini}

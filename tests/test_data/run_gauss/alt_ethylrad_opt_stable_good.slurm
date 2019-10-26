@@ -2,9 +2,9 @@
 #SBATCH --partition=short
 #SBATCH --time=4:00:00
 #SBATCH --nodes=1
-#SBATCH --job-name=ethylrad_opt
-#SBATCH --output=ethylrad_opt.out
-#SBATCH --error=ethylrad_opt.err
+#SBATCH --job-name=ethylrad_opt_stable
+#SBATCH --output=ethylrad_opt_stable.out
+#SBATCH --error=ethylrad_opt_stable.err
 #SBATCH --account=bpms
 #SBATCH --qos=high
 
@@ -23,4 +23,4 @@ module load gaussian/G16B
 
 cd ${SLURM_SUBMIT_DIR}
 
-run_gauss ethylrad_opt -o ethylrad_opt -c tests/test_data/run_gauss/run_spawn_all_new2.ini
+run_gauss ethylrad_opt -o ethylrad_opt -c ethylrad_opt_stable.ini

@@ -2,9 +2,9 @@
 #SBATCH --partition=short
 #SBATCH --time=4:00:00
 #SBATCH --nodes=1
-#SBATCH --job-name=ethylrad
-#SBATCH --output=ethylrad.out
-#SBATCH --error=ethylrad.err
+#SBATCH --job-name=ethylrad_ircr_opt
+#SBATCH --output=ethylrad_ircr_opt.out
+#SBATCH --error=ethylrad_ircr_opt.err
 #SBATCH --account=bpms
 #SBATCH --qos=normal
 
@@ -23,4 +23,4 @@ module load gaussian/G16B
 
 cd ${SLURM_SUBMIT_DIR}
 
-run_gauss ethylrad -o ethylrad -c ethylrad0.ini
+run_gauss ethylrad -o ethylrad -c ethylrad_ircr_opt.ini
