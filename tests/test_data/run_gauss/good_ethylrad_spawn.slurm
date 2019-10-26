@@ -2,9 +2,9 @@
 #SBATCH --partition=compute
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
-#SBATCH --job-name=ethylrad
-#SBATCH --output=ethylrad.out
-#SBATCH --error=ethylrad.err
+#SBATCH --job-name=ethylrad_opt_stable
+#SBATCH --output=ethylrad_opt_stable.out
+#SBATCH --error=ethylrad_opt_stable.err
 #SBATCH --account=nwu150
 #SBATCH --qos=normal
 
@@ -23,4 +23,4 @@ module load gaussian/G16B
 
 cd ${SLURM_SUBMIT_DIR}
 
-run_gauss ethylrad -o ethylrad -c ethylrad.ini
+run_gauss ethylrad -o ethylrad -c ethylrad_opt_stable.ini

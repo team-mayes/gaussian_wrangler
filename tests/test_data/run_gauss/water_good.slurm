@@ -2,9 +2,9 @@
 #SBATCH --partition=short
 #SBATCH --time=4:00:00
 #SBATCH --nodes=1
-#SBATCH --job-name=water
-#SBATCH --output=water.out
-#SBATCH --error=water.err
+#SBATCH --job-name=water_opt_stable
+#SBATCH --output=water_opt_stable.out
+#SBATCH --error=water_opt_stable.err
 #SBATCH --account=bpms
 #SBATCH --qos=high
 
@@ -23,4 +23,4 @@ module load gaussian/G16B
 
 cd ${SLURM_SUBMIT_DIR}
 
-run_gauss water  -c water.ini
+run_gauss water  -c water_opt_stable.ini
