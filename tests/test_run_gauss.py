@@ -55,21 +55,13 @@ NO_CHK_CHECK_INI = os.path.join(MAIN_DIR, 'ethylrad_restart_opt.ini')
 NO_CHK_CHECK_SLM = os.path.join(MAIN_DIR, 'ethylrad_restart_opt.slurm')
 GOOD_NO_CHK_CHECK_INI = os.path.join(SUB_DATA_DIR, 'good_ethylrad_restart.ini')
 GOOD_NO_CHK_CHECK_SLM = os.path.join(SUB_DATA_DIR, 'good_ethylrad_restart.slurm')
-SUBMIT_NO_CHK_CHECK_EXTRA_PARAM_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_no_chk_chk_extra_param.ini')
-NO_CHK_CHECK_EXTRA_PARAM_INI = os.path.join(MAIN_DIR, 'ethylrad_restart_extra_param.ini')
+# SUBMIT_NO_CHK_CHECK_EXTRA_PARAM_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_no_chk_chk_extra_param.ini')
+# NO_CHK_CHECK_EXTRA_PARAM_INI = os.path.join(MAIN_DIR, 'ethylrad_restart_extra_param.ini')
 
 SPAWN_GIVE_OLD_CHK_STR_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str.ini')
-SPAWN1_GIVE_CHK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str1.ini')
-SPAWN2_GIVE_CHK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str2.ini')
-SPAWN1_GIVE_CHK_SLM = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str1.slurm')
-SPAWN2_GIVE_CHK_SLM = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str2.slurm')
 
 SPAWN_ALT_OLD_CHK_STR_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_diff_old_chk_str.ini')
 GOOD_ALT_OPT_STABLE_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt_stable_alt.sh')
-SPAWN1_DIFF_CHK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_diff_old_chk_str1.ini')
-SPAWN2_DIFF_CHK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_diff_old_chk_str2.ini')
-SPAWN1_DIFF_CHK_SLM = os.path.join(SUB_DATA_DIR, 'run_spawn_diff_old_chk_str1.slurm')
-SPAWN2_DIFF_CHK_SLM = os.path.join(SUB_DATA_DIR, 'run_spawn_diff_old_chk_str2.slurm')
 
 SPAWN_ALL_NEW_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new.ini')
 
@@ -83,14 +75,10 @@ GOOD_SPAWN1_NEW_SLURM = os.path.join(SUB_DATA_DIR, 'alt_ethylrad_opt_opt_freq_go
 GOOD_SPAWN2_NEW_SLURM = os.path.join(SUB_DATA_DIR, 'alt_ethylrad_opt_freq_good.slurm')
 
 SETUP_SUBMIT_INI = os.path.join(SUB_DATA_DIR, 'set_up_submit.ini')
-SETUP_INI_OUT = os.path.join(MAIN_DIR, 'ethylrad.ini')
-SETUP_SLURM_OUT = os.path.join(MAIN_DIR, 'ethylrad.slurm')
 SETUP_WATER_INI_OUT = os.path.join(MAIN_DIR, 'water_opt_stable.ini')
 SETUP_WATER_SLURM_OUT = os.path.join(MAIN_DIR, 'water_opt_stable.slurm')
 GOOD_SETUP_INI_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad.ini')
 GOOD_SETUP_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad.slurm')
-WATER_INI_OUT = os.path.join(MAIN_DIR, 'water.ini')
-WATER_SLURM_OUT = os.path.join(MAIN_DIR, 'water.slurm')
 GOOD_WATER_INI_OUT = os.path.join(SUB_DATA_DIR, 'water_good.ini')
 GOOD_WATER_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'water_good.slurm')
 
@@ -107,11 +95,6 @@ GOOD_SETUP_F_TS_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_f_ts_good.ini')
 GOOD_SETUP_F_TS_SLM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_f_ts_good.slurm')
 GOOD_F_TS_INI_OUT = os.path.join(SUB_DATA_DIR, 'alt_ethylrad_f_ts_good.ini')
 GOOD_F_TS_SLM_OUT = os.path.join(SUB_DATA_DIR, 'alt_ethylrad_f_ts_good.slurm')
-
-SETUP_SLURM_DEF_DIR_OUT = os.path.join(MAIN_DIR, 'ethylrad.slurm')
-GOOD_DEF_DIR_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_default_dir_good.ini')
-GOOD_DEF_DIR_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_default_dir_good.slurm')
-
 
 SETUP_IRCS_INI = os.path.join(SUB_DATA_DIR, 'submit_ircs_opt.ini')
 SETUP_IRCR_INI_OUT = os.path.join(MAIN_DIR, 'ethylrad_ircr_opt.ini')
@@ -170,7 +153,7 @@ class TestRunGaussNoOut(unittest.TestCase):
             with capture_stderr(main, test_input) as output:
                 self.assertTrue("only supported" in output)
         finally:
-            for fname in temp_file_list + [SETUP_SLURM_DEF_DIR_OUT]:
+            for fname in temp_file_list:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
@@ -261,7 +244,8 @@ class TestRunGauss(unittest.TestCase):
             self.assertFalse(diff_lines(OPT_STABLE_SH_OUT, GOOD_OPT_STABLE_SH_OUT))
         finally:
             for fname in [DEF_SH_OUT, OPT_SH_OUT, OPT_STABLE_SH_OUT, DEF_LOG_OUT, OPT_LOG_OUT, OPT_STABLE_LOG_OUT,
-                          SPAWN1_GIVE_CHK_INI, SPAWN2_GIVE_CHK_INI, SPAWN1_GIVE_CHK_SLM, SPAWN2_GIVE_CHK_SLM]:
+                          SPAWN2_INI, SPAWN2_SLURM, SPAWN1_INI, SPAWN1_SLURM,
+                          ]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
@@ -271,8 +255,9 @@ class TestRunGauss(unittest.TestCase):
             main(test_input)
             self.assertFalse(diff_lines(OPT_STABLE_SH_OUT, GOOD_ALT_OPT_STABLE_SH_OUT))
         finally:
-            for fname in [DEF_SH_OUT, OPT_SH_OUT, OPT_STABLE_SH_OUT, DEF_LOG_OUT, OPT_LOG_OUT, OPT_STABLE_LOG_OUT,
-                          SPAWN1_DIFF_CHK_INI, SPAWN2_DIFF_CHK_INI, SPAWN1_DIFF_CHK_SLM, SPAWN2_DIFF_CHK_SLM]:
+            for fname in [DEF_SH_OUT, OPT_SH_OUT, SPAWN2_INI, SPAWN2_SLURM, OPT_STABLE_SH_OUT, DEF_LOG_OUT,
+                          OPT_LOG_OUT, OPT_STABLE_LOG_OUT, SPAWN1_INI, SPAWN1_SLURM,
+                          ]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
@@ -318,7 +303,7 @@ class TestRunGauss(unittest.TestCase):
             self.assertFalse(diff_lines(SPAWN0_INI, GOOD_SETUP_INI_OUT))
             self.assertFalse(diff_lines(SPAWN0_SLURM, GOOD_SETUP_SLURM_OUT))
         finally:
-            for fname in [SETUP_INI_OUT, SETUP_SLURM_OUT]:
+            for fname in [SPAWN0_INI, SPAWN0_SLURM]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
@@ -335,7 +320,7 @@ class TestRunGauss(unittest.TestCase):
             self.assertFalse(diff_lines(SETUP_WATER_INI_OUT, GOOD_WATER_INI_OUT))
             self.assertFalse(diff_lines(SETUP_WATER_SLURM_OUT, GOOD_WATER_SLURM_OUT))
         finally:
-            for fname in temp_file_list + [SETUP_INI_OUT, SETUP_SLURM_OUT, WATER_INI_OUT, WATER_SLURM_OUT]:
+            for fname in temp_file_list + [SPAWN0_INI, SPAWN0_SLURM, SETUP_WATER_INI_OUT, SETUP_WATER_SLURM_OUT]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
@@ -350,10 +335,10 @@ class TestRunGauss(unittest.TestCase):
             self.assertFalse(diff_lines(SPAWN0_INI, GOOD_ETHYL_SPAWN_INI_OUT))
             self.assertFalse(diff_lines(SPAWN0_SLURM, GOOD_ETHYL_SPAWN_SLURM_OUT))
             self.assertFalse(diff_lines(SETUP_WATER_INI_OUT, GOOD_ETHYL_SPAWN_INI_OUT))
-            self.assertFalse(diff_lines(WATER_SLURM_OUT, GOOD_WATER_SPAWN_SLURM_OUT))
+            self.assertFalse(diff_lines(SETUP_WATER_SLURM_OUT, GOOD_WATER_SPAWN_SLURM_OUT))
         finally:
-            # for fname in [SETUP_INI_OUT, SETUP_SLURM_OUT, WATER_INI_OUT, WATER_SLURM_OUT]:
-            #     silent_remove(fname, disable=DISABLE_REMOVE)
+            for fname in temp_file_list + [SPAWN0_INI, SPAWN0_SLURM, SETUP_WATER_INI_OUT, SETUP_WATER_SLURM_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
     def testSubmitWithChkDefDirIni(self):
