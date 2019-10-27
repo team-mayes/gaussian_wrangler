@@ -40,7 +40,6 @@ setup(
                                       'check_gauss = gaussian_wrangler.check_gauss:main',
                                       'goodvibes_helper = gaussian_wrangler.goodvibes_helper:main',
                                       'plot_steps = gaussian_wrangler.plot_steps:main',
-                                      'eagle_gauss_setup = gaussian_wrangler.eagle_gauss_setup:main'
                                       ],
                   },     package_dir={'gaussian_wrangler': 'gaussian_wrangler'},
 
