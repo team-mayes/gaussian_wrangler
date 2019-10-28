@@ -1,0 +1,1038 @@
+ Entering Gaussian System, Link 0=g16
+ Initial command:
+ /nopt/nrel/apps/gaussian/g16B/g16/l1.exe "/dev/shm/Gau-292230.inp" -scrdir="/dev/shm/"
+ Default is to use a total of  36 processors:
+                               36 via shared-memory
+                                1 via Linda
+ Entering Link 1 = /nopt/nrel/apps/gaussian/g16B/g16/l1.exe PID=    292232.
+...
+ ******************************************
+ Gaussian 16:  ES64L-G16RevB.01 20-Dec-2017
+                22-Aug-2019 
+ ******************************************
+ %RWF=/dev/shm/,5GB,/tmp/scratch/1232713/,-1
+ %NoSave
+ %Chk=/dev/shm/ipvc_11_10_cp.chk
+ Default route: CacheSize=180224 MaxDisk=256GB
+ -----------------------------------------------------
+ # m062x/Def2TZVP nosymm Counterpoise=2 CPHF=Grid=Fine
+ -----------------------------------------------------
+ 1/4=180224,38=1,62=2,172=1/1;
+ 2/4=180224,12=2,15=1,17=6,18=5,40=1/2;
+ 1/4=180224,38=1,53=2,62=2,63=1/22;
+ 3/4=180224,5=44,7=101,11=2,25=1,30=1,74=-55/1,2,3;
+ 4/4=180224/1;
+ 5/4=180224,5=2,38=5/2;
+ 6/4=180224,7=2,8=2,9=2,10=2,28=1/1;
+ 1/4=180224,53=2,62=2,63=1/22;
+ 3/4=180224,5=7,6=11,7=101,11=2,25=1,30=1,74=-55,82=7/1,2,3;
+ 4/4=180224/1;
+ 5/4=180224,5=2,38=5/2;
+ 6/4=180224,7=2,8=2,9=2,10=2,28=1/1;
+ 1/4=180224,53=2,62=2,63=1/22(-4);
+ 99/4=180224,5=1,9=1/99;
+ -------------------------------------------------------
+ cp calculation from fragment pair [11, 10] and ipvc.com
+ -------------------------------------------------------
+ Symbolic Z-matrix:
+ Charge =  0 Multiplicity = 1 in supermolecule
+ Charge =  0 Multiplicity = 2 in fragment      1.
+ Charge =  0 Multiplicity = 2 in fragment      2.
+ Cl(Fragment=1)        0.26989  -2.30485   17.35068 
+ Cl(Fragment=2)        1.02775  -1.60135   14.00511 
+ Cl(Fragment=2)       -0.26104  -0.42726   11.03728 
+ Cl(Fragment=1)        0.58518  -1.17272   20.65656 
+ Cl(Fragment=1)        2.62103   0.5953    22.83026 
+ C(Fragment=2)         0.27747   0.90058   12.12584 
+ C(Fragment=2)        -0.10444   2.22398   11.49029 
+ C(Fragment=2)        -0.32086   0.73512   13.5249 
+ C(Fragment=2)         0.57868   0.05099   14.54165 
+ C(Fragment=2)        -0.06862   0.00878   15.91728 
+ C(Fragment=1)         0.79743  -0.62205   17.01309 
+ C(Fragment=1)         0.77734   0.20122   18.29337 
+ C(Fragment=1)         1.62617  -0.36567   19.43674 
+ C(Fragment=1)         2.48069   0.7105    20.09145 
+ C(Fragment=1)         3.37507   0.22908   21.23709 
+ C(Fragment=1)         4.75215   0.86385   21.20115 
+ H(Fragment=2)        -1.27493   0.20883   13.45941 
+ H(Fragment=2)         0.2977    2.30065   10.48195 
+ H(Fragment=2)        -1.18992   2.318     11.43832 
+ H(Fragment=2)         1.36193   0.79866   12.16905 
+ H(Fragment=2)         0.28855   3.04782   12.08976 
+ H(Fragment=2)        -1.02524  -0.51188   15.85729 
+ H(Fragment=2)        -0.53235   1.73356   13.92192 
+ H(Fragment=1)        -0.2523    0.33677   18.62802 
+ H(Fragment=2)         1.52887   0.58638   14.60257 
+ H(Fragment=2)        -0.28538   1.0451    16.19602 
+ H(Fragment=1)         1.84705   1.53076   20.43439 
+ H(Fragment=1)         1.82493  -0.72579   16.65991 
+ H(Fragment=1)         1.161     1.19284   18.03092 
+ H(Fragment=1)         4.66855   1.95084   21.23831 
+ H(Fragment=1)         2.26925  -1.16276   19.06035 
+ H(Fragment=1)         3.1248    1.112     19.30172 
+ H(Fragment=1)         5.35393   0.53421   22.04593 
+ H(Fragment=1)         3.45587  -0.85746   21.21513 
+ H(Fragment=1)         5.26149   0.58432   20.27645 
+ 
+                          Input orientation:                          
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1         17           0        0.269886   -2.304849   17.350677
+      2         17           0        1.027754   -1.601354   14.005111
+      3         17           0       -0.261036   -0.427255   11.037278
+      4         17           0        0.585179   -1.172715   20.656563
+      5         17           0        2.621028    0.595296   22.830258
+      6          6           0        0.277472    0.900579   12.125841
+      7          6           0       -0.104437    2.223977   11.490288
+      8          6           0       -0.320859    0.735123   13.524904
+      9          6           0        0.578682    0.050988   14.541646
+     10          6           0       -0.068622    0.008778   15.917276
+     11          6           0        0.797429   -0.622048   17.013086
+     12          6           0        0.777344    0.201215   18.293370
+     13          6           0        1.626172   -0.365667   19.436740
+     14          6           0        2.480689    0.710501   20.091448
+     15          6           0        3.375067    0.229079   21.237089
+     16          6           0        4.752149    0.863852   21.201150
+     17          1           0       -1.274932    0.208829   13.459409
+     18          1           0        0.297700    2.300651   10.481950
+     19          1           0       -1.189924    2.318004   11.438322
+     20          1           0        1.361932    0.798658   12.169049
+     21          1           0        0.288545    3.047817   12.089763
+     22          1           0       -1.025242   -0.511881   15.857290
+     23          1           0       -0.532349    1.733561   13.921925
+     24          1           0       -0.252303    0.336766   18.628015
+     25          1           0        1.528869    0.586377   14.602573
+     26          1           0       -0.285377    1.045101   16.196020
+     27          1           0        1.847050    1.530760   20.434387
+     28          1           0        1.824933   -0.725786   16.659911
+     29          1           0        1.160997    1.192842   18.030915
+     30          1           0        4.668551    1.950840   21.238307
+     31          1           0        2.269253   -1.162764   19.060351
+     32          1           0        3.124804    1.111997   19.301718
+     33          1           0        5.353926    0.534210   22.045931
+     34          1           0        3.455874   -0.857463   21.215132
+     35          1           0        5.261487    0.584318   20.276450
+ ---------------------------------------------------------------------
+                    Distance matrix (angstroms):
+                    1          2          3          4          5
+     1  Cl   0.000000
+     2  Cl   3.501725   0.000000
+     3  Cl   6.608044   3.442023   0.000000
+     4  Cl   3.508564   6.679926   9.685166   0.000000
+     5  Cl   6.630574   9.232931  12.183032   3.463451   0.000000
+...
+    35  H    3.672146   2.407065   1.772602   2.494012   0.000000
+ Symmetry turned off by external request.
+ Stoichiometry    C11H19Cl5
+ Framework group  C1[X(C11H19Cl5)]
+ Deg. of freedom    99
+ Full point group                 C1      NOp   1
+ Rotational constants (GHZ):           0.7000172           0.0920152           0.0869305
+ Counterpoise: doing full-system calculation.
+ Standard basis: def2TZVP (5D, 7F)
+   640 basis functions,  1058 primitive gaussians,   720 cartesian basis functions
+    85 alpha electrons       85 beta electrons
+       nuclear repulsion energy      1739.6907382801 Hartrees.
+ NAtoms=   35 NActive=   35 NUniq=   35 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
+ Integral buffers will be    131072 words long.
+ Raffenetti 2 integral format.
+ Two-electron integral symmetry is turned off.
+ One-electron integrals computed using PRISM.
+   1 Symmetry operations used in ECPInt.
+ ECPInt:  NShTT=   34453 NPrTT=  110694 LenC2=   27636 LenP2D=   61582.
+ LDataN:  DoStor=T MaxTD1= 6 Len=  172
+ NBasis=   640 RedAO= T EigKep=  5.98D-05  NBF=   640
+ NBsUse=   640 1.00D-06 EigRej= -1.00D+00 NBFU=   640
+ ExpMin= 9.52D-02 ExpMax= 6.95D+04 ExpMxC= 2.37D+03 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
+ Harris functional with IExCor= 1009 and IRadAn=       5 diagonalized for initial guess.
+ HarFok:  IExCor= 1009 AccDes= 0.00D+00 IRadAn=         5 IDoV= 1 UseB2=F ITyADJ=14
+ ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
+ FoFCou: FMM=F IPFlag=           0 FMFlag=      100000 FMFlg1=           0
+         NFxFlg=           0 DoJE=T BraDBF=F KetDBF=T FulRan=T
+         wScrn=  0.000000 ICntrl=       500 IOpCl=  0 I1Cent=   200000004 NGrid=           0
+         NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
+ Symmetry not used in FoFCou.
+ Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.0000 <S**2>= 0.0000 S= 0.0000
+ Requested convergence on RMS density matrix=1.00D-08 within 128 cycles.
+ Requested convergence on MAX density matrix=1.00D-06.
+ Requested convergence on             energy=1.00D-06.
+ No special actions if energy rises.
+ Integral accuracy reduced to 1.0D-05 until final iterations.
+ Initial convergence to 1.0D-05 achieved.  Increase integral accuracy.
+ SCF Done:  E(UM062X) =  -2731.58063269     A.U. after   13 cycles
+            NFock= 13  Conv=0.63D-08     -V/T= 2.0016
+ <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.0000 <S**2>=-0.0000 S=-0.0000
+ <L.S>= 0.000000000000E+00
+ Annihilation of the first spin contaminant:
+ S**2 before annihilation    -0.0000,   after    -0.0000
+
+ **********************************************************************
+
+            Population analysis using the SCF Density.
+
+ **********************************************************************
+
+ Alpha  occ. eigenvalues -- -102.63488-102.63143-102.62827-102.62760-102.62490
+...
+  Beta virt. eigenvalues --   25.50785  25.54440  25.58274  25.67688  25.79567
+          Condensed to atoms (all electrons):
+               1          2          3          4          5          6
+     1  Cl  16.934172  -0.011594  -0.000003  -0.010773  -0.000002   0.000068
+...
+    35  H    0.000000  -0.000000  -0.000000   0.000000  -0.000000
+ Mulliken charges and spin densities:
+               1          2
+     1  Cl  -0.096782  -0.000000
+     2  Cl  -0.097407  -0.000000
+     3  Cl  -0.125555  -0.000000
+     4  Cl  -0.100834  -0.000000
+     5  Cl  -0.129852  -0.000000
+     6  C   -0.065362  -0.000000
+     7  C   -0.429476  -0.000000
+     8  C   -0.331696   0.000000
+     9  C   -0.107840   0.000000
+    10  C   -0.346252  -0.000000
+    11  C   -0.102557   0.000000
+    12  C   -0.348680  -0.000000
+    13  C   -0.106670   0.000000
+    14  C   -0.332926  -0.000000
+    15  C   -0.067452   0.000000
+    16  C   -0.429448  -0.000000
+    17  H    0.186473  -0.000000
+    18  H    0.161117   0.000000
+    19  H    0.157592  -0.000000
+    20  H    0.168313  -0.000000
+    21  H    0.139011   0.000000
+    22  H    0.191759   0.000000
+    23  H    0.162764  -0.000000
+    24  H    0.191948   0.000000
+    25  H    0.176794   0.000000
+    26  H    0.165454   0.000000
+    27  H    0.185199  -0.000000
+    28  H    0.186695   0.000000
+    29  H    0.164585   0.000000
+    30  H    0.155020  -0.000000
+    31  H    0.189729  -0.000000
+    32  H    0.161340  -0.000000
+    33  H    0.160943  -0.000000
+    34  H    0.173961  -0.000000
+    35  H    0.140093  -0.000000
+ Sum of Mulliken charges =  -0.00000  -0.00000
+ Mulliken charges and spin densities with hydrogens summed into heavy atoms:
+               1          2
+     1  Cl  -0.096782  -0.000000
+     2  Cl  -0.097407  -0.000000
+     3  Cl  -0.125555  -0.000000
+     4  Cl  -0.100834  -0.000000
+     5  Cl  -0.129852  -0.000000
+     6  C    0.102951  -0.000000
+     7  C    0.028244   0.000000
+     8  C    0.017541   0.000000
+     9  C    0.068953   0.000000
+    10  C    0.010961  -0.000000
+    11  C    0.084138   0.000000
+    12  C    0.007854  -0.000000
+    13  C    0.083059   0.000000
+    14  C    0.013613  -0.000000
+    15  C    0.106509   0.000000
+    16  C    0.026607  -0.000000
+         Mulliken charges and spin densities condensed to fragments:
+      1     -0.005688     -0.000000
+      2      0.005688      0.000000
+ Electronic spatial extent (au):  <R**2>=         187336.6740
+ Charge=             -0.0000 electrons
+ Dipole moment (field-independent basis, Debye):
+    X=              2.0572    Y=              5.1921    Z=             -1.7269  Tot=              5.8457
+ Quadrupole moment (field-independent basis, Debye-Ang):
+   XX=           -123.1174   YY=           -137.0083   ZZ=           -226.6834
+   XY=              1.8503   XZ=             35.0817   YZ=             77.5038
+ Traceless Quadrupole moment (field-independent basis, Debye-Ang):
+   XX=             39.1523   YY=             25.2614   ZZ=            -64.4137
+   XY=              1.8503   XZ=             35.0817   YZ=             77.5038
+ Octapole moment (field-independent basis, Debye-Ang**2):
+  XXX=           -398.1810  YYY=             84.8924  ZZZ=         -10103.7587  XYY=           -149.3888
+  XXY=             25.0094  XXZ=          -2067.9963  XZZ=            432.3408  YZZ=           1208.0229
+  YYZ=          -2336.2731  XYZ=             21.9118
+ Hexadecapole moment (field-independent basis, Debye-Ang**3):
+ XXXX=          -2519.0992 YYYY=          -1301.9122 ZZZZ=        -341480.8782 XXXY=            -74.0495
+ XXXZ=          -8167.3399 YYYX=            -62.9940 YYYZ=           1505.9005 ZZZX=           -121.4982
+ ZZZY=          19695.2071 XXYY=           -667.3077 XXZZ=         -37185.6421 YYZZ=         -42045.9263
+ XXYZ=            424.0681 YYXZ=          -3053.8178 ZZXY=            182.1777
+ N-N= 1.739690738280D+03 E-N=-9.950426048641D+03  KE= 2.727347896376D+03
+                          Isotropic Fermi Contact Couplings
+        Atom                 a.u.       MegaHertz       Gauss      10(-4) cm-1
+     1  Cl(35)             0.00000       0.00000       0.00000       0.00000
+...
+    35  H(1)              -0.00000      -0.00000      -0.00000      -0.00000
+ --------------------------------------------------------
+       Center         ----  Spin Dipole Couplings  ----
+                      3XX-RR        3YY-RR        3ZZ-RR
+ --------------------------------------------------------
+     1   Atom        0.000000      0.000000     -0.000000
+...
+    35   Atom        0.000000      0.000000     -0.000000
+ --------------------------------------------------------
+
+
+ ---------------------------------------------------------------------------------
+              Anisotropic Spin Dipole Couplings in Principal Axis System
+ ---------------------------------------------------------------------------------
+
+       Atom             a.u.   MegaHertz   Gauss  10(-4) cm-1        Axes
+
+              Baa    -0.0000    -0.000    -0.000    -0.000  0.3197 -0.1168  0.9403
+     1 Cl(35) Bbb     0.0000     0.000     0.000     0.000  0.2006  0.9782  0.0534
+              Bcc     0.0000     0.000     0.000     0.000  0.9260 -0.1716 -0.3362
+ 
+              Baa    -0.0000    -0.000    -0.000    -0.000  0.4610 -0.0411  0.8865
+...
+              Baa    -0.0000    -0.000    -0.000    -0.000 -0.6312  0.1701  0.7568
+    35 H(1)   Bbb     0.0000     0.000     0.000     0.000  0.2101  0.9767 -0.0443
+              Bcc     0.0000     0.000     0.000     0.000  0.7466 -0.1311  0.6522
+ 
+
+ ---------------------------------------------------------------------------------
+
+ CPIOFr:  IOpCl= 1 IRwI=-1 IRwCP=  731 ICalc= -1 LCPTot=      626607 Len1MO=     2063038 IndFrg=      626607
+ CPIOFr:  IOpCl= 1 IRwI=-1 IRwCP=  731 ICalc=  0 LCPTot=      626607 Len1MO=     2063038 IndFrg=     2689645
+ Counterpoise: doing calculation for fragment   1 using the basis set of the full-system, NewBq=T
+ Basis read from rwf:  (5D, 7F)
+ Pseudo-potential data read from rwf file.
+   640 basis functions,  1058 primitive gaussians,   720 cartesian basis functions
+    49 alpha electrons       48 beta electrons
+       nuclear repulsion energy       704.2450473965 Hartrees.
+ NAtoms=   35 NActive=   35 NUniq=   35 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
+ Integral buffers will be    131072 words long.
+ Raffenetti 2 integral format.
+ Two-electron integral symmetry is turned off.
+ One-electron integrals computed using PRISM.
+   1 Symmetry operations used in ECPInt.
+ ECPInt:  NShTT=   34453 NPrTT=  110694 LenC2=   27636 LenP2D=   61582.
+ LDataN:  DoStor=T MaxTD1= 6 Len=  172
+ NBasis=   640 RedAO= T EigKep=  5.98D-05  NBF=   640
+ NBsUse=   640 1.00D-06 EigRej= -1.00D+00 NBFU=   640
+ ExpMin= 9.52D-02 ExpMax= 6.95D+04 ExpMxC= 2.37D+03 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
+ Harris functional with IExCor= 1009 and IRadAn=       5 diagonalized for initial guess.
+ HarFok:  IExCor= 1009 AccDes= 0.00D+00 IRadAn=         5 IDoV= 1 UseB2=F ITyADJ=14
+ ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
+ FoFCou: FMM=F IPFlag=           0 FMFlag=      100000 FMFlg1=           0
+         NFxFlg=           0 DoJE=T BraDBF=F KetDBF=T FulRan=T
+         wScrn=  0.000000 ICntrl=       500 IOpCl=  0 I1Cent=   200000004 NGrid=           0
+         NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
+ Symmetry not used in FoFCou.
+ Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.5000 <S**2>= 0.7500 S= 0.5000
+ Requested convergence on RMS density matrix=1.00D-08 within 128 cycles.
+ Requested convergence on MAX density matrix=1.00D-06.
+ Requested convergence on             energy=1.00D-06.
+ No special actions if energy rises.
+ Integral accuracy reduced to 1.0D-05 until final iterations.
+ Initial convergence to 1.0D-05 achieved.  Increase integral accuracy.
+ SCF Done:  E(UM062X) =  -1615.16193744     A.U. after   16 cycles
+            NFock= 16  Conv=0.69D-08     -V/T= 2.0015
+ <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.5000 <S**2>= 0.7558 S= 0.5029
+ <L.S>= 0.000000000000E+00
+ Annihilation of the first spin contaminant:
+ S**2 before annihilation     0.7558,   after     0.7500
+
+ **********************************************************************
+
+            Population analysis using the SCF Density.
+
+ **********************************************************************
+
+ Alpha  occ. eigenvalues -- -102.64904-102.63206-102.62614 -10.63388 -10.62046
+...
+  Beta virt. eigenvalues --  155.70040 158.01506
+          Condensed to atoms (all electrons):
+               1          2          3          4          5          6
+     1  Cl  16.894230   0.000569   0.000000  -0.009760  -0.000001   0.000026
+...
+    35  H    0.000737  -0.003695  -0.019595  -0.002613   0.551182
+          Atomic-Atomic Spin Densities.
+               1          2          3          4          5          6
+     1  Cl   0.153311   0.000116   0.000000  -0.002317  -0.000001   0.000015
+...
+    35  H   -0.000008   0.000023  -0.000023  -0.000010   0.000004
+ Mulliken charges and spin densities:
+               1          2
+     1  Cl  -0.078688   0.066948
+     2  Cl   0.000165  -0.000092
+     3  Cl  -0.000001   0.000001
+     4  Cl  -0.096507   0.004894
+     5  Cl  -0.128435   0.000075
+     6  C    0.000311  -0.000342
+     7  C   -0.000011   0.000013
+     8  C   -0.000614   0.004049
+     9  C   -0.011602  -0.007278
+    10  C    0.107928  -0.045392
+    11  C   -0.230848   0.975981
+    12  C   -0.325817  -0.036350
+    13  C   -0.088446   0.037431
+    14  C   -0.336967   0.003274
+    15  C   -0.067142   0.001081
+    16  C   -0.429132   0.000398
+    17  H   -0.000165   0.000023
+    18  H   -0.000000   0.000000
+    19  H    0.000000  -0.000000
+    20  H   -0.000045   0.000030
+    21  H    0.000000  -0.000000
+    22  H   -0.009039  -0.001186
+    23  H    0.000029  -0.000098
+    24  H    0.185619   0.008534
+    25  H    0.000726   0.000890
+    26  H   -0.005765   0.003326
+    27  H    0.188505   0.000077
+    28  H    0.176033  -0.014838
+    29  H    0.167953   0.002099
+    30  H    0.156616  -0.000002
+    31  H    0.186526  -0.003606
+    32  H    0.164901  -0.000144
+    33  H    0.161049   0.000133
+    34  H    0.172824   0.000077
+    35  H    0.140042  -0.000006
+ Sum of Mulliken charges =  -0.00000   1.00000
+ Mulliken charges and spin densities with hydrogens summed into heavy atoms:
+               1          2
+     1  Cl  -0.078688   0.066948
+     2  Cl   0.000165  -0.000092
+     3  Cl  -0.000001   0.000001
+     4  Cl  -0.096507   0.004894
+     5  Cl  -0.128435   0.000075
+     6  C    0.000265  -0.000312
+     7  C   -0.000011   0.000013
+     8  C   -0.000750   0.003974
+     9  C   -0.010876  -0.006388
+    10  C    0.093123  -0.043252
+    11  C   -0.054815   0.961143
+    12  C    0.027755  -0.025717
+    13  C    0.098079   0.033825
+    14  C    0.016439   0.003207
+    15  C    0.105682   0.001159
+    16  C    0.028576   0.000522
+         Mulliken charges and spin densities condensed to fragments:
+      1     -0.081914      1.046056
+      2      0.081914     -0.046056
+ Electronic spatial extent (au):  <R**2>=         141700.9522
+ Charge=             -0.0000 electrons
+ Dipole moment (field-independent basis, Debye):
+    X=              2.7211    Y=              1.8511    Z=             -2.2338  Tot=              3.9775
+ Quadrupole moment (field-independent basis, Debye-Ang):
+   XX=            -65.0514   YY=            -79.2445   ZZ=           -173.4996
+   XY=             -0.0543   XZ=             47.3491   YZ=             32.6404
+ Traceless Quadrupole moment (field-independent basis, Debye-Ang):
+   XX=             40.8805   YY=             26.6873   ZZ=            -67.5678
+   XY=             -0.0543   XZ=             47.3491   YZ=             32.6404
+ Octapole moment (field-independent basis, Debye-Ang**2):
+  XXX=           -362.5186  YYY=             88.9028  ZZZ=          -7715.3897  XYY=           -136.9228
+  XXY=             26.0988  XXZ=          -1305.3953  XZZ=            661.8649  YZZ=            599.7439
+  YYZ=          -1572.0624  XYZ=             -3.5387
+ Hexadecapole moment (field-independent basis, Debye-Ang**3):
+ XXXX=          -2305.6708 YYYY=           -726.1318 ZZZZ=        -274258.5521 XXXY=           -137.6684
+ XXXZ=          -7627.8829 YYYX=           -123.8399 YYYZ=           1438.9086 ZZZX=           4208.7931
+ ZZZY=          11260.8655 XXYY=           -533.6981 XXZZ=         -26936.9505 YYZZ=         -31646.1148
+ XXYZ=            407.4235 YYXZ=          -2865.0561 ZZXY=           -175.7329
+ N-N= 7.042450473965D+02 E-N=-5.236127723589D+03  KE= 1.612674593447D+03
+                          Isotropic Fermi Contact Couplings
+        Atom                 a.u.       MegaHertz       Gauss      10(-4) cm-1
+     1  Cl(35)             0.02854      12.51220       4.46467       4.17362
+...
+    35  H(1)              -0.00001      -0.02757      -0.00984      -0.00920
+ --------------------------------------------------------
+       Center         ----  Spin Dipole Couplings  ----
+                      3XX-RR        3YY-RR        3ZZ-RR
+ --------------------------------------------------------
+     1   Atom        0.040275     -0.332722      0.292447
+...
+    35   Atom        0.000393      0.000920      0.000259
+ --------------------------------------------------------
+
+
+ ---------------------------------------------------------------------------------
+              Anisotropic Spin Dipole Couplings in Principal Axis System
+ ---------------------------------------------------------------------------------
+
+       Atom             a.u.   MegaHertz   Gauss  10(-4) cm-1        Axes
+
+              Baa    -0.6468   -33.853   -12.079   -11.292  0.5371  0.8424  0.0426
+     1 Cl(35) Bbb    -0.2994   -15.667    -5.591    -5.226 -0.5986  0.3451  0.7229
+              Bcc     0.9462    49.520    17.670    16.518  0.5943 -0.4138  0.6897
+...
+              Baa    -0.0008    -0.433    -0.154    -0.144 -0.1556  0.9767 -0.1479
+    35 H(1)   Bbb    -0.0007    -0.352    -0.126    -0.117 -0.5458  0.0398  0.8370
+              Bcc     0.0015     0.784     0.280     0.262  0.8234  0.2110  0.5268
+ 
+
+ ---------------------------------------------------------------------------------
+
+ CPIOFr:  IOpCl= 1 IRwI=-1 IRwCP=  731 ICalc=  1 LCPTot=      626607 Len1MO=     2063038 IndFrg=     4752683
+ Counterpoise: doing calculation for fragment   2 using the basis set of the full-system, NewBq=T
+ Basis read from rwf:  (5D, 7F)
+ Pseudo-potential data read from rwf file.
+   640 basis functions,  1058 primitive gaussians,   720 cartesian basis functions
+    37 alpha electrons       36 beta electrons
+       nuclear repulsion energy       443.9444437105 Hartrees.
+ NAtoms=   35 NActive=   35 NUniq=   35 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
+ Integral buffers will be    131072 words long.
+ Raffenetti 2 integral format.
+ Two-electron integral symmetry is turned off.
+ One-electron integrals computed using PRISM.
+   1 Symmetry operations used in ECPInt.
+ ECPInt:  NShTT=   34453 NPrTT=  110694 LenC2=   27636 LenP2D=   61582.
+ LDataN:  DoStor=T MaxTD1= 6 Len=  172
+ NBasis=   640 RedAO= T EigKep=  5.98D-05  NBF=   640
+ NBsUse=   640 1.00D-06 EigRej= -1.00D+00 NBFU=   640
+ ExpMin= 9.52D-02 ExpMax= 6.95D+04 ExpMxC= 2.37D+03 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
+ Harris functional with IExCor= 1009 and IRadAn=       5 diagonalized for initial guess.
+ HarFok:  IExCor= 1009 AccDes= 0.00D+00 IRadAn=         5 IDoV= 1 UseB2=F ITyADJ=14
+ ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
+ FoFCou: FMM=F IPFlag=           0 FMFlag=      100000 FMFlg1=           0
+         NFxFlg=           0 DoJE=T BraDBF=F KetDBF=T FulRan=T
+         wScrn=  0.000000 ICntrl=       500 IOpCl=  0 I1Cent=   200000004 NGrid=           0
+         NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
+ Symmetry not used in FoFCou.
+ Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.5000 <S**2>= 0.7500 S= 0.5000
+ Requested convergence on RMS density matrix=1.00D-08 within 128 cycles.
+ Requested convergence on MAX density matrix=1.00D-06.
+ Requested convergence on             energy=1.00D-06.
+ No special actions if energy rises.
+ Integral accuracy reduced to 1.0D-05 until final iterations.
+ Initial convergence to 1.0D-05 achieved.  Increase integral accuracy.
+ SCF Done:  E(UM062X) =  -1116.24989180     A.U. after   15 cycles
+            NFock= 15  Conv=0.72D-08     -V/T= 2.0016
+ <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.5000 <S**2>= 0.7542 S= 0.5021
+ <L.S>= 0.000000000000E+00
+ Annihilation of the first spin contaminant:
+ S**2 before annihilation     0.7542,   after     0.7500
+
+ **********************************************************************
+
+            Population analysis using the SCF Density.
+
+ **********************************************************************
+
+ Alpha  occ. eigenvalues -- -102.62817-102.62479 -10.61448 -10.61059 -10.57707
+...
+  Beta virt. eigenvalues --   66.19774 153.20896 158.01263 158.03972
+          Condensed to atoms (all electrons):
+               1          2          3          4          5          6
+     1  Cl   0.000581   0.000008   0.000000  -0.000000  -0.000000   0.000004
+...
+    35  H    0.000001  -0.000003  -0.000001  -0.000001   0.000002
+          Atomic-Atomic Spin Densities.
+               1          2          3          4          5          6
+     1  Cl   0.000090  -0.000130  -0.000000  -0.000001  -0.000000   0.000003
+...
+    35  H   -0.000000   0.000001  -0.000000   0.000000  -0.000000
+ Mulliken charges and spin densities:
+               1          2
+     1  Cl   0.003012  -0.002521
+     2  Cl  -0.115462   0.005694
+     3  Cl  -0.127325   0.000758
+     4  Cl   0.000005  -0.000001
+     5  Cl   0.000000  -0.000000
+     6  C   -0.062565   0.012451
+     7  C   -0.430178   0.000849
+     8  C   -0.317436   0.023107
+     9  C   -0.066731  -0.054565
+    10  C   -0.456048   1.142977
+    11  C    0.108518  -0.086592
+    12  C   -0.009772   0.009103
+    13  C    0.003042  -0.001802
+    14  C    0.000138  -0.000108
+    15  C    0.000016  -0.000019
+    16  C   -0.000001   0.000002
+    17  H    0.181515  -0.002433
+    18  H    0.160703   0.000800
+    19  H    0.156443   0.000030
+    20  H    0.170641  -0.000313
+    21  H    0.140993   0.000009
+    22  H    0.175496  -0.029323
+    23  H    0.163609  -0.001361
+    24  H   -0.001248   0.000880
+    25  H    0.171400   0.007096
+    26  H    0.160370  -0.029603
+    27  H   -0.000005  -0.000001
+    28  H   -0.010588   0.004207
+    29  H    0.001650   0.000617
+    30  H   -0.000000  -0.000000
+    31  H   -0.000053  -0.000027
+    32  H   -0.000144   0.000090
+    33  H    0.000000  -0.000000
+    34  H    0.000001  -0.000001
+    35  H   -0.000000   0.000000
+ Sum of Mulliken charges =  -0.00000   1.00000
+ Mulliken charges and spin densities with hydrogens summed into heavy atoms:
+               1          2
+     1  Cl   0.003012  -0.002521
+     2  Cl  -0.115462   0.005694
+     3  Cl  -0.127325   0.000758
+     4  Cl   0.000005  -0.000001
+     5  Cl   0.000000  -0.000000
+     6  C    0.108076   0.012138
+     7  C    0.027961   0.001688
+     8  C    0.027688   0.019313
+     9  C    0.104670  -0.047469
+    10  C   -0.120181   1.084051
+    11  C    0.097930  -0.082386
+    12  C   -0.009370   0.010600
+    13  C    0.002989  -0.001829
+    14  C   -0.000011  -0.000019
+    15  C    0.000018  -0.000020
+    16  C   -0.000001   0.000002
+         Mulliken charges and spin densities condensed to fragments:
+      1      0.094573     -0.076173
+      2     -0.094573      1.076173
+ Electronic spatial extent (au):  <R**2>=          45620.0355
+ Charge=              0.0000 electrons
+ Dipole moment (field-independent basis, Debye):
+    X=             -0.4128    Y=              3.5263    Z=              1.0902  Tot=              3.7140
+ Quadrupole moment (field-independent basis, Debye-Ang):
+   XX=            -57.6047   YY=            -57.3656   ZZ=            -32.9447
+   XY=              2.1568   XZ=             -7.8082   YZ=             47.1903
+ Traceless Quadrupole moment (field-independent basis, Debye-Ang):
+   XX=             -8.2997   YY=             -8.0607   ZZ=             16.3603
+   XY=              2.1568   XZ=             -7.8082   YZ=             47.1903
+ Octapole moment (field-independent basis, Debye-Ang**2):
+  XXX=            -33.2986  YYY=             -3.9946  ZZZ=          -1854.1472  XYY=            -11.9515
+  XXY=             -0.2942  XXZ=           -753.1830  XZZ=           -147.5516  YZZ=            636.6624
+  YYZ=           -754.9354  XYZ=             30.0253
+ Hexadecapole moment (field-independent basis, Debye-Ang**3):
+ XXXX=           -204.3019 YYYY=           -571.0070 ZZZZ=         -54519.6924 XXXY=             67.0213
+ XXXZ=           -494.8744 YYYX=             61.7808 YYYZ=             61.9961 ZZZX=          -2779.1826
+ ZZZY=           8770.3091 XXYY=           -131.7281 XXZZ=         -10055.5085 YYZZ=         -10199.2747
+ XXYZ=             32.6479 YYXZ=           -177.9970 ZZXY=            445.2528
+ N-N= 4.439444437105D+02 E-N=-3.531073936479D+03  KE= 1.114415017857D+03
+                          Isotropic Fermi Contact Couplings
+        Atom                 a.u.       MegaHertz       Gauss      10(-4) cm-1
+     1  Cl(35)             0.00004       0.01762       0.00629       0.00588
+     2  Cl(35)             0.01002       4.39188       1.56713       1.46497
+     3  Cl(35)            -0.00001      -0.00444      -0.00158      -0.00148
+     4  Cl(35)             0.00000       0.00002       0.00001       0.00001
+     5  Cl(35)             0.00000       0.00000       0.00000       0.00000
+     6  C(13)              0.01129      12.69756       4.53080       4.23545
+     7  C(13)              0.00105       1.17556       0.41947       0.39212
+     8  C(13)              0.05038      56.63458      20.20863      18.89126
+     9  C(13)             -0.02045     -22.98622      -8.20206      -7.66738
+    10  C(13)              0.45729     514.07948     183.43634     171.47846
+    11  C(13)              0.00484       5.44573       1.94317       1.81650
+    12  C(13)              0.00010       0.10819       0.03861       0.03609
+    13  C(13)              0.00000       0.00160       0.00057       0.00053
+    14  C(13)              0.00000       0.00005       0.00002       0.00002
+    15  C(13)              0.00000       0.00000       0.00000       0.00000
+    16  C(13)              0.00000       0.00000       0.00000       0.00000
+    17  H(1)              -0.00041      -1.84140      -0.65706      -0.61422
+    18  H(1)               0.00035       1.57133       0.56069       0.52414
+    19  H(1)               0.00003       0.14051       0.05014       0.04687
+    20  H(1)              -0.00017      -0.76308      -0.27229      -0.25454
+    21  H(1)              -0.00002      -0.08071      -0.02880      -0.02692
+    22  H(1)              -0.00427     -19.06558      -6.80307      -6.35959
+    23  H(1)               0.00024       1.08348       0.38661       0.36141
+    24  H(1)               0.00003       0.11990       0.04278       0.03999
+    25  H(1)               0.00425      18.98365       6.77384       6.33226
+    26  H(1)              -0.00590     -26.36580      -9.40797      -8.79469
+    27  H(1)               0.00000       0.00008       0.00003       0.00003
+    28  H(1)               0.00039       1.74536       0.62279       0.58219
+    29  H(1)               0.00003       0.12595       0.04494       0.04201
+    30  H(1)               0.00000       0.00000       0.00000       0.00000
+    31  H(1)               0.00000       0.00441       0.00157       0.00147
+    32  H(1)               0.00000       0.00031       0.00011       0.00010
+    33  H(1)               0.00000       0.00000       0.00000       0.00000
+    34  H(1)               0.00000       0.00000       0.00000       0.00000
+    35  H(1)               0.00000       0.00000       0.00000       0.00000
+ --------------------------------------------------------
+       Center         ----  Spin Dipole Couplings  ----
+                      3XX-RR        3YY-RR        3ZZ-RR
+ --------------------------------------------------------
+     1   Atom       -0.009848      0.013230     -0.003382
+...
+    35   Atom        0.000134      0.000728      0.000107
+ --------------------------------------------------------
+
+
+ ---------------------------------------------------------------------------------
+              Anisotropic Spin Dipole Couplings in Principal Axis System
+ ---------------------------------------------------------------------------------
+
+       Atom             a.u.   MegaHertz   Gauss  10(-4) cm-1        Axes
+
+              Baa    -0.0099    -0.516    -0.184    -0.172  0.9998  0.0194 -0.0063
+     1 Cl(35) Bbb    -0.0097    -0.508    -0.181    -0.170 -0.0034  0.4649  0.8854
+              Bcc     0.0196     1.024     0.365     0.342 -0.0201  0.8852 -0.4649
+...
+              Baa    -0.0005    -0.269    -0.096    -0.090 -0.4300  0.8180  0.3821
+    35 H(1)   Bbb    -0.0005    -0.268    -0.095    -0.089 -0.4672 -0.5638  0.6811
+              Bcc     0.0010     0.537     0.191     0.179  0.7726  0.1144  0.6245
+ 
+
+ ---------------------------------------------------------------------------------
+
+ CPIOFr:  IOpCl= 1 IRwI=-1 IRwCP=  731 ICalc=  2 LCPTot=      626607 Len1MO=     2063038 IndFrg=     6815721
+ Counterpoise: doing calculation for fragment   1 using the basis set of the fragment.
+ Basis read from rwf:  (5D, 7F)
+ Pseudo-potential data read from rwf file.
+   357 basis functions,   593 primitive gaussians,   402 cartesian basis functions
+    49 alpha electrons       48 beta electrons
+       nuclear repulsion energy       704.2450473965 Hartrees.
+ NAtoms=   35 NActive=   19 NUniq=   19 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
+ Integral buffers will be    131072 words long.
+ Raffenetti 2 integral format.
+ Two-electron integral symmetry is turned off.
+ One-electron integrals computed using PRISM.
+   1 Symmetry operations used in ECPInt.
+ ECPInt:  NShTT=   10585 NPrTT=   34461 LenC2=    9935 LenP2D=   24119.
+ LDataN:  DoStor=T MaxTD1= 6 Len=  172
+ NBasis=   357 RedAO= T EigKep=  1.12D-04  NBF=   357
+ NBsUse=   357 1.00D-06 EigRej= -1.00D+00 NBFU=   357
+ ExpMin= 9.52D-02 ExpMax= 6.95D+04 ExpMxC= 2.37D+03 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
+ Harris functional with IExCor= 1009 and IRadAn=       5 diagonalized for initial guess.
+ HarFok:  IExCor= 1009 AccDes= 0.00D+00 IRadAn=         5 IDoV= 1 UseB2=F ITyADJ=14
+ ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
+ FoFCou: FMM=F IPFlag=           0 FMFlag=      100000 FMFlg1=           0
+         NFxFlg=           0 DoJE=T BraDBF=F KetDBF=T FulRan=T
+         wScrn=  0.000000 ICntrl=       500 IOpCl=  0 I1Cent=   200000004 NGrid=           0
+         NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
+ Symmetry not used in FoFCou.
+ Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.5000 <S**2>= 0.7500 S= 0.5000
+ Requested convergence on RMS density matrix=1.00D-08 within 128 cycles.
+ Requested convergence on MAX density matrix=1.00D-06.
+ Requested convergence on             energy=1.00D-06.
+ No special actions if energy rises.
+ Integral accuracy reduced to 1.0D-05 until final iterations.
+ Initial convergence to 1.0D-05 achieved.  Increase integral accuracy.
+ SCF Done:  E(UM062X) =  -1615.16137460     A.U. after   16 cycles
+            NFock= 16  Conv=0.88D-08     -V/T= 2.0015
+ <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.5000 <S**2>= 0.7557 S= 0.5029
+ <L.S>= 0.000000000000E+00
+ Annihilation of the first spin contaminant:
+ S**2 before annihilation     0.7557,   after     0.7500
+
+ **********************************************************************
+
+            Population analysis using the SCF Density.
+
+ **********************************************************************
+
+ Alpha  occ. eigenvalues -- -102.64865-102.63199-102.62611 -10.63397 -10.62044
+...
+  Beta virt. eigenvalues --   22.62585  25.33694  25.52314  25.70036
+          Condensed to atoms (all electrons):
+               1          4          5         11         12         13
+     1  Cl  16.918693  -0.010479  -0.000001   0.274168  -0.065202   0.006669
+...
+    35  H    0.551253
+          Atomic-Atomic Spin Densities.
+               1          4          5         11         12         13
+     1  Cl   0.145275  -0.002352  -0.000001  -0.099203   0.010260   0.004465
+...
+    35  H    0.000008
+ Mulliken charges and spin densities:
+               1          2
+     1  Cl  -0.092329   0.066122
+     2  Cl   0.000000   0.000000
+     3  Cl   0.000000   0.000000
+     4  Cl  -0.098915   0.005095
+     5  Cl  -0.128548   0.000095
+     6  C    0.000000   0.000000
+     7  C    0.000000   0.000000
+     8  C    0.000000   0.000000
+     9  C    0.000000   0.000000
+    10  C    0.000000   0.000000
+    11  C   -0.099113   0.923149
+    12  C   -0.284039  -0.036354
+    13  C   -0.127029   0.039361
+    14  C   -0.331146   0.003258
+    15  C   -0.069303   0.001057
+    16  C   -0.429911   0.000331
+    17  H    0.000000   0.000000
+    18  H    0.000000   0.000000
+    19  H    0.000000   0.000000
+    20  H    0.000000   0.000000
+    21  H    0.000000   0.000000
+    22  H    0.000000   0.000000
+    23  H    0.000000   0.000000
+    24  H    0.179357   0.010116
+    25  H    0.000000   0.000000
+    26  H    0.000000   0.000000
+    27  H    0.187453   0.000062
+    28  H    0.155255  -0.012353
+    29  H    0.157494   0.002514
+    30  H    0.156545   0.000023
+    31  H    0.186867  -0.002873
+    32  H    0.162962   0.000123
+    33  H    0.160964   0.000152
+    34  H    0.173325   0.000134
+    35  H    0.140111  -0.000012
+ Sum of Mulliken charges =  -0.00000   1.00000
+ Mulliken charges and spin densities with hydrogens summed into heavy atoms:
+               1          2
+     1  Cl  -0.092329   0.066122
+     2  Cl   0.000000   0.000000
+     3  Cl   0.000000   0.000000
+     4  Cl  -0.098915   0.005095
+     5  Cl  -0.128548   0.000095
+     6  C    0.000000   0.000000
+     7  C    0.000000   0.000000
+     8  C    0.000000   0.000000
+     9  C    0.000000   0.000000
+    10  C    0.000000   0.000000
+    11  C    0.056142   0.910796
+    12  C    0.052811  -0.023724
+    13  C    0.059838   0.036488
+    14  C    0.019269   0.003443
+    15  C    0.104023   0.001191
+    16  C    0.027709   0.000495
+         Mulliken charges and spin densities condensed to fragments:
+      1     -0.000000      1.000000
+      2      0.000000      0.000000
+ Electronic spatial extent (au):  <R**2>=         141701.2012
+ Charge=              0.0000 electrons
+ Dipole moment (field-independent basis, Debye):
+    X=              2.7274    Y=              1.8472    Z=             -2.2436  Tot=              3.9856
+ Quadrupole moment (field-independent basis, Debye-Ang):
+   XX=            -65.0341   YY=            -79.2345   ZZ=           -173.8619
+   XY=             -0.0660   XZ=             47.4443   YZ=             32.5887
+ Traceless Quadrupole moment (field-independent basis, Debye-Ang):
+   XX=             41.0094   YY=             26.8090   ZZ=            -67.8184
+   XY=             -0.0660   XZ=             47.4443   YZ=             32.5887
+ Octapole moment (field-independent basis, Debye-Ang**2):
+  XXX=           -362.5476  YYY=             88.8391  ZZZ=          -7725.5969  XYY=           -136.8929
+  XXY=             26.0539  XXZ=          -1305.1607  XZZ=            663.2303  YZZ=            599.0569
+  YYZ=          -1571.9763  XYZ=             -3.7536
+ Hexadecapole moment (field-independent basis, Debye-Ang**3):
+ XXXX=          -2305.8756 YYYY=           -726.0033 ZZZZ=        -274517.6996 XXXY=           -137.7349
+ XXXZ=          -7628.6067 YYYX=           -124.0187 YYYZ=           1437.9303 ZZZX=           4226.6646
+ ZZZY=          11251.9805 XXYY=           -533.6656 XXZZ=         -26934.1939 YYZZ=         -31646.0451
+ XXYZ=            406.6240 YYXZ=          -2864.6015 ZZXY=           -179.7179
+ N-N= 7.042450473965D+02 E-N=-5.236135622192D+03  KE= 1.612675712312D+03
+                          Isotropic Fermi Contact Couplings
+        Atom                 a.u.       MegaHertz       Gauss      10(-4) cm-1
+     1  Cl(35)             0.02926      12.82776       4.57726       4.27888
+...
+    35   Atom        0.000392      0.000920      0.000258
+ --------------------------------------------------------
+
+
+ ---------------------------------------------------------------------------------
+              Anisotropic Spin Dipole Couplings in Principal Axis System
+ ---------------------------------------------------------------------------------
+
+       Atom             a.u.   MegaHertz   Gauss  10(-4) cm-1        Axes
+
+              Baa    -0.6490   -33.969   -12.121   -11.331  0.5364  0.8429  0.0428
+     1 Cl(35) Bbb    -0.3014   -15.776    -5.629    -5.262 -0.5994  0.3449  0.7223
+              Bcc     0.9505    49.745    17.750    16.593  0.5941 -0.4131  0.6902
+...
+              Baa    -0.0008    -0.433    -0.154    -0.144 -0.1558  0.9768 -0.1470
+    35 H(1)   Bbb    -0.0007    -0.351    -0.125    -0.117 -0.5454  0.0390  0.8373
+              Bcc     0.0015     0.784     0.280     0.262  0.8235  0.2107  0.5267
+ 
+
+ ---------------------------------------------------------------------------------
+
+ CPIOFr:  IOpCl= 1 IRwI=-1 IRwCP=  731 ICalc=  3 LCPTot=      626607 Len1MO=     2063038 IndFrg=     8878759
+ Counterpoise: doing calculation for fragment   2 using the basis set of the fragment.
+ Basis read from rwf:  (5D, 7F)
+ Pseudo-potential data read from rwf file.
+   283 basis functions,   465 primitive gaussians,   318 cartesian basis functions
+    37 alpha electrons       36 beta electrons
+       nuclear repulsion energy       443.9444437105 Hartrees.
+ NAtoms=   35 NActive=   16 NUniq=   16 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
+ Integral buffers will be    131072 words long.
+ Raffenetti 2 integral format.
+ Two-electron integral symmetry is turned off.
+ One-electron integrals computed using PRISM.
+   1 Symmetry operations used in ECPInt.
+ ECPInt:  NShTT=    6903 NPrTT=   21945 LenC2=    6695 LenP2D=   16599.
+ LDataN:  DoStor=T MaxTD1= 6 Len=  172
+ NBasis=   283 RedAO= T EigKep=  1.47D-04  NBF=   283
+ NBsUse=   283 1.00D-06 EigRej= -1.00D+00 NBFU=   283
+ ExpMin= 9.52D-02 ExpMax= 6.95D+04 ExpMxC= 2.37D+03 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
+ Harris functional with IExCor= 1009 and IRadAn=       5 diagonalized for initial guess.
+ HarFok:  IExCor= 1009 AccDes= 0.00D+00 IRadAn=         5 IDoV= 1 UseB2=F ITyADJ=14
+ ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
+ FoFCou: FMM=F IPFlag=           0 FMFlag=      100000 FMFlg1=           0
+         NFxFlg=           0 DoJE=T BraDBF=F KetDBF=T FulRan=T
+         wScrn=  0.000000 ICntrl=       500 IOpCl=  0 I1Cent=   200000004 NGrid=           0
+         NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
+ Symmetry not used in FoFCou.
+ Initial guess <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.5000 <S**2>= 0.7500 S= 0.5000
+ Requested convergence on RMS density matrix=1.00D-08 within 128 cycles.
+ Requested convergence on MAX density matrix=1.00D-06.
+ Requested convergence on             energy=1.00D-06.
+ No special actions if energy rises.
+ Integral accuracy reduced to 1.0D-05 until final iterations.
+ Initial convergence to 1.0D-05 achieved.  Increase integral accuracy.
+ SCF Done:  E(UM062X) =  -1116.24923993     A.U. after   16 cycles
+            NFock= 16  Conv=0.66D-08     -V/T= 2.0016
+ <Sx>= 0.0000 <Sy>= 0.0000 <Sz>= 0.5000 <S**2>= 0.7542 S= 0.5021
+ <L.S>= 0.000000000000E+00
+ Annihilation of the first spin contaminant:
+ S**2 before annihilation     0.7542,   after     0.7500
+
+ **********************************************************************
+
+            Population analysis using the SCF Density.
+
+ **********************************************************************
+
+ Alpha  occ. eigenvalues -- -102.62779-102.62474 -10.61439 -10.61058 -10.57714
+...
+  Beta virt. eigenvalues --   25.48472  25.57554
+          Condensed to atoms (all electrons):
+               2          3          6          7          8          9
+     2  Cl  16.965058  -0.014630   0.010534   0.002674  -0.056032   0.285791
+...
+    26  H   -0.042336   0.001990  -0.007533   0.551912
+          Atomic-Atomic Spin Densities.
+               2          3          6          7          8          9
+     2  Cl   0.011378  -0.000015  -0.000450   0.000041  -0.000385   0.007401
+...
+    26  H    0.002183  -0.000179   0.000901  -0.022637
+ Mulliken charges and spin densities:
+               1          2
+     1  Cl   0.000000   0.000000
+     2  Cl  -0.120347   0.007122
+     3  Cl  -0.127721   0.000775
+     4  Cl   0.000000   0.000000
+     5  Cl   0.000000   0.000000
+     6  C   -0.066500   0.012071
+     7  C   -0.429124   0.001011
+     8  C   -0.323190   0.038450
+     9  C   -0.064331  -0.047422
+    10  C   -0.289291   1.039200
+    11  C    0.000000   0.000000
+    12  C    0.000000   0.000000
+    13  C    0.000000   0.000000
+    14  C    0.000000   0.000000
+    15  C    0.000000   0.000000
+    16  C    0.000000   0.000000
+    17  H    0.178965  -0.002865
+    18  H    0.160443   0.000866
+    19  H    0.156008   0.000047
+    20  H    0.169274  -0.000208
+    21  H    0.140955  -0.000007
+    22  H    0.158606  -0.026589
+    23  H    0.156339  -0.001888
+    24  H    0.000000   0.000000
+    25  H    0.158635   0.007487
+    26  H    0.141280  -0.028049
+    27  H    0.000000   0.000000
+    28  H    0.000000   0.000000
+    29  H    0.000000   0.000000
+    30  H    0.000000   0.000000
+    31  H    0.000000   0.000000
+    32  H    0.000000   0.000000
+    33  H    0.000000   0.000000
+    34  H    0.000000   0.000000
+    35  H    0.000000   0.000000
+ Sum of Mulliken charges =  -0.00000   1.00000
+ Mulliken charges and spin densities with hydrogens summed into heavy atoms:
+               1          2
+     1  Cl   0.000000   0.000000
+     2  Cl  -0.120347   0.007122
+     3  Cl  -0.127721   0.000775
+     4  Cl   0.000000   0.000000
+     5  Cl   0.000000   0.000000
+     6  C    0.102774   0.011863
+     7  C    0.028281   0.001917
+     8  C    0.012114   0.033697
+     9  C    0.094304  -0.039935
+    10  C    0.010595   0.984562
+    11  C    0.000000   0.000000
+    12  C    0.000000   0.000000
+    13  C    0.000000   0.000000
+    14  C    0.000000   0.000000
+    15  C    0.000000   0.000000
+    16  C    0.000000   0.000000
+         Mulliken charges and spin densities condensed to fragments:
+      1      0.000000      0.000000
+      2     -0.000000      1.000000
+ Electronic spatial extent (au):  <R**2>=          45619.9670
+ Charge=              0.0000 electrons
+ Dipole moment (field-independent basis, Debye):
+    X=             -0.4124    Y=              3.5264    Z=              1.0939  Tot=              3.7152
+ Quadrupole moment (field-independent basis, Debye-Ang):
+   XX=            -57.5866   YY=            -57.3536   ZZ=            -32.8826
+   XY=              2.1460   XZ=             -7.7911   YZ=             47.1808
+ Traceless Quadrupole moment (field-independent basis, Debye-Ang):
+   XX=             -8.3124   YY=             -8.0793   ZZ=             16.3917
+   XY=              2.1460   XZ=             -7.7911   YZ=             47.1808
+ Octapole moment (field-independent basis, Debye-Ang**2):
+  XXX=            -33.2706  YYY=             -4.0655  ZZZ=          -1853.8143  XYY=            -11.9134
+  XXY=             -0.3336  XXZ=           -752.8494  XZZ=           -147.1018  YZZ=            636.3123
+  YYZ=           -754.6677  XYZ=             29.8072
+ Hexadecapole moment (field-independent basis, Debye-Ang**3):
+ XXXX=           -204.1922 YYYY=           -570.9499 ZZZZ=         -54534.3783 XXXY=             66.8973
+ XXXZ=           -494.3800 YYYX=             61.7650 YYYZ=             60.8578 ZZZX=          -2769.0270
+ ZZZY=           8761.4224 XXYY=           -131.6814 XXZZ=         -10049.5868 YYZZ=         -10194.0655
+ XXYZ=             32.0171 YYXZ=           -177.3612 ZZXY=            441.1224
+ N-N= 4.439444437105D+02 E-N=-3.531080691639D+03  KE= 1.114415818555D+03
+                          Isotropic Fermi Contact Couplings
+        Atom                 a.u.       MegaHertz       Gauss      10(-4) cm-1
+     2  Cl(35)             0.00998       4.37451       1.56093       1.45918
+...
+    26  H(1)              -0.00591     -26.42806      -9.43019      -8.81545
+ --------------------------------------------------------
+       Center         ----  Spin Dipole Couplings  ----
+                      3XX-RR        3YY-RR        3ZZ-RR
+ --------------------------------------------------------
+     2   Atom       -0.029225     -0.004273      0.033498
+...
+    26   Atom       -0.031691      0.015502      0.023362
+ --------------------------------------------------------
+
+
+ ---------------------------------------------------------------------------------
+              Anisotropic Spin Dipole Couplings in Principal Axis System
+ ---------------------------------------------------------------------------------
+
+       Atom             a.u.   MegaHertz   Gauss  10(-4) cm-1        Axes
+
+              Baa    -0.0428    -2.240    -0.799    -0.747  0.9090  0.4005  0.1154
+     2 Cl(35) Bbb    -0.0321    -1.679    -0.599    -0.560 -0.2533  0.7507 -0.6102
+              Bcc     0.0749     3.919     1.399     1.307 -0.3310  0.5254  0.7838
+...
+              Baa    -0.0606   -32.315   -11.531   -10.779  0.7850  0.3047 -0.5393
+    26 H(1)   Bbb    -0.0145    -7.715    -2.753    -2.573  0.5701 -0.0146  0.8215
+              Bcc     0.0750    40.030    14.284    13.353 -0.2424  0.9523  0.1852
+ 
+
+ ---------------------------------------------------------------------------------
+
+ CPIOFr:  IOpCl= 1 IRwI=-1 IRwCP=  731 ICalc=  4 LCPTot=      626607 Len1MO=     2063038 IndFrg=    10941797
+ CPIOFr:  IOpCl= 1 IRwI=-2 IRwCP=  731 ICalc=  0 LCPTot=      626607 Len1MO=     2063038 IndFrg=     2689645
+ Counterpoise corrected energy =   -2731.579417978362
+                   BSSE energy =       0.001214715245
+              sum of fragments =   -2731.410614527007
+           complexation energy =    -106.69 kcal/mole (raw)
+           complexation energy =    -105.93 kcal/mole (corrected)
+ 1\1\GINC-R4I3N5\SP\UM062X\def2TZVP\C11H19Cl5\HMAYES\22-Aug-2019\0\\# m
+ 062x/Def2TZVP nosymm Counterpoise=2 CPHF=Grid=Fine\\cp calculation fro
+ m fragment pair [11, 10] and ipvc.com\\0,1\Cl,0,0.269886,-2.304849,17.
+ 350677\Cl,0,1.027754,-1.601354,14.005111\Cl,0,-0.261036,-0.427255,11.0
+ 37278\Cl,0,0.585179,-1.172715,20.656563\Cl,0,2.621028,0.595296,22.8302
+ 58\C,0,0.277472,0.900579,12.125841\C,0,-0.104437,2.223977,11.490288\C,
+ 0,-0.320859,0.735123,13.524904\C,0,0.578682,0.050988,14.541646\C,0,-0.
+ 068622,0.008778,15.917276\C,0,0.797429,-0.622048,17.013086\C,0,0.77734
+ 4,0.201215,18.29337\C,0,1.626172,-0.365667,19.43674\C,0,2.480689,0.710
+ 501,20.091448\C,0,3.375067,0.229079,21.237089\C,0,4.752149,0.863852,21
+ .20115\H,0,-1.274932,0.208829,13.459409\H,0,0.2977,2.300651,10.48195\H
+ ,0,-1.189924,2.318004,11.438322\H,0,1.361932,0.798658,12.169049\H,0,0.
+ 288545,3.047817,12.089763\H,0,-1.025242,-0.511881,15.85729\H,0,-0.5323
+ 49,1.733561,13.921925\H,0,-0.252303,0.336766,18.628015\H,0,1.528869,0.
+ 586377,14.602573\H,0,-0.285377,1.045101,16.19602\H,0,1.84705,1.53076,2
+ 0.434387\H,0,1.824933,-0.725786,16.659911\H,0,1.160997,1.192842,18.030
+ 915\H,0,4.668551,1.95084,21.238307\H,0,2.269253,-1.162764,19.060351\H,
+ 0,3.124804,1.111997,19.301718\H,0,5.353926,0.53421,22.045931\H,0,3.455
+ 874,-0.857463,21.215132\H,0,5.261487,0.584318,20.27645\\Version=ES64L-
+ G16RevB.01\HF=-1116.2492399\S2=0.754209\S2-1=0.\S2A=0.750014\RMSD=6.58
+ 6e-09\Dipole=0.8120012,2.0412789,-0.681834\Quadrupole=29.1952142,18.85
+ 77608,-48.052975,1.3588655,26.1658079,57.5766495\PG=C01 [X(C11H19Cl5)]
+ \\@
+
+ Job cpu time:       0 days  3 hours 14 minutes 49.3 seconds.
+ Elapsed time:       0 days  0 hours  5 minutes 26.3 seconds.
+ File lengths (MBytes):  RWF=    511 Int=      0 D2E=      0 Chk=    112 Scr=      1
+ Normal termination of Gaussian 16 at Thu Aug 22 12:40:39 2019.

@@ -98,6 +98,8 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
     #    SEC_ATOMS: atoms as a dict of dicts, with atom_id as key to dict with
     #        ATOM_TYPE: atom_type (str), ATOM_COORDS: (np array)
     #    SEC_TAIL: everything including and after the blank line following SEC_ATOMS
+
+    # The mode argument is optional; 'r' will be assumed if it’s omitted. (so read-only below)
     with open(gausslog_file) as d:
         gausslog_content = {SEC_ATOMS: {}, BASE_NAME: get_fname_root(gausslog_file), STOICH: None,
                             ENERGY: None, ENTHALPY: None, CONVERG_STEP_DICT: collections.OrderedDict()}
@@ -131,8 +133,14 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                             line = next(d).strip()
                         gausslog_content[DIHES] = dih_dict
                     # may gave stopped by matching dih pat, so may need to continue
-                    while not GAU_COORD_PAT.match(line):
+                    #   for some jobs, stoich before coordinates
+                    while not GAU_COORD_PAT.match(line) and not GAU_STOICH_PAT.match(line):
                         line = next(d).strip()
+                    # catch case when Stoich before coordinates (first step only); catch that case
+                    if GAU_STOICH_PAT.match(line):
+                        gausslog_content[STOICH] = line.split()[1]
+                        while not GAU_COORD_PAT.match(line):
+                            line = next(d).strip()
                     next(d)
                     next(d)
                     section = SEC_ATOMS
@@ -160,7 +168,7 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                         gausslog_content[ENERGY] = float(line.split('=')[1].split()[0])
                         line = next(d).strip()
 
-                    # In CalcAll job, thermo after Dih then coordinates, then done reading:
+                    # In CalcAll job reading from checkpoint, thermo after Dih then coordinates, then done reading:
                     #     first step: Charge, Coord, Dih, Stoich, SCF, Step, Converg
                     #     then, if not last step: Coord, SCF, Step, Converg
                     #     if last step: Coord, SCF, Step, Converg, Dih, Coord (repeat), Thermo
@@ -168,6 +176,8 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                     #     First and middle steps the same
                     #     Importantly, in Freq: SCF, **Thermo**, then step, conv dih
                     # Thus, Step always after SCF Done, but sometimes thermo in the middle
+                    # In CalcAll job starting from coordinates:
+                    #     first step: Charge, Dih, Stoich, **Coord**, SCF, Step, Converg
                     while not (GAU_H_PAT.match(line) or GAU_STEP_PAT.match(line)):
                         line = next(d).strip()
                     if GAU_H_PAT.match(line):

@@ -63,8 +63,11 @@ def parse_cmdline(argv):
                         action="store_true", default=False)
     parser.add_argument("-b", "--best", help="Check convergence of each step and list the convergence of the best 10 "
                                              "steps, sorted by convergence.", action="store_true", default=False)
-    parser.add_argument("-d", "--directory", help="The directory where to look for Gaussian output to check for "
-                                                  "normal termination. The default is the current directory.",
+    parser.add_argument("-d", "--directory", help="The directory where to look for Gaussian output files to check for "
+                                                  "normal termination, without checking in subdirectories.",
+                        default=None)
+    parser.add_argument("-ds", "--dir_subdirs", help="The directory where to look for Gaussian output files to check "
+                                                     "for normal termination, including checking in subdirectories.",
                         default=None)
     parser.add_argument("-e", "--extension", help="The extension of the Gaussian output file(s) to look for when "
                                                   "searching a directory for output files. The default is '{}'."
@@ -185,9 +188,9 @@ def check_convergence(check_file_list, step_converg, last_step, best_conv, all_s
         if step_converg:
             # all_steps_to_stdout doesn't need an out_fname, but doesn't hurt either
             if last_step:
-                out_fname = sys.stdout
+                out_loc = sys.stdout
             else:
-                out_fname = create_out_fname(fname, prefix='', suffix='_conv_steps', ext='.csv')
+                out_loc = create_out_fname(fname, prefix='', suffix='_conv_steps', ext='.csv')
 
             # create list of dicts for each step, for all step_converg options
             step_list = []
@@ -204,6 +207,9 @@ def check_convergence(check_file_list, step_converg, last_step, best_conv, all_s
 
             # different output depending on which step_converg option
             if last_step or best_conv:
+                if len(step_list) == 0:
+                    print("No convergence data found for file: {}".format(log_content[F_NAME]))
+                    continue
                 sorted_by_converg = sorted(step_list, key=itemgetter(CONVERG))
                 if last_step:
                     print("Steps sorted by convergence to step number {} for file: {}".format(last_step,
@@ -215,7 +221,7 @@ def check_convergence(check_file_list, step_converg, last_step, best_conv, all_s
                 print("    StepNum  Convergence")
                 for print_num, step_dict in enumerate(sorted_by_converg):
                     if print_num == stop_step:
-                        # break so can go to next file, if there is one
+                        # break this for, and go to next file if there is one
                         break
                     print("    {:7} {:10.3f}".format(step_dict[STEP_NUM], step_dict[CONVERG]))
             elif all_steps_to_stdout:
@@ -226,11 +232,39 @@ def check_convergence(check_file_list, step_converg, last_step, best_conv, all_s
                     print("    {:7} {:10.3f}".format(step_dict[STEP_NUM], step_dict[CONVERG]))
             else:
                 # save all steps, not sorted by convergence
-                write_csv(step_list, out_fname, headers, extrasaction="ignore", round_digits=6)
+                write_csv(step_list, out_loc, headers, extrasaction="ignore", round_digits=6)
         else:
             # this is the printing for final termination step only (not step_converg)
-            print("{:36} {:11.4f} {:}".format(log_content[headers[0]], log_content[headers[1]],
-                                              log_content[headers[2]]))
+            fname = log_content[headers[0]]
+            try:
+                print("{:36} {:11.4f} {:}".format(fname, log_content[headers[1]], log_content[headers[2]]))
+            except KeyError:
+                print("{:36} {:>11} {:}".format(fname, "not found", "n/a"))
+
+
+def search_dir_fnames(args, check_file_list):
+    # set up so if some reason select args.dir_subdirs and args.directory, runs the former option (covers later option)
+    if args.dir_subdirs:
+        search_folder = args.dir_subdirs
+        for root, dirs, files in os.walk(args.dir_subdirs):
+            for fname in files:
+                if fname.endswith(args.extension):
+                    check_file_list.append(os.path.join(root, fname))
+    else:
+        if args.directory:
+            if os.path.isdir(args.directory):
+                search_folder = args.directory
+            else:
+                raise InvalidDataError("Could not find the specified input directory '{}'".format(args.directory))
+        else:
+            search_folder = os.getcwd()
+            # search for output files
+        for file in os.listdir(search_folder):
+            if file.endswith(args.extension):
+                check_file_list.append(os.path.join(search_folder, file))
+    if len(check_file_list) == 0:
+        raise InvalidDataError("Could not find files with extension '{}' in "
+                               "directory '{}'".format(args.extension, search_folder))
 
 
 def main(argv=None):
@@ -242,25 +276,15 @@ def main(argv=None):
     # Find files to process, then process them
     check_file_list = []
     try:
-        # first make list of files to check, either by a directory search or from a specified file name and/or list
+        # first make list of files to check, either by a directory search or from a specified file name and/or list,
+        #    allowing multiple choices
         if args.file_name or args.file_list:
             check_file_list = check_file_and_file_list(args.file_name, args.file_list)
-        else:
-            # check input for specified search directory (if specified)
-            if args.directory:
-                if os.path.isdir(args.directory):
-                    search_folder = args.directory
-                else:
-                    raise InvalidDataError("Could not find the specified input directory '{}'".format(args.directory))
-            else:
-                search_folder = os.getcwd()
-                # search for output files
-            for file in os.listdir(search_folder):
-                if file.endswith(args.extension):
-                    check_file_list.append(os.path.join(search_folder, file))
-            if len(check_file_list) == 0:
-                raise InvalidDataError("Could not find files with extension '{}' in "
-                                       "directory '{}'".format(args.extension, search_folder))
+        # catches dir specified, dir+subdirs, or none of these options, which defaults to searching the current
+        #    directory only
+        if args.directory or args.dir_subdirs or (not args.file_name and not args.file_list):
+            search_dir_fnames(args, check_file_list)
+        check_file_list.sort()
 
         # now check either for convergence or termination
         if args.step_converg or args.final_converg:

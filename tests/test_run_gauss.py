@@ -1,8 +1,10 @@
-import unittest
-import os
-from gaussian_wrangler.run_gauss import main
-from common_wrangler.common import diff_lines, silent_remove, capture_stdout, capture_stderr
 import logging
+import os
+import unittest
+
+from common_wrangler.common import diff_lines, silent_remove, capture_stdout, capture_stderr
+
+from gaussian_wrangler.run_gauss import main
 
 # logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -21,8 +23,13 @@ DEF_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde.ini')
 DEF_SH_OUT = os.path.join(MAIN_DIR, 'ethylrad.sh')
 GOOD_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad.sh')
 DEF_LOG_OUT = os.path.join(PARENT_DIR, 'ethylrad.log')
-ONE_JOB_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde_one_job.ini')
+ONE_JOB_INI = os.path.join(SUB_DATA_DIR, 'run_one_job.ini')
+ONE_INI_OUT = os.path.join(MAIN_DIR, 'ethylrad.ini')
+ONE_SLM_OUT = os.path.join(MAIN_DIR, 'ethylrad.slurm')
 GOOD_ONE_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_one.sh')
+GOOD_ONE_INI_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_one.ini')
+GOOD_ONE_SLM_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_one.slurm')
+ONE_JOB_FROM_CHK_INI = os.path.join(SUB_DATA_DIR, 'run_one_job_from_chk.ini')
 
 MISSING_TPL_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_missing_tpl.ini')
 ONE_NEW_JOB_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_one.ini')
@@ -33,54 +40,51 @@ OPT_STABLE_SH_OUT = os.path.join(MAIN_DIR, 'ethylrad_opt_stable.sh')
 GOOD_OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt.sh')
 GOOD_OPT_STABLE_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt_stable.sh')
 
+MISSING_KEY_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde_missing_key.ini')
+HAS_EXTRA_KEY_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_bde_has_extra_key.ini')
+GOOD_OPT_EXTRA_KEY_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt_extra_key.sh')
+MISSING_JOB_TPL_INI = os.path.join(SUB_DATA_DIR, 'run_gauss_missing_job_tpl.ini')
+
 SPAWN_INI = os.path.join(SUB_DATA_DIR, 'run_spawn.ini')
-SPAWN1_INI = os.path.join(SUB_DATA_DIR, 'run_spawn1.ini')
-SPAWN2_INI = os.path.join(SUB_DATA_DIR, 'run_spawn2.ini')
-SPAWN1_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn1.slurm')
-SPAWN2_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn2.slurm')
-GOOD_SPAWN1_INI = os.path.join(SUB_DATA_DIR, 'run_spawn1_good.ini')
-GOOD_SPAWN2_INI = os.path.join(SUB_DATA_DIR, 'run_spawn2_good.ini')
-GOOD_SPAWN1_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn1_good.slurm')
-GOOD_SPAWN2_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn2_good.slurm')
+SPAWN1_INI = os.path.join(MAIN_DIR, 'ethylrad_opt_opt_freq.ini')
+SPAWN1_SLURM = os.path.join(MAIN_DIR, 'ethylrad_opt_opt_freq.slurm')
+GOOD_SPAWN1_INI = os.path.join(SUB_DATA_DIR, 'ethylrad_opt_opt_freq_good.ini')
+GOOD_SPAWN1_SLURM = os.path.join(SUB_DATA_DIR, 'ethylrad_opt_opt_freq_good.slurm')
+
+SPAWN2_INI = os.path.join(MAIN_DIR, 'ethylrad_opt_freq.ini')
+SPAWN2_SLURM = os.path.join(MAIN_DIR, 'ethylrad_opt_freq.slurm')
+GOOD_SPAWN2_INI = os.path.join(SUB_DATA_DIR, 'ethylrad_opt_freq_good.ini')
+GOOD_SPAWN2_SLURM = os.path.join(SUB_DATA_DIR, 'ethylrad_opt_freq_good.slurm')
 
 SUBMIT_NO_CHK_CHECK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_no_chk_chk.ini')
-NO_CHK_CHECK_INI = os.path.join(MAIN_DIR, 'ethylrad_restart.ini')
-NO_CHK_CHECK_SLM = os.path.join(MAIN_DIR, 'ethylrad_restart.slurm')
+NO_CHK_CHECK_INI = os.path.join(MAIN_DIR, 'ethylrad_restart_opt.ini')
+NO_CHK_CHECK_SLM = os.path.join(MAIN_DIR, 'ethylrad_restart_opt.slurm')
 GOOD_NO_CHK_CHECK_INI = os.path.join(SUB_DATA_DIR, 'good_ethylrad_restart.ini')
 GOOD_NO_CHK_CHECK_SLM = os.path.join(SUB_DATA_DIR, 'good_ethylrad_restart.slurm')
+# SUBMIT_NO_CHK_CHECK_EXTRA_PARAM_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_no_chk_chk_extra_param.ini')
+# NO_CHK_CHECK_EXTRA_PARAM_INI = os.path.join(MAIN_DIR, 'ethylrad_restart_extra_param.ini')
 
 SPAWN_GIVE_OLD_CHK_STR_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str.ini')
-SPAWN1_GIVE_CHK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str1.ini')
-SPAWN2_GIVE_CHK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str2.ini')
-SPAWN1_GIVE_CHK_SLM = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str1.slurm')
-SPAWN2_GIVE_CHK_SLM = os.path.join(SUB_DATA_DIR, 'run_spawn_give_old_chk_str2.slurm')
 
 SPAWN_ALT_OLD_CHK_STR_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_diff_old_chk_str.ini')
 GOOD_ALT_OPT_STABLE_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt_stable_alt.sh')
-SPAWN1_DIFF_CHK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_diff_old_chk_str1.ini')
-SPAWN2_DIFF_CHK_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_diff_old_chk_str2.ini')
-SPAWN1_DIFF_CHK_SLM = os.path.join(SUB_DATA_DIR, 'run_spawn_diff_old_chk_str1.slurm')
-SPAWN2_DIFF_CHK_SLM = os.path.join(SUB_DATA_DIR, 'run_spawn_diff_old_chk_str2.slurm')
 
 SPAWN_ALL_NEW_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new.ini')
-SPAWN0_NEW_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new0.ini')
-SPAWN1_NEW_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new1.ini')
-SPAWN2_NEW_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new2.ini')
-SPAWN0_NEW_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new0.slurm')
-SPAWN1_NEW_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new1.slurm')
-SPAWN2_NEW_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new2.slurm')
-GOOD_SPAWN0_NEW_INI = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new0_good.ini')
-GOOD_SPAWN0_NEW_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new0_good.slurm')
-GOOD_SPAWN1_NEW_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new1_good.slurm')
-GOOD_SPAWN2_NEW_SLURM = os.path.join(SUB_DATA_DIR, 'run_spawn_all_new2_good.slurm')
+
+SPAWN0_INI = os.path.join(MAIN_DIR, 'ethylrad_opt_stable.ini')
+SPAWN0_SLURM = os.path.join(MAIN_DIR, 'ethylrad_opt_stable.slurm')
+GOOD_SPAWN0_INI = os.path.join(SUB_DATA_DIR, 'ethylrad_opt_stable_good.ini')
+GOOD_SPAWN0_SLURM = os.path.join(SUB_DATA_DIR, 'ethylrad_opt_stable_good.slurm')
+GOOD_SPAWN0_NEW_INI = os.path.join(SUB_DATA_DIR, 'alt_ethylrad_opt_stable_good.ini')
+GOOD_SPAWN0_NEW_SLURM = os.path.join(SUB_DATA_DIR, 'alt_ethylrad_opt_stable_good.slurm')
+GOOD_SPAWN1_NEW_SLURM = os.path.join(SUB_DATA_DIR, 'alt_ethylrad_opt_opt_freq_good.slurm')
+GOOD_SPAWN2_NEW_SLURM = os.path.join(SUB_DATA_DIR, 'alt_ethylrad_opt_freq_good.slurm')
 
 SETUP_SUBMIT_INI = os.path.join(SUB_DATA_DIR, 'set_up_submit.ini')
-SETUP_INI_OUT = os.path.join(MAIN_DIR, 'ethylrad.ini')
-SETUP_SLURM_OUT = os.path.join(MAIN_DIR, 'ethylrad.slurm')
+SETUP_WATER_INI_OUT = os.path.join(MAIN_DIR, 'water_opt_stable.ini')
+SETUP_WATER_SLURM_OUT = os.path.join(MAIN_DIR, 'water_opt_stable.slurm')
 GOOD_SETUP_INI_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad.ini')
 GOOD_SETUP_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad.slurm')
-WATER_INI_OUT = os.path.join(MAIN_DIR, 'water.ini')
-WATER_SLURM_OUT = os.path.join(MAIN_DIR, 'water.slurm')
 GOOD_WATER_INI_OUT = os.path.join(SUB_DATA_DIR, 'water_good.ini')
 GOOD_WATER_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'water_good.slurm')
 
@@ -90,23 +94,39 @@ GOOD_ETHYL_SPAWN_INI_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_spawn.ini')
 GOOD_ETHYL_SPAWN_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_spawn.slurm')
 GOOD_WATER_SPAWN_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'water_spawn_good.slurm')
 
-SETUP_DEF_TPL_INI = os.path.join(SUB_DATA_DIR, 'submit_current_f_ts.ini')
-GOOD_DEF_TPL_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_default_tpl_good.ini')
-SETUP_INI_DEF_DIR_OUT = os.path.join(MAIN_DIR, 'ethylrad.ini')
-SETUP_SLURM_DEF_DIR_OUT = os.path.join(MAIN_DIR, 'ethylrad.slurm')
-GOOD_DEF_DIR_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_default_dir_good.ini')
-GOOD_DEF_DIR_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_default_dir_good.slurm')
-GOOD_SHORT_DEF_DIR_SLURM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_short_def_dir_good.slurm')
+SETUP_F_TS_INI_IN = os.path.join(SUB_DATA_DIR, 'submit_current_f_ts.ini')
+SETUP_F_TS_INI_OUT = os.path.join(MAIN_DIR, 'ethylrad_f_ts.ini')
+SETUP_F_TS_SLM_OUT = os.path.join(MAIN_DIR, 'ethylrad_f_ts.slurm')
+GOOD_SETUP_F_TS_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_f_ts_good.ini')
+GOOD_SETUP_F_TS_SLM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_f_ts_good.slurm')
+GOOD_F_TS_INI_OUT = os.path.join(SUB_DATA_DIR, 'alt_ethylrad_f_ts_good.ini')
+GOOD_F_TS_SLM_OUT = os.path.join(SUB_DATA_DIR, 'alt_ethylrad_f_ts_good.slurm')
 
 SETUP_IRCS_INI = os.path.join(SUB_DATA_DIR, 'submit_ircs_opt.ini')
-SETUP_IRCR_INI_OUT = os.path.join(MAIN_DIR, 'ethylrad0.ini')
-SETUP_IRCR_SLM_OUT = os.path.join(MAIN_DIR, 'ethylrad0.slurm')
-SETUP_IRCF_INI_OUT = os.path.join(MAIN_DIR, 'ethylrad1.ini')
-SETUP_IRCF_SLM_OUT = os.path.join(MAIN_DIR, 'ethylrad1.slurm')
-GOOD_SETUP_IRCR_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad0_good.ini')
-GOOD_SETUP_IRCR_SLM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad0_good.slurm')
-GOOD_SETUP_IRCF_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad1_good.ini')
-GOOD_SETUP_IRCF_SLM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad1_good.slurm')
+SETUP_IRCR_INI_OUT = os.path.join(MAIN_DIR, 'ethylrad_ircr_opt.ini')
+SETUP_IRCR_SLM_OUT = os.path.join(MAIN_DIR, 'ethylrad_ircr_opt.slurm')
+SETUP_IRCF_INI_OUT = os.path.join(MAIN_DIR, 'ethylrad_ircf_opt.ini')
+SETUP_IRCF_SLM_OUT = os.path.join(MAIN_DIR, 'ethylrad_ircf_opt.slurm')
+GOOD_SETUP_IRCR_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_ircr_good.ini')
+GOOD_SETUP_IRCR_SLM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_ircr_good.slurm')
+GOOD_SETUP_IRCF_INI_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_ircf_good.ini')
+GOOD_SETUP_IRCF_SLM_OUT = os.path.join(SUB_DATA_DIR, 'ethylrad_ircf_good.slurm')
+
+SETUP_GET_MEM_INI = os.path.join(SUB_DATA_DIR, 'set_up_submit_get_mem.ini')
+SETUP_GET_PROCS_INI = os.path.join(SUB_DATA_DIR, 'set_up_submit_get_procs.ini')
+SETUP_GET_MEM_PROCS_INI = os.path.join(SUB_DATA_DIR, 'set_up_submit_get_mem_procs.ini')
+GOOD_MEM_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_get_mem.sh')
+GOOD_PROC_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_get_proc.sh')
+GOOD_MEM_PROC_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_get_mem_proc.sh')
+GOOD_MEM_OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt_get_mem.sh')
+GOOD_PROC_OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_opt_get_proc.sh')
+GOOD_MEM_PROC_OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_get_opt_mem_proc.sh')
+
+SETUP_GET_MEM_PROCS_ROUTE_INI = os.path.join(SUB_DATA_DIR, 'set_up_submit_get_mem_procs_default.ini')
+DEF_ROUTE_LOC = os.path.join(SUB_DATA_DIR, 'Default.Route')
+GOOD_DEF_ROUTE_LOC = os.path.join(SUB_DATA_DIR, 'default_route_good.txt')
+GOOD_MEM_PROC_ROUTE_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_get_mem_proc_route.sh')
+GOOD_MEM_PROC_ROUTE_OPT_SH_OUT = os.path.join(SUB_DATA_DIR, 'good_ethylrad_get_opt_mem_proc_route.sh')
 
 
 class TestRunGaussNoOut(unittest.TestCase):
@@ -146,7 +166,7 @@ class TestRunGaussNoOut(unittest.TestCase):
         temp_file_list = ['ethylrad.com', 'ircr.tpl', 'ircf.tpl', 'opt.tpl']
         for fname in temp_file_list:
             with open(fname, 'w') as f:
-                f.write("# for test only")
+                f.write("# for test only\n")
         test_input = ['ethylrad', "-c", SETUP_IRCS_INI, "-o", 'ethyl']
         if logger.isEnabledFor(logging.DEBUG):
             main(test_input)
@@ -155,22 +175,98 @@ class TestRunGaussNoOut(unittest.TestCase):
             with capture_stderr(main, test_input) as output:
                 self.assertTrue("only supported" in output)
         finally:
-            for fname in temp_file_list + [SETUP_INI_DEF_DIR_OUT, SETUP_SLURM_DEF_DIR_OUT]:
+            for fname in temp_file_list:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
-    def testNoChk(self):
-        # Checking alternate input from above
-        temp_file_list = ['ethylrad.com', 'f.tpl', 'ts.tpl']
+    def testInvalidGaussianInputFile(self):
+        # Create and submit more than one ini
+        temp_file_list = ['ethylrad.com', ]
         for fname in temp_file_list:
             with open(fname, 'w') as f:
-                f.write("# for test only")
-
-        test_input = ['tests/test_data/run_gauss/ethylrad_restart', "-c", SPAWN_INI, "-s"]
+                f.write(" ")
+        test_input = ['ethylrad', "-c", ONE_JOB_INI, "-s"]
         try:
             # main(test_input)
             with capture_stderr(main, test_input) as output:
-                self.assertTrue("old checkpoint" in output)
+                self.assertTrue("specified input file does not appear valid" in output)
+        finally:
+            for fname in temp_file_list + [ONE_INI_OUT, ONE_SLM_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testMissingChkFileStartFromChkName(self):
+        # Make sure chk is not there from a different test
+        silent_remove("ethylrad.chk", disable=DISABLE_REMOVE)
+        test_input = [ETHYLRAD, "-c", ONE_JOB_FROM_CHK_INI, "-s", ]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("Could not find required checkpoint file" in output)
+
+    def testNoChk(self):
+        # Checking alternate input from above
+        test_input = ['tests/test_data/run_gauss/ethylrad_restart', "-c", ONE_JOB_INI, "-s"]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("old checkpoint" in output)
+
+    def testMissingKeyIni(self):
+        test_input = [ETHYLRAD, "-c", MISSING_KEY_INI]
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("required for template file" in output)
+
+    def testMissingJobTpl(self):
+        test_input = [ETHYLRAD, "-c", MISSING_JOB_TPL_INI]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("For job 'stable', could not find a template file 'stable.tpl" in output)
+
+    def testNoSuchListFile(self):
+        test_input = ["ghost", "-l", "-c", DEF_INI]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("Problems reading file" in output)
+
+    def testMissingChkFile(self):
+        temp_file_list = ['ethylrad.com', 'f.tpl', 'ts.tpl']
+        for fname in temp_file_list:
+            with open(fname, 'w') as f:
+                f.write("# for test only\n")
+        test_input = ['ethylrad', "-c", SETUP_F_TS_INI_IN, "-s", "-o", 'ethyl.chk', '-n', '-t']
+        try:
+            # main(test_input)
+            with capture_stderr(main, test_input) as output:
+                self.assertTrue("Could not find specified 'chk_for_first_job'" in output)
+        finally:
+            for fname in temp_file_list:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testFileAndList(self):
+        temp_file_list = ['f.tpl', 'ts.tpl', 'ethylrad.com', 'ethyl.chk']
+        for fname in temp_file_list:
+            with open(fname, 'w') as f:
+                f.write("# for test only\n")
+        test_input = ['ethylrad', "-c", SETUP_F_TS_INI_IN, "-s", "-l", "-o", 'ethyl.chk', '-n', '-t']
+        try:
+            # main(test_input)
+            with capture_stderr(main, test_input) as output:
+                self.assertTrue("Cannot choose both" in output)
+        finally:
+            for fname in temp_file_list:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testMissingList(self):
+        temp_file_list = ['f.tpl', 'ts.tpl', 'ethylrad.com', 'ethyl.chk']
+        for fname in temp_file_list:
+            with open(fname, 'w') as f:
+                f.write("# for test only\n")
+        test_input = ['ghost', "-c", SETUP_F_TS_INI_IN, "-l", "-o", 'ethyl.chk', '-n', '-t']
+        try:
+            # main(test_input)
+            with capture_stderr(main, test_input) as output:
+                self.assertTrue("list of jobs. Could not read" in output)
         finally:
             for fname in temp_file_list:
                 silent_remove(fname, disable=DISABLE_REMOVE)
@@ -179,14 +275,17 @@ class TestRunGaussNoOut(unittest.TestCase):
 
 class TestRunGauss(unittest.TestCase):
     # These test/demonstrate different options
+    # Note: the testing mode ("-t") is key to not accidentally submitting a slurm job or running Gaussian
     def testDefIni(self):
-        test_input = [ETHYLRAD, "-c", DEF_INI]
+        test_input = [ETHYLRAD, "-c", DEF_INI, "-t"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_SH_OUT))
+            self.assertFalse(diff_lines(OPT_SH_OUT, GOOD_OPT_SH_OUT))
+            self.assertFalse(diff_lines(OPT_STABLE_SH_OUT, GOOD_OPT_STABLE_SH_OUT))
         finally:
-            silent_remove(DEF_SH_OUT, disable=DISABLE_REMOVE)
-            silent_remove(DEF_LOG_OUT, disable=DISABLE_REMOVE)
+            for file in [DEF_SH_OUT, DEF_LOG_OUT, OPT_SH_OUT, OPT_STABLE_SH_OUT]:
+                silent_remove(file, disable=DISABLE_REMOVE)
             pass
 
     def testOneJobIni(self):
@@ -197,6 +296,27 @@ class TestRunGauss(unittest.TestCase):
         finally:
             silent_remove(DEF_SH_OUT, disable=DISABLE_REMOVE)
             silent_remove(DEF_LOG_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testSetupOneJobIni(self):
+        test_input = [ETHYLRAD, "-c", ONE_JOB_INI, "-t", "-s"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(ONE_INI_OUT, GOOD_ONE_INI_OUT))
+            self.assertFalse(diff_lines(ONE_SLM_OUT, GOOD_ONE_SLM_OUT))
+        finally:
+            silent_remove(ONE_INI_OUT, disable=DISABLE_REMOVE)
+            silent_remove(ONE_SLM_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testNeedsExtraKeyIni(self):
+        test_input = [ETHYLRAD, "-c", HAS_EXTRA_KEY_INI, "-t"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(OPT_SH_OUT, GOOD_OPT_EXTRA_KEY_SH_OUT))
+        finally:
+            for fname in [DEF_SH_OUT, DEF_LOG_OUT, OPT_SH_OUT, OPT_LOG_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
     def testOneNewJobIni(self):
@@ -231,7 +351,8 @@ class TestRunGauss(unittest.TestCase):
             self.assertFalse(diff_lines(OPT_STABLE_SH_OUT, GOOD_OPT_STABLE_SH_OUT))
         finally:
             for fname in [DEF_SH_OUT, OPT_SH_OUT, OPT_STABLE_SH_OUT, DEF_LOG_OUT, OPT_LOG_OUT, OPT_STABLE_LOG_OUT,
-                          SPAWN1_GIVE_CHK_INI, SPAWN2_GIVE_CHK_INI, SPAWN1_GIVE_CHK_SLM, SPAWN2_GIVE_CHK_SLM]:
+                          SPAWN2_INI, SPAWN2_SLURM, SPAWN1_INI, SPAWN1_SLURM,
+                          ]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
@@ -241,8 +362,9 @@ class TestRunGauss(unittest.TestCase):
             main(test_input)
             self.assertFalse(diff_lines(OPT_STABLE_SH_OUT, GOOD_ALT_OPT_STABLE_SH_OUT))
         finally:
-            for fname in [DEF_SH_OUT, OPT_SH_OUT, OPT_STABLE_SH_OUT, DEF_LOG_OUT, OPT_LOG_OUT, OPT_STABLE_LOG_OUT,
-                          SPAWN1_DIFF_CHK_INI, SPAWN2_DIFF_CHK_INI, SPAWN1_DIFF_CHK_SLM, SPAWN2_DIFF_CHK_SLM]:
+            for fname in [DEF_SH_OUT, OPT_SH_OUT, SPAWN2_INI, SPAWN2_SLURM, OPT_STABLE_SH_OUT, DEF_LOG_OUT,
+                          OPT_LOG_OUT, OPT_STABLE_LOG_OUT, SPAWN1_INI, SPAWN1_SLURM,
+                          ]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
@@ -260,19 +382,24 @@ class TestRunGauss(unittest.TestCase):
             pass
 
     def testSpawnAllNew(self):
+        temp_file_list = ['ethylrad_opt.chk']
+        for fname in temp_file_list:
+            with open(fname, 'w') as f:
+                f.write("# for test only\n\n")
+
         test_input = [ETHYLRAD, "-c", SPAWN_ALL_NEW_INI, "-t", "-n"]
         try:
             main(test_input)
-            self.assertFalse(diff_lines(SPAWN0_NEW_INI, GOOD_SPAWN0_NEW_INI))
-            self.assertFalse(diff_lines(SPAWN1_NEW_INI, GOOD_SPAWN1_INI))
-            self.assertFalse(diff_lines(SPAWN2_NEW_INI, GOOD_SPAWN2_INI))
-            self.assertFalse(diff_lines(SPAWN0_NEW_SLURM, GOOD_SPAWN0_NEW_SLURM))
-            self.assertFalse(diff_lines(SPAWN1_NEW_SLURM, GOOD_SPAWN1_NEW_SLURM))
-            self.assertFalse(diff_lines(SPAWN2_NEW_SLURM, GOOD_SPAWN2_NEW_SLURM))
+            self.assertFalse(diff_lines(SPAWN0_INI, GOOD_SPAWN0_NEW_INI))
+            self.assertFalse(diff_lines(SPAWN1_INI, GOOD_SPAWN1_INI))
+            self.assertFalse(diff_lines(SPAWN2_INI, GOOD_SPAWN2_INI))
+            self.assertFalse(diff_lines(SPAWN0_SLURM, GOOD_SPAWN0_NEW_SLURM))
+            self.assertFalse(diff_lines(SPAWN1_SLURM, GOOD_SPAWN1_NEW_SLURM))
+            self.assertFalse(diff_lines(SPAWN2_SLURM, GOOD_SPAWN2_NEW_SLURM))
         finally:
-            for fname in [DEF_SH_OUT, OPT_SH_OUT, DEF_LOG_OUT, OPT_LOG_OUT,
-                          SPAWN0_NEW_INI, SPAWN1_NEW_INI, SPAWN2_NEW_INI,
-                          SPAWN0_NEW_SLURM, SPAWN1_NEW_SLURM, SPAWN2_NEW_SLURM]:
+            for fname in temp_file_list + [DEF_SH_OUT, OPT_SH_OUT, DEF_LOG_OUT, OPT_LOG_OUT,
+                                           SPAWN0_INI, SPAWN1_INI, SPAWN2_INI,
+                                           SPAWN0_SLURM, SPAWN1_SLURM, SPAWN2_SLURM]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
@@ -280,10 +407,10 @@ class TestRunGauss(unittest.TestCase):
         test_input = [ETHYLRAD, "-s", "-c", SETUP_SUBMIT_INI, "-n"]
         try:
             main(test_input)
-            self.assertFalse(diff_lines(SETUP_INI_OUT, GOOD_SETUP_INI_OUT))
-            self.assertFalse(diff_lines(SETUP_SLURM_OUT, GOOD_SETUP_SLURM_OUT))
+            self.assertFalse(diff_lines(SPAWN0_INI, GOOD_SETUP_INI_OUT))
+            self.assertFalse(diff_lines(SPAWN0_SLURM, GOOD_SETUP_SLURM_OUT))
         finally:
-            for fname in [SETUP_INI_OUT, SETUP_SLURM_OUT]:
+            for fname in [SPAWN0_INI, SPAWN0_SLURM]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
@@ -295,25 +422,29 @@ class TestRunGauss(unittest.TestCase):
         test_input = [LIST, "-l", "-c", SETUP_SUBMIT_INI, "-n"]
         try:
             main(test_input)
-            self.assertFalse(diff_lines(SETUP_INI_OUT, GOOD_SETUP_INI_OUT))
-            self.assertFalse(diff_lines(SETUP_SLURM_OUT, GOOD_SETUP_SLURM_OUT))
-            self.assertFalse(diff_lines(WATER_INI_OUT, GOOD_WATER_INI_OUT))
-            self.assertFalse(diff_lines(WATER_SLURM_OUT, GOOD_WATER_SLURM_OUT))
+            self.assertFalse(diff_lines(SPAWN0_INI, GOOD_SPAWN0_INI))
+            self.assertFalse(diff_lines(SPAWN0_SLURM, GOOD_SPAWN0_SLURM))
+            self.assertFalse(diff_lines(SETUP_WATER_INI_OUT, GOOD_WATER_INI_OUT))
+            self.assertFalse(diff_lines(SETUP_WATER_SLURM_OUT, GOOD_WATER_SLURM_OUT))
         finally:
-            for fname in temp_file_list + [SETUP_INI_OUT, SETUP_SLURM_OUT, WATER_INI_OUT, WATER_SLURM_OUT]:
+            for fname in temp_file_list + [SPAWN0_INI, SPAWN0_SLURM, SETUP_WATER_INI_OUT, SETUP_WATER_SLURM_OUT]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
     def testSetupSubmitListSpawn(self):
+        temp_file_list = ['water.chk', 'ethylrad.chk']
+        for fname in temp_file_list:
+            with open(fname, 'w') as f:
+                f.write("# for test only\n")
         test_input = [LIST, "-l", "-c", SETUP_SUBMIT_SPAWN_INI, "-n"]
         try:
             main(test_input)
-            self.assertFalse(diff_lines(SETUP_INI_OUT, GOOD_ETHYL_SPAWN_INI_OUT))
-            self.assertFalse(diff_lines(SETUP_SLURM_OUT, GOOD_ETHYL_SPAWN_SLURM_OUT))
-            self.assertFalse(diff_lines(WATER_INI_OUT, GOOD_ETHYL_SPAWN_INI_OUT))
-            self.assertFalse(diff_lines(WATER_SLURM_OUT, GOOD_WATER_SPAWN_SLURM_OUT))
+            self.assertFalse(diff_lines(SPAWN0_INI, GOOD_ETHYL_SPAWN_INI_OUT))
+            self.assertFalse(diff_lines(SPAWN0_SLURM, GOOD_ETHYL_SPAWN_SLURM_OUT))
+            self.assertFalse(diff_lines(SETUP_WATER_INI_OUT, GOOD_ETHYL_SPAWN_INI_OUT))
+            self.assertFalse(diff_lines(SETUP_WATER_SLURM_OUT, GOOD_WATER_SPAWN_SLURM_OUT))
         finally:
-            for fname in [SETUP_INI_OUT, SETUP_SLURM_OUT, WATER_INI_OUT, WATER_SLURM_OUT]:
+            for fname in temp_file_list + [SPAWN0_INI, SPAWN0_SLURM, SETUP_WATER_INI_OUT, SETUP_WATER_SLURM_OUT]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
@@ -322,43 +453,41 @@ class TestRunGauss(unittest.TestCase):
         temp_file_list = ['f.tpl', 'ts.tpl']
         for fname in temp_file_list:
             with open(fname, 'w') as f:
-                f.write("# for test only")
-
-        test_input = ['tests/test_data/run_gauss/ethylrad.com', "-c", SETUP_DEF_TPL_INI, "-s",
+                f.write("# for test only\n")
+        test_input = ['tests/test_data/run_gauss/ethylrad.com', "-c", SETUP_F_TS_INI_IN, "-s",
                       "-o", 'tests/test_data/run_gauss/ethyl.chk', "-n"]
         try:
             main(test_input)
-            self.assertFalse(diff_lines(SETUP_INI_DEF_DIR_OUT, GOOD_DEF_DIR_INI_OUT))
-            self.assertFalse(diff_lines(SETUP_SLURM_DEF_DIR_OUT, GOOD_DEF_DIR_SLURM_OUT))
+            self.assertFalse(diff_lines(SETUP_F_TS_INI_OUT, GOOD_SETUP_F_TS_INI_OUT))
+            self.assertFalse(diff_lines(SETUP_F_TS_SLM_OUT, GOOD_SETUP_F_TS_SLM_OUT))
         finally:
-            for fname in temp_file_list + [SETUP_INI_DEF_DIR_OUT, SETUP_SLURM_DEF_DIR_OUT]:
+            for fname in temp_file_list + [SETUP_F_TS_INI_OUT, SETUP_F_TS_SLM_OUT]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
     def testSubmitDefDirIni(self):
         # Checking alternate input from above
-        temp_file_list = ['ethylrad.com', 'f.tpl', 'ts.tpl']
+        temp_file_list = ['ethylrad.com', 'f.tpl', 'ts.tpl', 'ethyl.chk']
         for fname in temp_file_list:
             with open(fname, 'w') as f:
-                f.write("# for test only")
+                f.write("# for test only\n")
 
-        test_input = ['ethylrad', "-c", SETUP_DEF_TPL_INI, "-s", "-o", 'ethyl', '-n', '-t']
-        main(test_input)
+        test_input = ['ethylrad', "-c", SETUP_F_TS_INI_IN, "-s", "-o", 'ethyl.chk', '-n', '-t']
         try:
             main(test_input)
-            self.assertFalse(diff_lines(SETUP_INI_DEF_DIR_OUT, GOOD_DEF_TPL_INI_OUT))
-            self.assertFalse(diff_lines(SETUP_SLURM_DEF_DIR_OUT, GOOD_SHORT_DEF_DIR_SLURM_OUT))
+            self.assertFalse(diff_lines(SETUP_F_TS_INI_OUT, GOOD_F_TS_INI_OUT))
+            self.assertFalse(diff_lines(SETUP_F_TS_SLM_OUT, GOOD_F_TS_SLM_OUT))
         finally:
-            for fname in temp_file_list + [SETUP_INI_DEF_DIR_OUT, SETUP_SLURM_DEF_DIR_OUT]:
+            for fname in temp_file_list + [SETUP_F_TS_INI_OUT, SETUP_F_TS_SLM_OUT]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
 
     def testSubmitMultIni(self):
         # Create and submit more than one ini
-        temp_file_list = ['ethylrad.com', 'ircr.tpl', 'ircf.tpl', 'opt.tpl']
+        temp_file_list = ['ethylrad.com', 'ircr.tpl', 'ircf.tpl', 'opt.tpl', 'ethylrad.chk']
         for fname in temp_file_list:
             with open(fname, 'w') as f:
-                f.write("# for test only")
+                f.write("# for test only\n")
         test_input = ['ethylrad', "-c", SETUP_IRCS_INI, "-s", "-n"]
         try:
             main(test_input)
@@ -369,5 +498,58 @@ class TestRunGauss(unittest.TestCase):
         finally:
             for fname in temp_file_list + [SETUP_IRCR_INI_OUT, SETUP_IRCR_SLM_OUT,
                                            SETUP_IRCF_INI_OUT, SETUP_IRCF_SLM_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testFindNodeMem(self):
+        test_input = [ETHYLRAD, "-c", SETUP_GET_MEM_INI, "-t"]
+        try:
+            # main(test_input)
+            with capture_stdout(main, test_input) as output:
+                # each assert from a different print command
+                self.assertTrue("the whole node will" in output)
+                self.assertTrue("Will allocate up to 63124196 kB" in output)
+                self.assertFalse("0-35" in output)
+                self.assertTrue("user may override these" in output)
+            self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_MEM_SH_OUT))
+            self.assertFalse(diff_lines(OPT_SH_OUT, GOOD_MEM_OPT_SH_OUT))
+        finally:
+            for fname in [DEF_SH_OUT, OPT_SH_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testFindNodeProc(self):
+        test_input = [ETHYLRAD, "-c", SETUP_GET_PROCS_INI, "-t"]
+        try:
+            # main(test_input)
+            with capture_stdout(main, test_input) as output:
+                # each assert from a different print command
+                self.assertTrue("the whole node will" in output)
+                self.assertFalse("Will allocate up to 63124196 kB" in output)
+                self.assertTrue("0-35" in output)
+                self.assertTrue("user may override these" in output)
+            self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_PROC_SH_OUT))
+            self.assertFalse(diff_lines(OPT_SH_OUT, GOOD_PROC_OPT_SH_OUT))
+        finally:
+            for fname in [DEF_SH_OUT, OPT_SH_OUT]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            pass
+
+    def testFindNodeProcsMem(self):
+        test_input = [ETHYLRAD, "-c", SETUP_GET_MEM_PROCS_ROUTE_INI, "-t"]
+        try:
+            # main(test_input)
+            with capture_stdout(main, test_input) as output:
+                # each assert from a different print command
+                self.assertTrue("the whole node will" in output)
+                self.assertTrue("Will allocate up to 63124196 kB" in output)
+                self.assertTrue("0-35" in output)
+                self.assertTrue("user may override these" in output)
+                self.assertTrue("CacheSize=720896 and MaxDisk=40.50G" in output)
+            self.assertFalse(diff_lines(DEF_ROUTE_LOC, GOOD_DEF_ROUTE_LOC))
+            self.assertFalse(diff_lines(DEF_SH_OUT, GOOD_MEM_PROC_ROUTE_SH_OUT))
+            self.assertFalse(diff_lines(OPT_SH_OUT, GOOD_MEM_PROC_ROUTE_OPT_SH_OUT))
+        finally:
+            for fname in [DEF_ROUTE_LOC, DEF_SH_OUT, OPT_SH_OUT]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
             pass
