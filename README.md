@@ -7,16 +7,28 @@ gaussian_wrangler
 
 A suite of scripts that have been helpful primarily with work flows involving Gaussian.
 
-To install, obtain the tarball (from https://www.dropbox.com/sh/spiu46a0mrgtean/AADfeFWQsJNUpD2UkYNe6gCoa?dl=0)
-or by creating it from the project using `python setup.py sdist`). Then install it on your machine, e.g.:
+## Installation
 
-`pip install --upgrade gaussian_wrangler-0.0.0.tar.gz --user`
-    
-You will also need to install common_wrangler. You can copy the tarball from 
-https://www.dropbox.com/sh/spiu46a0mrgtean/AADfeFWQsJNUpD2UkYNe6gCoa?dl=0 or download the project 
-and built it yourself (available at https://github.com/team-mayes/common_wrangler). You can use a similar command to install it:
+In three simple steps!
 
-`pip install --upgrade gaussian_wrangler-0.0.0.tar.gz --user`
++ If you do not already have python \geq 3.0 installed, start with that installation. 
+[Anaconda](https://www.anaconda.com/distribution/) or [miniconda](https://docs.conda.io/en/latest/miniconda.html) are 
+recommended.
++ If you do not already have a `$HOME/.local/bin` directory, create it. Make sure `$HOME/.local/bin` is included in your 
+paths in your `.bashrc` and/or `.bash_profile` (e.g. `export PATH="$PATH:$HOME/.local/bin`).
++ Run `pip install gaussian-wrangler`
+
+## Build
+
+If you prefer to build the package yourself:
+
++ Clone this package
++ Check that you have python \geq 3.0 installed, a `$HOME/.local/bin` directory, and that this directory in your `$PATH` (see above)
++ If desired, run the test on your platform with `python setup.py test` (within `gaussian_wrangler`)
++ Build the tarball via `python setup.py sdist`
++ Install the resulting tarball with `pip install dist/gaussian*tar.gz`
+
+## Included Scripts
 
 **check_gauss**: There are two main functions:
 1) Checks for normal termination of Gaussian output files in a specified directory, and moves them to a new location.
@@ -55,6 +67,17 @@ configuration file.
 The program will also determine an appropriate amount of memory to allocate and max number of cores to use (also 
 assuming the whole node is used for the Gaussian job) if a '{mem}' and/or '{proc_list}' parameter is included in the 
 'job_run_tpl' and not specified in the configuration file.
+
+**Additional scripts** (descriptions available via the `-h` option) include:
+
++ gausscom2com
++ gausslog2com
++ gausslog2pdb
++ gausslog_unique
++ goodvibes_helper (requires [hartree](https://github.com/team-mayes/hartree) and [this version of goodvibes](https://github.com/team-mayes/GoodVibes))
++ pdbs2gausscoms
++ plot_steps
++ run_gauss
 
 
 ### Copyright
