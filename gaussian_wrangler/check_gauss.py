@@ -4,26 +4,18 @@ Finds Gaussian files in a folder. If complete (Normal termination), moves them t
 If appears to have failed, add to a text file for investigation.
 """
 
-from __future__ import print_function
-
 import os
 import re
 import sys
 import argparse
 from operator import itemgetter
-
+from configparser import MissingSectionHeaderError
 from common_wrangler.common import (InvalidDataError, warning, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                     create_out_fname, write_csv, check_file_and_file_list)
 
 from gaussian_wrangler.gw_common import (MAX_FORCE, RMS_FORCE, MAX_DISPL, RMS_DISPL, CONVERG, CONVERG_ERR,
                                          process_gausslog_file, CONVERG_STEP_DICT)
 
-try:
-    # noinspection PyCompatibility
-    from ConfigParser import ConfigParser, MissingSectionHeaderError
-except ImportError:
-    # noinspection PyCompatibility
-    from configparser import ConfigParser, MissingSectionHeaderError
 
 __author__ = 'hmayes'
 

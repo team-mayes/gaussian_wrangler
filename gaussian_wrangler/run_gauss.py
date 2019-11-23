@@ -3,24 +3,18 @@
 makes and runs gaussian input
 """
 
-from __future__ import print_function
 import sys
 import argparse
 import subprocess
 import re
 import os
+from configparser import ConfigParser, MissingSectionHeaderError
 from common_wrangler.common import (InvalidDataError, warning, process_cfg, create_out_fname, GOOD_RET, INPUT_ERROR,
                                     IO_ERROR, INVALID_DATA, read_tpl, InvalidInputError, str_to_file,
                                     get_fname_root, OUT_DIR, MAIN_SEC, list_to_file)
 from common_wrangler.fill_tpl import fill_save_tpl
 from gaussian_wrangler.gw_common import GAU_HEADER_PAT
 
-try:
-    # noinspection PyCompatibility
-    from ConfigParser import ConfigParser, MissingSectionHeaderError
-except ImportError:
-    # noinspection PyCompatibility
-    from configparser import ConfigParser, MissingSectionHeaderError
 
 __author__ = 'hmayes'
 

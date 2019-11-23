@@ -8,18 +8,12 @@ import os
 import copy
 import sys
 import argparse
+from configparser import ConfigParser, MissingSectionHeaderError
 from common_wrangler.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file,
                                     process_pdb_file, PDB_FORMAT, NUM_ATOMS, MAIN_SEC,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA)
-
 from gaussian_wrangler.gw_common import GAU_HEADER_PAT
 
-try:
-    # noinspection PyCompatibility
-    from ConfigParser import ConfigParser, MissingSectionHeaderError
-except ImportError:
-    # noinspection PyCompatibility
-    from configparser import ConfigParser, MissingSectionHeaderError
 
 __author__ = 'hmayes'
 
