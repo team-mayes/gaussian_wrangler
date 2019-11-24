@@ -1,9 +1,7 @@
 import logging
 import os
 import unittest
-
 from common_wrangler.common import diff_lines, silent_remove, capture_stdout, capture_stderr
-
 from gaussian_wrangler.run_gauss import main
 
 # logging.basicConfig(level=logging.DEBUG)

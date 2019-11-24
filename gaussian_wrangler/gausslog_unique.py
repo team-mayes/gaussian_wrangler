@@ -3,20 +3,14 @@
 if atoms are in the same order, checks for duplicate conformers
 """
 
-from __future__ import print_function
 import os
 import sys
 import argparse
+from configparser import MissingSectionHeaderError
 from common_wrangler.common import (InvalidDataError, warning,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, DIHES)
 from gaussian_wrangler.gw_common import (STOICH, CONVERG, ENERGY, ENTHALPY, CONVERG_ERR, process_gausslog_file)
 
-try:
-    # noinspection PyCompatibility
-    from ConfigParser import ConfigParser, MissingSectionHeaderError
-except ImportError:
-    # noinspection PyCompatibility
-    from configparser import ConfigParser, MissingSectionHeaderError
 
 __author__ = 'hmayes'
 

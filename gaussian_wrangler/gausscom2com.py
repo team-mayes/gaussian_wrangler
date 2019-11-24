@@ -3,24 +3,15 @@
 Creates Gaussian input files from other Gaussian input files.
 """
 
-from __future__ import print_function
-
 import argparse
 import os
 import sys
-
+from configparser import MissingSectionHeaderError
 from common_wrangler.common import (InvalidDataError, warning, create_out_fname, list_to_file,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, check_file_and_file_list)
-
 from gaussian_wrangler.gausslog2com import process_gausscom_tpl, ATOM_TYPES
 from gaussian_wrangler.gw_common import GAU_HEADER_PAT
 
-try:
-    # noinspection PyCompatibility
-    from ConfigParser import ConfigParser, MissingSectionHeaderError
-except ImportError:
-    # noinspection PyCompatibility
-    from configparser import ConfigParser, MissingSectionHeaderError
 
 __author__ = 'hmayes'
 

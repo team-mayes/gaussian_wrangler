@@ -3,8 +3,6 @@
 Uses GoodVibes to check input and calculate G at a range of temperatures
 """
 
-from __future__ import print_function
-
 import csv
 import os
 import subprocess
@@ -12,19 +10,11 @@ import sys
 import argparse
 import re
 import numpy as np
-# from goodvibes import GoodVibes
 from common_wrangler.common import (InvalidDataError, warning, RG, KB, H, EHPART_TO_KCAL_MOL,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                                    write_csv, silent_remove, create_out_fname, make_fig, )
+                                    write_csv, silent_remove, create_out_fname, make_fig, parse_stoich)
 from gaussian_wrangler.gw_common import (CHARGE, MULT, STOICH)
 
-
-try:
-    # noinspection PyCompatibility
-    from ConfigParser import ConfigParser, MissingSectionHeaderError
-except ImportError:
-    # noinspection PyCompatibility
-    from configparser import ConfigParser, MissingSectionHeaderError
 
 __author__ = 'hmayes'
 
@@ -323,23 +313,6 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
                 raise InvalidDataError("See GoodVibes error checking report: 'Goodvibes_output.dat'")
 
     return solvent, ts_index
-
-
-def parse_stoich(stoich_string, add_to_dict=None):
-    raw_list = re.findall(r'([A-Z][a-z]*)(\d*)', stoich_string)
-    stoich_dict = {}
-    for atom_tuple in raw_list:
-        if atom_tuple[1] == '':
-            stoich_dict[atom_tuple[0]] = 1
-        else:
-            stoich_dict[atom_tuple[0]] = int(atom_tuple[1])
-    if add_to_dict:
-        for key, val in add_to_dict.items():
-            if key in stoich_dict:
-                stoich_dict[key] += add_to_dict[key]
-            else:
-                stoich_dict[key] = add_to_dict[key]
-    return stoich_dict
 
 
 def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_output_fname, qh_h_opt, vib_scale):

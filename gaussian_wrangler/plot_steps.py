@@ -3,23 +3,14 @@
 
 """
 
-from __future__ import print_function
-
 import os
 import sys
 import argparse
 import numpy as np
-# from goodvibes import GoodVibes
 from common_wrangler.common import (InvalidDataError, warning,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                     create_out_fname, make_fig, EHPART_TO_KCAL_MOL, DEF_FIG_HEIGHT, DEF_FIG_WIDTH)
 
-try:
-    # noinspection PyCompatibility
-    from ConfigParser import ConfigParser, MissingSectionHeaderError
-except ImportError:
-    # noinspection PyCompatibility
-    from configparser import ConfigParser, MissingSectionHeaderError
 
 __author__ = 'hmayes'
 

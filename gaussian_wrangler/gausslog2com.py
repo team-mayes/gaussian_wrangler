@@ -3,7 +3,6 @@
 Creates pdb data files from lammps data files, given a template pdb file.
 """
 
-from __future__ import print_function
 import os
 import re
 import sys
@@ -13,12 +12,6 @@ from common_wrangler.common import (InvalidDataError, warning, create_out_fname,
                                     SEC_ATOMS, SEC_TAIL, check_file_and_file_list)
 from gaussian_wrangler.gw_common import (GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT, GAU_CHARGE_PAT)
 
-try:
-    # noinspection PyCompatibility
-    from ConfigParser import ConfigParser, MissingSectionHeaderError
-except ImportError:
-    # noinspection PyCompatibility
-    from configparser import ConfigParser, MissingSectionHeaderError
 
 __author__ = 'hmayes'
 
@@ -200,7 +193,7 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
         f_name = create_out_fname(out_fname, base_dir=base_dir)
 
     else:
-        f_name = create_out_fname(gausslog_file, ext='_' + com_tpl_content[BASE_NAME] + '.com', base_dir=base_dir)
+        f_name = create_out_fname(gausslog_file, suffix='_' + com_tpl_content[BASE_NAME], ext='.com', base_dir=base_dir)
     list_to_file(com_tpl_content[SEC_HEAD] + final_atoms_section + com_tpl_content[SEC_TAIL], f_name)
 
     # Now that finished reading the file, first make sure didn't  exit before reaching the desired number of atoms
