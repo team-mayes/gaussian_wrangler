@@ -1,9 +1,11 @@
-#!/usr/bin/env python
+import jpype
+import jpype.imports
+
+# !/usr/bin/env python
 """
 Uses GoodVibes to check input and calculate G at a range of temperatures
 """
 
-import csv
 import os
 import subprocess
 import sys
@@ -13,8 +15,6 @@ import numpy as np
 from common_wrangler.common import (InvalidDataError, warning, RG, KB, H, EHPART_TO_KCAL_MOL,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                     write_csv, silent_remove, create_out_fname, make_fig, parse_stoich)
-from gaussian_wrangler.gw_common import (CHARGE, MULT, STOICH)
-
 
 __author__ = 'hmayes'
 
@@ -124,27 +124,6 @@ def parse_cmdline(argv):
         if not os.path.exists(args[0].out_dir):
             os.makedirs(args[0].out_dir)
 
-        if not args[0].hartree_call:
-            with open(os.devnull, 'w') as fnull:
-                hartree_bash_alias_call = ['/bin/bash', '-i', '-c', "alias hartree"]
-                hartree_bash_which_call = ['/bin/bash', '-i', '-c', "which hartree"]
-                if subprocess.call(hartree_bash_alias_call, stdout=fnull, stderr=subprocess.STDOUT) == 0:
-                    raw_hartree_call = subprocess.check_output(hartree_bash_alias_call,
-                                                               stderr=fnull).decode("utf-8").strip().split("\n")
-                    args[0].hartree_call = raw_hartree_call[0].split("'")[1].split()
-                elif subprocess.call(hartree_bash_which_call, stdout=fnull, stderr=subprocess.STDOUT) == 0:
-                    args[0].hartree_call = subprocess.check_output(hartree_bash_which_call,
-                                                                   stderr=fnull).decode("utf-8").strip().split("\n")[0]
-                else:
-                    warning("Did not find a valid 'hartree' command. {}".format(hartree_help_string))
-                    return args, INPUT_ERROR
-
-                hartree_cmd = args[0].hartree_call
-                print(f"Hartree command: {hartree_cmd}")
-                if not (os.path.isfile(hartree_cmd) or os.path.islink(hartree_cmd)):
-                    warning("Hartree not found at this location: {}\n"
-                            "If using an alias, use the absolute path.".format(args[0].hartree_call))
-
         if args[0].output_fname:
             args[0].output_fname = os.path.abspath(os.path.join(args[0].out_dir, args[0].output_fname))
         elif args[0].list:
@@ -201,16 +180,16 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
     prod_stoich_dict = {}  # empty dict to make IDE happy
     reading_reactants = True
 
-    # first, run through Hartree
-    hartree_input = hartree_call + ["snap"]
-    for index, fname in enumerate(file_set):
-        if fname == REACT_PROD_SEP:
-            continue
-        hartree_input += ["-f", fname]
+    # # first, run through Hartree
+    # hartree_input = hartree_call + ["snap"]
+    # for index, fname in enumerate(file_set):
+    #     if fname == REACT_PROD_SEP:
+    #         continue
+    #     hartree_input += ["-f", fname]
 
     # now start checks by getting info from hartree
-    hartree_output = subprocess.check_output(hartree_input).decode("utf-8").strip().split("\n")
-    hartree_list = list(csv.DictReader(hartree_output, quoting=csv.QUOTE_NONNUMERIC))
+    # hartree_output = subprocess.check_output(hartree_input).decode("utf-8").strip().split("\n")
+    # hartree_list = list(csv.DictReader(hartree_output, quoting=csv.QUOTE_NONNUMERIC))
 
     # index here instead of using loop index because a row might need to be skipped if "TS" is included
     hartree_index = 0
@@ -227,12 +206,18 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
             continue
 
         # now start checks by getting info from hartree
-        row = hartree_list[hartree_index]
+
+        gauss_result = hartree.read_gaussian(fname)
         # exclude any crazy two imaginary frequency files
-        if float(row[FREQ1]) < 0 and float(row[FREQ2]) < 0:
+        freq_vals = gauss_result.getFrequencyValues()
+        if len(freq_vals) < 2:
+            warning(f"Too few frequencies ({freq_vals.size()} vs. {len(freq_vals)}.  Skipping")
+            continue
+
+        if freq_vals[0] < 0 and freq_vals[1] < 0:
             raise InvalidDataError("The first two frequencies are both imaginary in file: {}".format(fname))
         # First see if it is the TS
-        if float(row[FREQ1]) < 0:
+        if freq_vals[0] < 0:
             if not reading_reactants:
                 raise InvalidDataError("In set of filed, only one file with an imaginary frequency is expected (or "
                                        "none if reactant/product separator is used). Unexpectedly found an imaginary "
@@ -240,39 +225,39 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
                                        "{}".format(fname, file_set[ts_index]))
             reading_reactants = False
             ts_index = index
-            ts_charge = int(row[CHARGE])
-            ts_stoich_dict = parse_stoich(row[STOICH])
+            ts_charge = gauss_result.getCharge()
+            ts_stoich_dict = parse_stoich(str(gauss_result.getStoichiometry()))
         elif reading_reactants:
-            total_react_charge += int(row[CHARGE])
+            total_react_charge += gauss_result.getCharge()
             if len(react_stoich_dict) == 0:
-                react_stoich_dict = parse_stoich(row[STOICH])
+                react_stoich_dict = parse_stoich(str(gauss_result.getStoichiometry()))
             else:
-                react_stoich_dict = parse_stoich(row[STOICH], add_to_dict=react_stoich_dict)
+                react_stoich_dict = parse_stoich(str(gauss_result.getStoichiometry()), add_to_dict=react_stoich_dict)
         else:
-            total_product_charge += int(row[CHARGE])
+            total_product_charge += gauss_result.getCharge()
             if len(prod_stoich_dict) == 0:
-                prod_stoich_dict = parse_stoich(row[STOICH])
+                prod_stoich_dict = parse_stoich(str(gauss_result.getStoichiometry()))
             else:
-                prod_stoich_dict = parse_stoich(row[STOICH], add_to_dict=prod_stoich_dict)
+                prod_stoich_dict = parse_stoich(str(gauss_result.getStoichiometry()), add_to_dict=prod_stoich_dict)
 
         # additional checks on all files as we go...
-        multiplicities[index] = int(row[MULT])
+        multiplicities[index] = int(gauss_result.getMult())
         file_gauss_ver = subprocess.check_output(AWK_GRAB_GAUSS_VER + [fname]).strip().split()[:3]
         if index == 0:
-            solvent = row[SOLV]
-            func = row[FUNCTIONAL]
-            basis = row[BASIS_SET]
+            solvent = gauss_result.getSolvent()
+            func = gauss_result.getFunctional()
+            basis = gauss_result.getBasisSet()
             gauss_ver = file_gauss_ver
         else:
-            if row[SOLV] != solvent:
+            if gauss_result.getSolvent() != solvent:
                 raise InvalidDataError("Different solvents ({}, {}) found for file set: "
-                                       "{}".format(solvent, row[SOLV], file_set))
-            if row[FUNCTIONAL] != func:
+                                       "{}".format(solvent, gauss_result.getSolvent(), file_set))
+            if gauss_result.getFunctional() != func:
                 raise InvalidDataError("Different functionals ({}, {}) found for file set: "
-                                       "{}".format(func, row[FUNCTIONAL], file_set))
-            if row[BASIS_SET] != basis:
+                                       "{}".format(func, gauss_result.getFunctional(), file_set))
+            if gauss_result.getBasisSet() != basis:
                 raise InvalidDataError("Different basis sets ({}, {}) found for file set: "
-                                       "{}".format(basis, row[BASIS_SET], file_set))
+                                       "{}".format(basis, gauss_result.getBasisSet(), file_set))
             if gauss_ver != file_gauss_ver:
                 raise InvalidDataError("Different Gaussian versions ({}, {}) found for file set: "
                                        "{}".format(gauss_ver, file_gauss_ver, file_set))
@@ -303,7 +288,7 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
             file_set = file_set + ["-c", "1"]
         if REACT_PROD_SEP in file_set:
             file_set.remove(REACT_PROD_SEP)
-        vibes_out = subprocess.check_output(["python", "-m", "goodvibes_hmayes"] + file_set +
+        vibes_out = subprocess.check_output(["python", "-m", "goodvibes"] + file_set +
                                             ["--check"]).decode("utf-8").strip().split("\n")
         for line in vibes_out:
             if GOODVIBES_ERROR_PAT.match(line):
@@ -340,7 +325,7 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
             gt.append(np.full([len(temps)], np.nan))
             qh_gt.append(np.full([len(temps)], np.nan))
             continue
-        vibes_input = ["python", "-m", "goodvibes_hmayes", file, "--ti", temp_range]
+        vibes_input = ["python", "-m", "goodvibes", file, "--ti", temp_range]
         if solvent:
             vibes_input += ["-c", "1"]
         if qh_h_opt:
@@ -627,6 +612,37 @@ def main(argv=None):
 
     return GOOD_RET  # success
 
+
+class HartreeWrapper:
+    def __init__(self):
+        jpype.addClassPath("gaussian_wrangler/hartree/*")
+        print("Classpath: ", jpype.getClassPath())
+        jpype.startJVM(convertStrings=False)
+
+        # TODO: Figure out how to scope these imports for the class
+        from org.cmayes.hartree.loader.gaussian import SnapshotLoader
+
+        self.loader = SnapshotLoader()
+
+    def read_all_gaussian(self, files):
+        from java.io import FileReader
+        mapped_results = {}
+        for cur_file in files:
+            mapped_results[cur_file] = self.loader.load(cur_file, FileReader(cur_file))
+
+        return mapped_results
+
+    def read_gaussian(self, tgt_file):
+        from java.io import FileReader
+        return self.loader.load(tgt_file, FileReader(tgt_file))
+
+    def __del__(self):
+        if jpype.isJVMStarted():
+            jpype.shutdownJVM()
+
+
+# Jpype can't restart the JVM, so we make this global.
+hartree = HartreeWrapper()
 
 if __name__ == '__main__':
     status = main()
