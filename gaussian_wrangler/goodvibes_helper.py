@@ -180,18 +180,6 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
     prod_stoich_dict = {}  # empty dict to make IDE happy
     reading_reactants = True
 
-    # # first, run through Hartree
-    # hartree_input = hartree_call + ["snap"]
-    # for index, fname in enumerate(file_set):
-    #     if fname == REACT_PROD_SEP:
-    #         continue
-    #     hartree_input += ["-f", fname]
-
-    # now start checks by getting info from hartree
-    # hartree_output = subprocess.check_output(hartree_input).decode("utf-8").strip().split("\n")
-    # hartree_list = list(csv.DictReader(hartree_output, quoting=csv.QUOTE_NONNUMERIC))
-
-    # index here instead of using loop index because a row might need to be skipped if "TS" is included
     hartree_index = 0
     for index, fname in enumerate(file_set):
         if fname == REACT_PROD_SEP:
