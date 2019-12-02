@@ -8,7 +8,7 @@ import os
 import sys
 from configparser import MissingSectionHeaderError
 from common_wrangler.common import (InvalidDataError, warning, create_out_fname, list_to_file,
-                                    GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, check_file_and_file_list)
+                                    GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, check_for_files)
 from gaussian_wrangler.gausslog2com import process_gausscom_tpl, ATOM_TYPES
 from gaussian_wrangler.gw_common import GAU_HEADER_PAT
 
@@ -184,7 +184,7 @@ def main(argv=None):
     # Read template and data files
     try:
         # Make sure there are files to process
-        gausscom_files = check_file_and_file_list(args.com_file, args.list_file)
+        gausscom_files = check_for_files(args.com_file, args.list_file)
         com_tpl_content = process_gausscom_tpl(args.tpl_file, not args.charge_read_com)
         for gausscom_file in gausscom_files:
             process_gausscom_file(gausscom_file, com_tpl_content, args.charge_read_com, args.out_dir)

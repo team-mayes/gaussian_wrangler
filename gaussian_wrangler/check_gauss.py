@@ -11,7 +11,7 @@ import argparse
 from operator import itemgetter
 from configparser import MissingSectionHeaderError
 from common_wrangler.common import (InvalidDataError, warning, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                                    create_out_fname, write_csv, check_file_and_file_list)
+                                    create_out_fname, write_csv, check_for_files)
 
 from gaussian_wrangler.gw_common import (MAX_FORCE, RMS_FORCE, MAX_DISPL, RMS_DISPL, CONVERG, CONVERG_ERR,
                                          process_gausslog_file, CONVERG_STEP_DICT)
@@ -234,49 +234,23 @@ def check_convergence(check_file_list, step_converg, last_step, best_conv, all_s
                 print("{:36} {:>11} {:}".format(fname, "not found", "n/a"))
 
 
-def search_dir_fnames(args, check_file_list):
-    # set up so if some reason select args.dir_subdirs and args.directory, runs the former option (covers later option)
-    if args.dir_subdirs:
-        search_folder = args.dir_subdirs
-        for root, dirs, files in os.walk(args.dir_subdirs):
-            for fname in files:
-                if fname.endswith(args.extension):
-                    check_file_list.append(os.path.join(root, fname))
-    else:
-        if args.directory:
-            if os.path.isdir(args.directory):
-                search_folder = args.directory
-            else:
-                raise InvalidDataError("Could not find the specified input directory '{}'".format(args.directory))
-        else:
-            search_folder = os.getcwd()
-            # search for output files
-        for file in os.listdir(search_folder):
-            if file.endswith(args.extension):
-                check_file_list.append(os.path.join(search_folder, file))
-    if len(check_file_list) == 0:
-        raise InvalidDataError("Could not find files with extension '{}' in "
-                               "directory '{}'".format(args.extension, search_folder))
-
-
 def main(argv=None):
     # Read input
     args, ret = parse_cmdline(argv)
     if ret != GOOD_RET or args is None:
         return ret
 
-    # Find files to process, then process them
-    check_file_list = []
     try:
-        # first make list of files to check, either by a directory search or from a specified file name and/or list,
-        #    allowing multiple choices
-        if args.file_name or args.file_list:
-            check_file_list = check_file_and_file_list(args.file_name, args.file_list)
-        # catches dir specified, dir+subdirs, or none of these options, which defaults to searching the current
-        #    directory only
-        if args.directory or args.dir_subdirs or (not args.file_name and not args.file_list):
-            search_dir_fnames(args, check_file_list)
-        check_file_list.sort()
+        # Find files to process, then process them
+        check_sub_dirs = False
+        search_dir = None
+        if args.dir_subdirs:
+            search_dir = args.dir_subdirs
+            check_sub_dirs = True
+        elif args.directory:
+            search_dir = args.directory
+        check_file_list = check_for_files(args.file_name, args.file_list, search_pattern=args.extension,
+                                          search_dir=search_dir, search_sub_dir=check_sub_dirs)
 
         # now check either for convergence or termination
         if args.step_converg or args.final_converg:

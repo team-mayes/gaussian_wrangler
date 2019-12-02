@@ -44,7 +44,7 @@ setup(
                   },     package_dir={'gaussian_wrangler': 'gaussian_wrangler'},
 
     test_suite='tests',
-    install_requires=['numpy', 'six', 'matplotlib', 'common-wrangler'],
+    install_requires=['numpy', 'six', 'matplotlib', 'common-wrangler>=0.2.5'],
 
     # install_requires=requirements,
     # Additional entries you may want simply uncomment the lines you want and fill in the data

@@ -48,9 +48,9 @@ NOT_FROM_CHK_FILE = os.path.join(SUB_DATA_DIR, 'acyl-min_ts5.out')
 
 
 def make_fill_sub_dir():
-    # set up sub directory and copy files there
-    if not os.path.exists(SUB_SUB_DIR):
-        os.makedirs(SUB_SUB_DIR)
+    # Start fresh with sub_sub_dir
+    silent_remove(SUB_SUB_DIR, dir_with_files=True)
+    os.makedirs(SUB_SUB_DIR)
     base_com = 'a579.com'
     orig_com = os.path.join(LOG_2_COM_DIR, base_com)
     temp_com = os.path.join(SUB_SUB_DIR, base_com)
@@ -140,19 +140,18 @@ class TestCheckGauss(unittest.TestCase):
     def testBasicUse(self):
         test_input = ["-d", SUB_DATA_DIR]
         copyfile(NORM_TERM_LOG, TEMP_NORM_TERM_LOG)
-        silent_remove(MOVED_FILE, disable=DISABLE_REMOVE)
+        silent_remove(MOVED_FILE)
         try:
             # main(test_input)
             # copyfile(NORM_TERM_LOG, TEMP_NORM_TERM_LOG)
-            # silent_remove(MOVED_FILE, disable=DISABLE_REMOVE)
+            # silent_remove(MOVED_FILE)
             with capture_stdout(main, test_input) as output:
                 self.assertTrue(output == GOOD_OUT)
             self.assertFalse(diff_lines(MOVED_FILE, NORM_TERM_LOG))
             with capture_stderr(main, test_input) as output:
                 self.assertTrue("not read" in output)
         finally:
-            silent_remove(MOVED_FILE, disable=DISABLE_REMOVE)
-            silent_remove(FOR_HARTREE_DIR, disable=DISABLE_REMOVE)
+            silent_remove(FOR_HARTREE_DIR, dir_with_files=True)
             pass
 
     def testSingleFinalConvergence(self):
@@ -293,8 +292,9 @@ class TestCheckGauss(unittest.TestCase):
             with capture_stdout(main, test_input) as output:
                 self.assertTrue(output == good_out)
         finally:
-            for temp_name in temp_files_list + [SUB_SUB_DIR]:
+            for temp_name in temp_files_list:
                 silent_remove(temp_name, disable=DISABLE_REMOVE)
+            silent_remove(SUB_SUB_DIR, disable=DISABLE_REMOVE, dir_with_files=True)
             pass
 
     def testDirSubdirsBestSteps(self):
@@ -321,6 +321,7 @@ class TestCheckGauss(unittest.TestCase):
             with capture_stdout(main, test_input) as output:
                 self.assertTrue(output == good_out)
         finally:
-            for temp_name in temp_files_list + [SUB_SUB_DIR]:
+            for temp_name in temp_files_list:
                 silent_remove(temp_name, disable=DISABLE_REMOVE)
+            silent_remove(SUB_SUB_DIR, disable=DISABLE_REMOVE, dir_with_files=True)
             pass
