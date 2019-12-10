@@ -565,6 +565,7 @@ def main(argv=None):
             silent_remove(tog_fname)
         else:
             tog_fname = None
+        # Todo: optimize--don't do the same calc multiple times on the same output file
         for file_set in row_list:
             solvent, ts_index = check_gausslog_fileset(file_set, args[0].hartree_call, args[0].vibes_check)
             temps, h, qh_h, gt, qh_gt = get_thermochem(file_set, args[0].temp_range, solvent, args[0].save_vibes,
