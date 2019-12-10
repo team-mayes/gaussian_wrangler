@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.pytest_cache/.pytest_cache.iml" filepath="$PROJECT_DIR$/.pytest_cache/.pytest_cache.iml" />
       <module fileurl="file://$PROJECT_DIR$/gaussian_wrangler.iml" filepath="$PROJECT_DIR$/gaussian_wrangler.iml" />
     </modules>
   </component>
