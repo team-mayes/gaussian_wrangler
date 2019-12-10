@@ -26,7 +26,7 @@ setup(
     # Optional include package data to ship with your package
     # Comment out this line to prevent the files from being packaged with your software
     # Extend/modify the list to include/exclude other items as need be
-    package_data={'gaussian_wrangler': ["data/*.dat"]
+    package_data={'gaussian_wrangler': ["data/*.dat","hartree/*.*","good_vibes/*.*"]
                   },
 
     entry_points={'console_scripts': ['gausscom2pdb = gaussian_wrangler.gausscom2pdb:main',
@@ -44,7 +44,7 @@ setup(
                   },     package_dir={'gaussian_wrangler': 'gaussian_wrangler'},
 
     test_suite='tests',
-    install_requires=['numpy', 'six', 'matplotlib', 'common-wrangler>=0.2.5'],
+    install_requires=['numpy', 'six', 'matplotlib', 'common-wrangler>=0.2.5', 'jpype1'],
 
     # install_requires=requirements,
     # Additional entries you may want simply uncomment the lines you want and fill in the data

@@ -115,6 +115,7 @@ class TestGoodVibesHelperInputError(unittest.TestCase):
         try:
             # main(test_input)
             with capture_stderr(main, test_input) as output:
+                print("Output: ", output)
                 self.assertTrue("Different solvents" in output)
         finally:
             silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
