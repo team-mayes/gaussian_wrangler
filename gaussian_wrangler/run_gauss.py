@@ -627,7 +627,7 @@ def main(argv=None):
         job_name_perhaps_with_dir = os.path.splitext(args.job_name)[0]
         job_name = os.path.basename(job_name_perhaps_with_dir)
         tpl_dict = {JOB_NAME: job_name, INPUT_FILE: job_name_perhaps_with_dir + cfg[GAUSS_IN_EXT]}
-        if not os.path.isfile(tpl_dict[INPUT_FILE]):
+        if cfg[JOB_LIST][0] == '' and not os.path.isfile(tpl_dict[INPUT_FILE]):
             raise IOError("Could not find input file: {}".format(tpl_dict[INPUT_FILE]))
 
         if args.setup_submit:
