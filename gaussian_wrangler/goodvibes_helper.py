@@ -324,9 +324,9 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
             vibes_input += ["-q"]
         if vib_scale:
             vibes_input += ["-v", str(vib_scale)]
-        # vibes_out = subprocess.check_output(vibes_input).decode("utf-8").strip().split("\n")
+        vibes_out = subprocess.check_output(vibes_input).decode("utf-8").strip().split("\n")
         # vibes_out = goodvibes(vibes_input)
-        vibes_out = goodvibes_hmayes(vibes_input).decode("utf-8").strip().split("\n")
+        # vibes_out = goodvibes_hmayes(vibes_input).decode("utf-8").strip().split("\n")
         found_structure = False
         skip_line = True
         h.append([])
