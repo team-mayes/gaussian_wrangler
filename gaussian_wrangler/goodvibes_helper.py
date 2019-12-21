@@ -12,6 +12,7 @@ import sys
 import argparse
 import re
 import numpy as np
+from goodvibes_hmayes import goodvibes_hmayes
 from common_wrangler.common import (InvalidDataError, warning, RG, KB, H, EHPART_TO_KCAL_MOL,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                     write_csv, silent_remove, create_out_fname, make_fig, parse_stoich)
@@ -276,8 +277,10 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
             file_set = file_set + ["-c", "1"]
         if REACT_PROD_SEP in file_set:
             file_set.remove(REACT_PROD_SEP)
+        # vibes_out = goodvibes_hmayes(file_set + ["--check"])
         vibes_out = subprocess.check_output(["python", "-m", "goodvibes"] + file_set +
                                             ["--check"]).decode("utf-8").strip().split("\n")
+        # vibes_out = goodvibes_hmayes.main(file_set + ["--check"]).decode("utf-8").strip().split("\n")
         for line in vibes_out:
             if GOODVIBES_ERROR_PAT.match(line):
                 if 'Different charge and multiplicity' in line:
@@ -314,13 +317,16 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
             qh_gt.append(np.full([len(temps)], np.nan))
             continue
         vibes_input = ["python", "-m", "goodvibes", file, "--ti", temp_range]
+        # vibes_input = [file, "--ti", temp_range]
         if solvent:
             vibes_input += ["-c", "1"]
         if qh_h_opt:
             vibes_input += ["-q"]
         if vib_scale:
             vibes_input += ["-v", str(vib_scale)]
-        vibes_out = subprocess.check_output(vibes_input).decode("utf-8").strip().split("\n")
+        # vibes_out = subprocess.check_output(vibes_input).decode("utf-8").strip().split("\n")
+        # vibes_out = goodvibes(vibes_input)
+        vibes_out = goodvibes_hmayes(vibes_input).decode("utf-8").strip().split("\n")
         found_structure = False
         skip_line = True
         h.append([])

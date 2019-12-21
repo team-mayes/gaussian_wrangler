@@ -44,6 +44,7 @@ setup(
                   },     package_dir={'gaussian_wrangler': 'gaussian_wrangler'},
 
     test_suite='tests',
+    # to install jpype1, use conda: install -c conda-forge jpype1
     install_requires=['numpy', 'six', 'matplotlib', 'common-wrangler>=0.2.5', 'jpype1'],
 
     # install_requires=requirements,
