@@ -1,0 +1,354 @@
+ Entering Gaussian System, Link 0=g16
+ Initial command:
+ /nopt/nrel/apps/gaussian/g16B/g16/l1.exe "/dev/shm/Gau-366604.inp" -scrdir="/dev/shm/"
+ Default is to use a total of  36 processors:
+                               36 via shared-memory
+                                1 via Linda
+ Entering Link 1 = /nopt/nrel/apps/gaussian/g16B/g16/l1.exe PID=    366606.
+  
+ Copyright (c) 1988-2017, Gaussian, Inc.  All Rights Reserved.
+ 
+ ******************************************
+ Gaussian 16:  ES64L-G16RevB.01 20-Dec-2017
+                14-Aug-2019 
+ ******************************************
+ %RWF=/dev/shm/,5GB,/tmp/scratch/1148495/,-1
+ %NoSave
+ %Chk=/dev/shm/ipah_d.chk
+ Default route: CacheSize=180224 MaxDisk=256GB
+ ----------------------------------------------------------------------
+ # m062x/Def2TZVP nosymm scf=xqc opt freq=NoRaman guess=mix CPHF=Grid=F
+ ine SCRF=(Solvent=1,2-EthaneDiol,Read)
+ ----------------------------------------------------------------------
+ 1/4=180224,18=20,19=15,26=3,38=1,40=2/1,3;
+ 2/4=180224,9=110,12=2,15=1,17=6,18=5,40=1/2;
+ 3/4=180224,5=44,7=101,11=2,25=1,30=1,70=2203,71=1,72=30,74=-55/1,2,3;
+ 4/4=180224,13=-1/1;
+ 5/4=180224,5=2,8=3,13=1,38=5,53=30/2,8;
+ 6/4=180224,7=2,8=2,9=2,10=2,28=1/1;
+ 7/4=180224,30=1/1,2,3,16;
+ 1/4=180224,18=20,19=15,26=3/3(2);
+ 2/4=180224,9=110,15=1/2;
+ 99/4=180224/99;
+ 2/4=180224,9=110,15=1/2;
+ 3/4=180224,5=44,7=101,11=2,25=1,30=1,70=2205,71=1,72=30,74=-55/1,2,3;
+ 4/4=180224,5=5,16=3,69=1/1;
+ 5/4=180224,5=2,8=3,13=1,38=5,53=30/2,8;
+ 7/4=180224,30=1/1,2,3,16;
+ 1/4=180224,18=20,19=15,26=3/3(-5);
+ 2/4=180224,9=110,15=1/2;
+ 6/4=180224,7=2,8=2,9=2,10=2,19=2,28=1/1;
+ 99/4=180224,9=1/99;
+ -------------------------------
+ rotate to make sure have lowest
+ -------------------------------
+ Symbolic Z-matrix:
+ Charge =  1 Multiplicity = 1
+ 1                     3.4132    20.14716   10.26251 
+ 1                     4.91582   15.90327   13.82323 
+ 6                     3.90245   20.17373   11.22514 
+ 1                     3.882     18.04357   11.47442 
+ 1                     4.04282   22.28909   11.22641 
+ 6                     5.15786   20.22882   13.71714 
+ 6                     4.79196   19.02163   13.15087 
+ 6                     4.16495   18.99276   11.90778 
+ 6                     4.26661   21.38514   11.77821 
+ 6                     4.89658   21.41281   13.02742 
+ 6                     5.09463   17.77463   13.91438 
+ 6                     5.29455   22.66377   13.63838 
+ 1                     5.64497   20.23946   14.68215 
+ 1                     6.03888   23.52084   15.14207 
+ 8                     4.69269   16.67498   13.27984 
+ 8                     5.64163   17.76601   14.9848 
+ 8                     5.78685   22.63621   14.81711 
+ 8                     5.19606   23.81759   13.09303 
+ 1                     5.50968   24.55548   13.64127 
+ 
+
+ GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
+ Berny optimization.
+ Initialization pass.
+                           ----------------------------
+                           !    Initial Parameters    !
+                           ! (Angstroms and Degrees)  !
+ --------------------------                            --------------------------
+ ! Name  Definition              Value          Derivative Info.                !
+ --------------------------------------------------------------------------------
+ ! R1    R(1,3)                  1.0802         estimate D2E/DX2                !
+ ! R2    R(2,15)                 0.9698         estimate D2E/DX2                !
+ ! R3    R(3,8)                  1.3891         estimate D2E/DX2                !
+ ! R4    R(3,9)                  1.3806         estimate D2E/DX2                !
+ ! R5    R(4,8)                  1.0811         estimate D2E/DX2                !
+ ! R6    R(5,9)                  1.0824         estimate D2E/DX2                !
+ ! R7    R(6,7)                  1.3827         estimate D2E/DX2                !
+ ! R8    R(6,10)                 1.3949         estimate D2E/DX2                !
+ ! R9    R(6,13)                 1.081          estimate D2E/DX2                !
+ ! R10   R(7,8)                  1.3926         estimate D2E/DX2                !
+ ! R11   R(7,11)                 1.4932         estimate D2E/DX2                !
+ ! R12   R(9,10)                 1.3993         estimate D2E/DX2                !
+ ! R13   R(10,12)                1.4479         estimate D2E/DX2                !
+ ! R14   R(11,15)                1.3317         estimate D2E/DX2                !
+ ! R15   R(11,16)                1.2021         estimate D2E/DX2                !
+ ! R16   R(12,17)                1.2777         estimate D2E/DX2                !
+ ! R17   R(12,18)                1.28           estimate D2E/DX2                !
+ ! R18   R(14,17)                0.9755         estimate D2E/DX2                !
+ ! R19   R(18,19)                0.9713         estimate D2E/DX2                !
+ ! A1    A(1,3,8)              120.1746         estimate D2E/DX2                !
+ ! A2    A(1,3,9)              119.8731         estimate D2E/DX2                !
+ ! A3    A(8,3,9)              119.9523         estimate D2E/DX2                !
+ ! A4    A(7,6,10)             119.2741         estimate D2E/DX2                !
+ ! A5    A(7,6,13)             119.5656         estimate D2E/DX2                !
+ ! A6    A(10,6,13)            121.1595         estimate D2E/DX2                !
+ ! A7    A(6,7,8)              120.1874         estimate D2E/DX2                !
+ ! A8    A(6,7,11)             117.7801         estimate D2E/DX2                !
+ ! A9    A(8,7,11)             122.0324         estimate D2E/DX2                !
+ ! A10   A(3,8,4)              119.9986         estimate D2E/DX2                !
+ ! A11   A(3,8,7)              120.4067         estimate D2E/DX2                !
+ ! A12   A(4,8,7)              119.5947         estimate D2E/DX2                !
+ ! A13   A(3,9,5)              118.2955         estimate D2E/DX2                !
+ ! A14   A(3,9,10)             119.586          estimate D2E/DX2                !
+ ! A15   A(5,9,10)             122.1159         estimate D2E/DX2                !
+ ! A16   A(6,10,9)             120.5929         estimate D2E/DX2                !
+ ! A17   A(6,10,12)            118.2422         estimate D2E/DX2                !
+ ! A18   A(9,10,12)            121.1649         estimate D2E/DX2                !
+ ! A19   A(7,11,15)            112.6305         estimate D2E/DX2                !
+ ! A20   A(7,11,16)            123.6099         estimate D2E/DX2                !
+ ! A21   A(15,11,16)           123.7596         estimate D2E/DX2                !
+ ! A22   A(10,12,17)           118.4592         estimate D2E/DX2                !
+ ! A23   A(10,12,18)           125.3003         estimate D2E/DX2                !
+ ! A24   A(17,12,18)           116.2405         estimate D2E/DX2                !
+ ! A25   A(2,15,11)            108.7016         estimate D2E/DX2                !
+ ! A26   A(12,17,14)           112.7857         estimate D2E/DX2                !
+ ! A27   A(12,18,19)           114.8018         estimate D2E/DX2                !
+ ! D1    D(1,3,8,4)              0.1779         estimate D2E/DX2                !
+ ! D2    D(1,3,8,7)           -179.8132         estimate D2E/DX2                !
+ ! D3    D(9,3,8,4)           -179.8703         estimate D2E/DX2                !
+ ! D4    D(9,3,8,7)              0.1386         estimate D2E/DX2                !
+ ! D5    D(1,3,9,5)              0.3834         estimate D2E/DX2                !
+ ! D6    D(1,3,9,10)           179.8134         estimate D2E/DX2                !
+ ! D7    D(8,3,9,5)           -179.5686         estimate D2E/DX2                !
+ ! D8    D(8,3,9,10)            -0.1386         estimate D2E/DX2                !
+ ! D9    D(10,6,7,8)            -0.2494         estimate D2E/DX2                !
+ ! D10   D(10,6,7,11)          179.6506         estimate D2E/DX2                !
+ ! D11   D(13,6,7,8)          -179.9374         estimate D2E/DX2                !
+ ! D12   D(13,6,7,11)           -0.0374         estimate D2E/DX2                !
+ ! D13   D(7,6,10,9)             0.2493         estimate D2E/DX2                !
+ ! D14   D(7,6,10,12)         -179.7281         estimate D2E/DX2                !
+ ! D15   D(13,6,10,9)          179.9322         estimate D2E/DX2                !
+ ! D16   D(13,6,10,12)          -0.0453         estimate D2E/DX2                !
+ ! D17   D(6,7,8,3)              0.0581         estimate D2E/DX2                !
+ ! D18   D(6,7,8,4)           -179.933          estimate D2E/DX2                !
+ ! D19   D(11,7,8,3)          -179.8376         estimate D2E/DX2                !
+ ! D20   D(11,7,8,4)             0.1713         estimate D2E/DX2                !
+ ! D21   D(6,7,11,15)          179.6379         estimate D2E/DX2                !
+ ! D22   D(6,7,11,16)           -0.3711         estimate D2E/DX2                !
+ ! D23   D(8,7,11,15)           -0.464          estimate D2E/DX2                !
+ ! D24   D(8,7,11,16)          179.527          estimate D2E/DX2                !
+ ! D25   D(3,9,10,6)            -0.0554         estimate D2E/DX2                !
+ ! D26   D(3,9,10,12)          179.9214         estimate D2E/DX2                !
+ ! D27   D(5,9,10,6)           179.3521         estimate D2E/DX2                !
+ ! D28   D(5,9,10,12)           -0.6711         estimate D2E/DX2                !
+ ! D29   D(6,10,12,17)          -4.4952         estimate D2E/DX2                !
+ ! D30   D(6,10,12,18)         175.4813         estimate D2E/DX2                !
+ ! D31   D(9,10,12,17)         175.5275         estimate D2E/DX2                !
+ ! D32   D(9,10,12,18)          -4.4961         estimate D2E/DX2                !
+ ! D33   D(7,11,15,2)         -179.9762         estimate D2E/DX2                !
+ ! D34   D(16,11,15,2)           0.0328         estimate D2E/DX2                !
+ ! D35   D(10,12,17,14)        179.0881         estimate D2E/DX2                !
+ ! D36   D(18,12,17,14)         -0.8904         estimate D2E/DX2                !
+ ! D37   D(10,12,18,19)        180.0            estimate D2E/DX2                !
+ ! D38   D(17,12,18,19)         -0.0231         estimate D2E/DX2                !
+ --------------------------------------------------------------------------------
+ Trust Radius=3.00D-01 FncErr=1.00D-07 GrdErr=1.00D-06 EigMax=2.50D+02 EigMin=1.00D-04
+ Number of steps in this run=     94 maximum allowed number of steps=    114.
+ GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
+
+                          Input orientation:                          
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          1           0        3.413202   20.147162   10.262507
+      2          1           0        4.915820   15.903267   13.823226
+      3          6           0        3.902452   20.173734   11.225139
+      4          1           0        3.881995   18.043571   11.474417
+      5          1           0        4.042825   22.289088   11.226413
+      6          6           0        5.157857   20.228821   13.717136
+      7          6           0        4.791959   19.021633   13.150867
+      8          6           0        4.164950   18.992762   11.907779
+      9          6           0        4.266606   21.385139   11.778211
+     10          6           0        4.896583   21.412814   13.027421
+     11          6           0        5.094629   17.774629   13.914377
+     12          6           0        5.294555   22.663768   13.638380
+     13          1           0        5.644968   20.239463   14.682152
+     14          1           0        6.038879   23.520838   15.142070
+     15          8           0        4.692687   16.674977   13.279835
+     16          8           0        5.641631   17.766013   14.984799
+     17          8           0        5.786847   22.636212   14.817114
+     18          8           0        5.196056   23.817592   13.093031
+     19          1           0        5.509676   24.555478   13.641266
+ ---------------------------------------------------------------------
+                    Distance matrix (angstroms):
+                    1          2          3          4          5
+     1  H    0.000000
+     2  H    5.739967   0.000000
+     3  C    1.080154   5.100378   0.000000
+     4  H    2.472567   3.341646   2.144797   0.000000
+     5  H    2.431746   6.948688   2.120007   4.255795   0.000000
+     6  C    3.871040   4.333619   2.790900   3.381262   3.419312
+     7  C    3.392699   3.192431   2.413915   2.143624   3.865357
+     8  C    2.145853   3.711835   1.389100   1.081124   3.368225
+     9  C    2.135004   5.886806   1.380579   3.377320   1.082443
+    10  C    3.383348   5.566757   2.402465   3.846168   2.177243
+    11  C    4.668219   1.882094   3.795918   2.737922   5.358338
+    12  C    4.611867   6.773624   3.736570   5.293797   2.743137
+    13  H    4.952026   4.480179   3.871901   4.268440   4.325501
+    14  H    6.487373   7.812042   5.577614   6.935725   4.564407
+    15  O    4.774664   0.969845   4.133709   2.406201   6.013078
+    16  O    5.738973   2.312115   4.791337   3.936514   6.094248
+    17  O    5.707364   6.861417   4.745211   5.991197   4.006899
+    18  O    4.966134   7.952877   4.294198   6.138891   2.674047
+    19  H    5.936705   8.674476   5.255523   7.053333   3.622111
+                    6          7          8          9         10
+     6  C    0.000000
+     7  C    1.382695   0.000000
+     8  C    2.405718   1.392567   0.000000
+     9  C    2.427103   2.783225   2.398039   0.000000
+    10  C    1.394923   2.396650   2.765056   1.399344   0.000000
+    11  C    2.462917   1.493176   2.524794   4.276051   3.749974
+    12  C    2.440052   3.708830   4.212751   2.480282   1.447943
+    13  H    1.081039   2.134378   3.382582   3.412525   2.162167
+    14  H    3.693780   5.075682   5.871603   4.360930   3.196928
+    15  O    3.610737   2.352293   2.744662   4.962061   4.748935
+    16  O    2.811837   2.379460   3.626783   5.027024   4.205423
+    17  O    2.720498   4.102604   4.936548   3.620946   2.343560
+    18  O    3.642835   4.813301   5.074149   2.917097   2.424241
+    19  H    4.341600   5.601701   5.979722   3.881655   3.260219
+                   11         12         13         14         15
+    11  C    0.000000
+    12  C    4.901002   0.000000
+    13  H    2.639651   2.662612   0.000000
+    14  H    5.951282   1.884057   3.336782   0.000000
+    15  O    1.331704   6.029628   3.947011   7.221216   0.000000
+    16  O    1.202118   5.091297   2.491899   5.770663   2.235566
+    17  O    4.992904   1.277703   2.404735   0.975541   6.252738
+    18  O    6.099369   1.280007   3.940791   2.235391   7.162767
+    19  H    6.799027   1.903905   4.441817   1.898144   7.930977
+                   16         17         18         19
+    16  O    0.000000
+    17  O    4.875248   0.000000
+    18  O    6.356015   2.171901   0.000000
+    19  H    6.922379   2.267824   0.971285   0.000000
+ Symmetry turned off by external request.
+ Stoichiometry    C8H7O4(1+)
+ Framework group  C1[X(C8H7O4)]
+ Deg. of freedom    51
+ Full point group                 C1      NOp   1
+ Rotational constants (GHZ):           1.8732426           0.5799610           0.4430341
+ Standard basis: def2TZVP (5D, 7F)
+   414 basis functions,   668 primitive gaussians,   474 cartesian basis functions
+    43 alpha electrons       43 beta electrons
+       nuclear repulsion energy       667.7428792824 Hartrees.
+ NAtoms=   19 NActive=   19 NUniq=   19 SFac= 1.00D+00 NAtFMM=   60 NAOKFM=F Big=F
+ Integral buffers will be    131072 words long.
+ Raffenetti 2 integral format.
+ Two-electron integral symmetry is turned off.
+ Using the following non-standard input for PCM:
+ PDENS=7.0
+ --- end of non-standard input.
+ ------------------------------------------------------------------------------
+ Polarizable Continuum Model (PCM)
+ =================================
+ Model                : PCM.
+ Atomic radii         : UFF (Universal Force Field).
+ Polarization charges : Total charges.
+ Charge compensation  : None.
+ Solution method      : On-the-fly selection.
+ Cavity type          : Scaled VdW (van der Waals Surface) (Alpha=1.100).
+ Cavity algorithm     : GePol (No added spheres)
+                        Default sphere list used, NSphG=   19.
+                        Lebedev-Laikov grids with approx.  7.0 points / Ang**2.
+                        Smoothing algorithm: York/Karplus (Gamma=1.0000).
+                        Polarization charges: spherical gaussians, with
+                                              point-specific exponents (IZeta= 3).
+                        Self-potential: point-specific (ISelfS= 7).
+                        Self-field    : sphere-specific E.n sum rule (ISelfD= 2).
+ 1st derivatives      : Analytical E(r).r(x)/FMM algorithm (CHGder, D1EAlg=3).
+                        Cavity 1st derivative terms included.
+ Solvent              : 1,2-EthaneDiol, Eps=  40.245000 Eps(inf)=   2.050051
+ ------------------------------------------------------------------------------
+ Spheres list:
+ ISph  on   Nord     Re0    Alpha      Xe            Ye            Ze
+    1   H      1    1.4430  1.100      3.413202     20.147162     10.262507
+    2   H      2    1.4430  1.100      4.915820     15.903267     13.823226
+    3   C      3    1.9255  1.100      3.902452     20.173734     11.225139
+    4   H      4    1.4430  1.100      3.881995     18.043571     11.474417
+    5   H      5    1.4430  1.100      4.042825     22.289088     11.226413
+    6   C      6    1.9255  1.100      5.157857     20.228821     13.717136
+    7   C      7    1.9255  1.100      4.791959     19.021633     13.150867
+    8   C      8    1.9255  1.100      4.164950     18.992762     11.907779
+    9   C      9    1.9255  1.100      4.266606     21.385139     11.778211
+   10   C     10    1.9255  1.100      4.896583     21.412814     13.027421
+   11   C     11    1.9255  1.100      5.094629     17.774629     13.914377
+   12   C     12    1.9255  1.100      5.294555     22.663768     13.638380
+   13   H     13    1.4430  1.100      5.644968     20.239463     14.682152
+   14   H     14    1.4430  1.100      6.038879     23.520838     15.142070
+   15   O     15    1.7500  1.100      4.692687     16.674977     13.279835
+   16   O     16    1.7500  1.100      5.641631     17.766013     14.984799
+   17   O     17    1.7500  1.100      5.786847     22.636212     14.817114
+   18   O     18    1.7500  1.100      5.196056     23.817592     13.093031
+   19   H     19    1.4430  1.100      5.509676     24.555478     13.641266
+ ------------------------------------------------------------------------------
+ One-electron integrals computed using PRISM.
+   1 Symmetry operations used in ECPInt.
+ ECPInt:  NShTT=   12880 NPrTT=   40188 LenC2=   11949 LenP2D=   28217.
+ LDataN:  DoStor=T MaxTD1= 6 Len=  172
+ NBasis=   414 RedAO= T EigKep=  7.71D-06  NBF=   414
+ NBsUse=   414 1.00D-06 EigRej= -1.00D+00 NBFU=   414
+ ExpMin= 9.52D-02 ExpMax= 2.70D+04 ExpMxC= 9.22D+02 IAcc=3 IRadAn=         5 AccDes= 0.00D+00
+ Harris functional with IExCor= 1009 and IRadAn=       5 diagonalized for initial guess.
+ HarFok:  IExCor= 1009 AccDes= 0.00D+00 IRadAn=         5 IDoV= 1 UseB2=F ITyADJ=14
+ ICtDFT=  3500011 ScaDFX=  1.000000  1.000000  1.000000  1.000000
+ FoFCou: FMM=F IPFlag=           0 FMFlag=      100000 FMFlg1=           0
+         NFxFlg=           0 DoJE=T BraDBF=F KetDBF=T FulRan=T
+         wScrn=  0.000000 ICntrl=       500 IOpCl=  0 I1Cent=   200000004 NGrid=           0
+         NMat0=    1 NMatS0=      1 NMatT0=    0 NMatD0=    1 NMtDS0=    0 NMtDT0=    0
+ Symmetry not used in FoFCou.
+ Mixing orbitals, IMix= 1 IMixAn=  0 NRI=1 NE=   43 Coef=  7.07106781D-01  7.07106781D-01
+ Requested convergence on RMS density matrix=1.00D-08 within  32 cycles.
+ Requested convergence on MAX density matrix=1.00D-06.
+ Requested convergence on             energy=1.00D-06.
+ No special actions if energy rises.
+ Inv3:  Mode=1 IEnd=    17323227.
+ Iteration    1 A*A^-1 deviation from unit magnitude is 3.11D-15 for    297.
+ Iteration    1 A*A^-1 deviation from orthogonality  is 2.39D-15 for   2222   1888.
+ Iteration    1 A^-1*A deviation from unit magnitude is 3.11D-15 for    297.
+ Iteration    1 A^-1*A deviation from orthogonality  is 1.57D-13 for   2350   2336.
+ Error on total polarization charges =  0.00848
+ SCF Done:  E(RM062X) =  -609.812383791     A.U. after   15 cycles
+            NFock= 15  Conv=0.22D-08     -V/T= 2.0045
+ QCSCF skips out because SCF is already converged.
+
+ **********************************************************************
+
+            Population analysis using the SCF Density.
+
+ **********************************************************************
+
+ Alpha  occ. eigenvalues --  -19.76353 -19.76114 -19.69275 -19.64057 -10.78922
+ Alpha  occ. eigenvalues --  -10.70340 -10.61580 -10.60249 -10.60059 -10.59508
+ Alpha  occ. eigenvalues --  -10.59429 -10.58017  -1.36641  -1.26309  -1.26239
+ Alpha  occ. eigenvalues --   -1.16718  -1.02678  -0.94304  -0.90627  -0.84653
+ Alpha  occ. eigenvalues --   -0.79713  -0.77147  -0.74551  -0.70621  -0.68076
+ Alpha  occ. eigenvalues --   -0.64235  -0.63352  -0.61368  -0.59115  -0.57704
+ Alpha  occ. eigenvalues --   -0.56621  -0.56074  -0.54256  -0.52714  -0.50934
+ Alpha  occ. eigenvalues --   -0.50494  -0.48788  -0.46892  -0.45458  -0.42393
+ Alpha  occ. eigenvalues --   -0.38712  -0.36845  -0.35638
+ Alpha virt. eigenvalues --   -0.09418  -0.04523   0.01721   0.02121   0.06913
+ Alpha virt. eigenvalues --    0.08249   0.08815   0.09046   0.10767   0.12166
+ Alpha virt. eigenvalues --    0.12754   0.14148   0.14830   0.16092   0.18831
+ Alpha virt. eigenvalues --    0.20988   0.21140   0.21985   0.22358   0.22924
+ Alpha virt. eigenvalues --    0.23429   0.24427   0.25112   0.25789   0.26847
+ Alpha virt. eigenvalues --    0.27702   0.28006   0.29425   0.29669   0.31257
+ Alpha virt. eigenvalues --    0.31792   0.33587   0.33858   0.35198   0.36022
+ Alpha virt. eigenvalues --    0.38019   0.38730   0.39716   0.40110   0.40653

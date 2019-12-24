@@ -1,7 +1,6 @@
-import jpype
-import jpype.imports
-
 # !/usr/bin/env python
+
+
 """
 Uses GoodVibes to check input and calculate G at a range of temperatures
 """
@@ -12,10 +11,12 @@ import sys
 import argparse
 import re
 import numpy as np
-from goodvibes_hmayes import goodvibes_hmayes
+import goodvibes_hm
+import jpype
+import jpype.imports
 from common_wrangler.common import (InvalidDataError, warning, RG, KB, H, EHPART_TO_KCAL_MOL,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                                    write_csv, silent_remove, create_out_fname, make_fig, parse_stoich)
+                                    write_csv, silent_remove, create_out_fname, make_fig, parse_stoich, capture_stderr)
 
 __author__ = 'hmayes'
 
@@ -59,6 +60,37 @@ QH_DELTA_G_RXN = 'qh_\u0394G_rxn (kcal/mol)'
 
 OUTPUT_HEADERS = [FILE1, FILE2, FILE3, FILE4, FILE5, A, EA, DELTA_G_TEMP, DELTA_G_TS, DELTA_G_RXN,
                   QH_A, QH_EA, QH_DELTA_G_TS, QH_DELTA_G_RXN]
+
+class HartreeWrapper:
+    def __init__(self):
+        jpype.addClassPath("gaussian_wrangler/hartree/*")
+        print("Classpath: ", jpype.getClassPath())
+        jpype.startJVM(convertStrings=False)
+
+        # TODO: Figure out how to scope these imports for the class
+        from org.cmayes.hartree.loader.gaussian import SnapshotLoader
+
+        self.loader = SnapshotLoader()
+
+    def read_all_gaussian(self, files):
+        from java.io import FileReader
+        mapped_results = {}
+        for cur_file in files:
+            mapped_results[cur_file] = self.loader.load(cur_file, FileReader(cur_file))
+
+        return mapped_results
+
+    def read_gaussian(self, tgt_file):
+        from java.io import FileReader
+        return self.loader.load(tgt_file, FileReader(tgt_file))
+
+    def __del__(self):
+        if jpype.isJVMStarted():
+            jpype.shutdownJVM()
+
+
+# Jpype can't restart the JVM, so we make this global.
+hartree = HartreeWrapper()
 
 
 def parse_cmdline(argv):
@@ -278,6 +310,7 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
         if REACT_PROD_SEP in file_set:
             file_set.remove(REACT_PROD_SEP)
         # vibes_out = goodvibes_hmayes(file_set + ["--check"])
+        vibes_out = goodvibes_hm.main(file_set)
         vibes_out = subprocess.check_output(["python", "-m", "goodvibes"] + file_set +
                                             ["--check"]).decode("utf-8").strip().split("\n")
         # vibes_out = goodvibes_hmayes.main(file_set + ["--check"]).decode("utf-8").strip().split("\n")
@@ -316,7 +349,7 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
             gt.append(np.full([len(temps)], np.nan))
             qh_gt.append(np.full([len(temps)], np.nan))
             continue
-        vibes_input = ["python", "-m", "goodvibes", file, "--ti", temp_range]
+        vibes_input = [file, "--ti", temp_range]
         # vibes_input = [file, "--ti", temp_range]
         if solvent:
             vibes_input += ["-c", "1"]
@@ -324,9 +357,8 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
             vibes_input += ["-q"]
         if vib_scale:
             vibes_input += ["-v", str(vib_scale)]
-        vibes_out = subprocess.check_output(vibes_input).decode("utf-8").strip().split("\n")
-        # vibes_out = goodvibes(vibes_input)
-        # vibes_out = goodvibes_hmayes(vibes_input).decode("utf-8").strip().split("\n")
+        with capture_stderr(goodvibes_hm.main, vibes_input) as output:
+            vibes_out = output
         found_structure = False
         skip_line = True
         h.append([])
@@ -607,37 +639,6 @@ def main(argv=None):
 
     return GOOD_RET  # success
 
-
-class HartreeWrapper:
-    def __init__(self):
-        jpype.addClassPath("gaussian_wrangler/hartree/*")
-        print("Classpath: ", jpype.getClassPath())
-        jpype.startJVM(convertStrings=False)
-
-        # TODO: Figure out how to scope these imports for the class
-        from org.cmayes.hartree.loader.gaussian import SnapshotLoader
-
-        self.loader = SnapshotLoader()
-
-    def read_all_gaussian(self, files):
-        from java.io import FileReader
-        mapped_results = {}
-        for cur_file in files:
-            mapped_results[cur_file] = self.loader.load(cur_file, FileReader(cur_file))
-
-        return mapped_results
-
-    def read_gaussian(self, tgt_file):
-        from java.io import FileReader
-        return self.loader.load(tgt_file, FileReader(tgt_file))
-
-    def __del__(self):
-        if jpype.isJVMStarted():
-            jpype.shutdownJVM()
-
-
-# Jpype can't restart the JVM, so we make this global.
-hartree = HartreeWrapper()
 
 if __name__ == '__main__':
     status = main()

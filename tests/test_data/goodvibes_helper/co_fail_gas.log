@@ -1,0 +1,90 @@
+ Entering Gaussian System, Link 0=g16
+ Initial command:
+ /nopt/nrel/apps/gaussian/g16B/g16/l1.exe "/dev/shm/Gau-177943.inp" -scrdir="/dev/shm/"
+ Default is to use a total of  36 processors:
+                               36 via shared-memory
+                                1 via Linda
+ Entering Link 1 = /nopt/nrel/apps/gaussian/g16B/g16/l1.exe PID=    177944.
+  
+ Copyright (c) 1988-2017, Gaussian, Inc.  All Rights Reserved.
+
+ 
+ ******************************************
+ Gaussian 16:  ES64L-G16RevB.01 20-Dec-2017
+                23-Dec-2019 
+ ******************************************
+ %RWF=/dev/shm/,5GB,/scratch/hmayes/co_fail_gas_2108325/,-1
+ %NoSave
+ %Chk=/dev/shm/co_fail_gas.chk
+ %CPU=0-35
+ SetSPE:  set environment variable "MP_BIND" = "yes"
+ SetSPE:  set environment variable "MP_BLIST" = "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35"
+ Will use up to   36 processors via shared memory.
+ %Mem=72983496KB
+ Default route: CacheSize=180224 MaxDisk=256GB
+ ---------------------------------------------------------------
+ # m062x/Def2TZVP nosymm scf=xqc opt freq=NoRaman CPHF=Grid=Fine
+ ---------------------------------------------------------------
+ 1/4=180224,18=20,19=15,26=3,38=1/1,3;
+ 2/4=180224,9=110,12=2,15=1,17=6,18=5,40=1/2;
+ 3/4=180224,5=44,7=101,11=2,25=1,30=1,71=1,74=-55/1,2,3;
+ 4/4=180224/1;
+ 5/4=180224,5=2,8=3,13=1,38=5/2,8;
+ 6/4=180224,7=2,8=2,9=2,10=2,28=1/1;
+ 7/4=180224,30=1/1,2,3,16;
+ 1/4=180224,18=20,19=15,26=3/3(2);
+ 2/4=180224,9=110,15=1/2;
+ 99/4=180224/99;
+ 2/4=180224,9=110,15=1/2;
+ 3/4=180224,5=44,7=101,11=2,25=1,30=1,71=1,74=-55/1,2,3;
+ 4/4=180224,5=5,16=3,69=1/1;
+ 5/4=180224,5=2,8=3,13=1,38=5/2,8;
+ 7/4=180224,30=1/1,2,3,16;
+ 1/4=180224,18=20,19=15,26=3/3(-5);
+ 2/4=180224,9=110,15=1/2;
+ 6/4=180224,7=2,8=2,9=2,10=2,19=2,28=1/1;
+ 99/4=180224,9=1/99;
+ -----------------------------------------------
+ to create a failed job for goodvibes_hm testing
+ -----------------------------------------------
+ Symbolic Z-matrix:
+ Charge =  0 Multiplicity = 2
+ C                    -0.09252  -1.92708  -0.77688 
+ O                    -0.53762  -2.62744  -0.02348 
+ 
+
+ GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
+ Berny optimization.
+ Initialization pass.
+                           ----------------------------
+                           !    Initial Parameters    !
+                           ! (Angstroms and Degrees)  !
+ --------------------------                            --------------------------
+ ! Name  Definition              Value          Derivative Info.                !
+ --------------------------------------------------------------------------------
+ ! R1    R(1,2)                  1.1208         estimate D2E/DX2                !
+ --------------------------------------------------------------------------------
+ Trust Radius=3.00D-01 FncErr=1.00D-07 GrdErr=1.00D-06 EigMax=2.50D+02 EigMin=1.00D-04
+ Number of steps in this run=     20 maximum allowed number of steps=    100.
+ GradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGradGrad
+
+                          Input orientation:                          
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          6           0       -0.092518   -1.927082   -0.776880
+      2          8           0       -0.537618   -2.627443   -0.023484
+ ---------------------------------------------------------------------
+ Symmetry turned off by external request.
+ Stoichiometry    CO(2)
+ Framework group  C*V[C*(CO)]
+ Deg. of freedom     1
+ Full point group                 C*V     NOp   4
+ Rotational constants (GHZ):           0.0000000          58.6767049          58.6767049
+ Standard basis: def2TZVP (5D, 7F)
+ The combination of multiplicity 2 and    14 electrons is impossible.
+ Error termination via Lnk1e in /nopt/nrel/apps/gaussian/g16B/g16/l301.exe at Mon Dec 23 12:55:29 2019.
+ Job cpu time:       0 days  0 hours  0 minutes 17.2 seconds.
+ Elapsed time:       0 days  0 hours  0 minutes  0.6 seconds.
+ File lengths (MBytes):  RWF=      6 Int=      0 D2E=      0 Chk=      1 Scr=      1
