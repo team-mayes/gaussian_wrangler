@@ -141,13 +141,10 @@ class TestGoodVibesHelper(unittest.TestCase):
     def testTwoUni(self):
         test_input = ["-l", FILE_LIST, "-d", SUB_DATA_DIR, "-q", "-o", AE_OUT]
         try:
-            print(GOOD_AE_OUT)
             main(test_input)
-
             self.assertFalse(diff_lines(AE_OUT, GOOD_AE_OUT))
         finally:
-            # silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
-            # silent_remove(AE_OUT, disable=DISABLE_REMOVE)
+            silent_remove(AE_OUT, disable=DISABLE_REMOVE)
             pass
 
     def testBimolecular(self):
@@ -162,10 +159,10 @@ class TestGoodVibesHelper(unittest.TestCase):
             for fname in [BI_VIBES_OUT1, BI_VIBES_OUT2, BI_VIBES_OUT3]:
                 self.assertTrue(os.path.exists(fname))
         finally:
-            # for fname in [BI_VIBES_OUT1, BI_VIBES_OUT2, BI_VIBES_OUT3]:
-            #     silent_remove(fname, disable=DISABLE_REMOVE)
-            # silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
-            # silent_remove(AE_OUT, disable=DISABLE_REMOVE)
+            for fname in [BI_VIBES_OUT1, BI_VIBES_OUT2, BI_VIBES_OUT3]:
+                silent_remove(fname, disable=DISABLE_REMOVE)
+            silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
+            silent_remove(AE_OUT, disable=DISABLE_REMOVE)
             pass
 
     def testTi(self):
@@ -178,9 +175,9 @@ class TestGoodVibesHelper(unittest.TestCase):
             self.assertFalse(diff_lines(AE_OUT, GOOD_AE_TI_OUT))
             self.assertTrue(os.path.exists(AEA_VIBES_OUT))
         finally:
-            # silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
-            # silent_remove(AE_OUT, disable=DISABLE_REMOVE)
-            # silent_remove(AEA_VIBES_OUT, disable=DISABLE_REMOVE)
+            silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
+            silent_remove(AE_OUT, disable=DISABLE_REMOVE)
+            silent_remove(AEA_VIBES_OUT, disable=DISABLE_REMOVE)
             pass
 
     def testTPA(self):
@@ -191,9 +188,8 @@ class TestGoodVibesHelper(unittest.TestCase):
             main(test_input)
             self.assertFalse(diff_lines(TPA_OUT, GOOD_TPA_OUT))
         finally:
-            # silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
-            # silent_remove(TPA_OUT, disable=DISABLE_REMOVE)
-            # silent_remove(TPA_VIBES_OUT, disable=DISABLE_REMOVE)
+            silent_remove(TPA_OUT, disable=DISABLE_REMOVE)
+            silent_remove(TPA_VIBES_OUT, disable=DISABLE_REMOVE)
             pass
 
     def testTPAAltVib(self):
@@ -202,8 +198,8 @@ class TestGoodVibesHelper(unittest.TestCase):
             main(test_input)
             self.assertFalse(diff_lines(TPA_OUT, GOOD_TPA_SCALED_OUT))
         finally:
-            # silent_remove(TPA_OUT, disable=DISABLE_REMOVE)
-            # silent_remove(TPA_VIBES_OUT, disable=DISABLE_REMOVE)
+            silent_remove(TPA_OUT, disable=DISABLE_REMOVE)
+            silent_remove(TPA_VIBES_OUT, disable=DISABLE_REMOVE)
             pass
 
     def testReactTSProd(self):
