@@ -33,17 +33,18 @@ import os
 import sys
 import numpy as np
 from common_wrangler.common import (InvalidDataError, SPEED_OF_LIGHT,
-                                    # GAS_CONSTANT, KB, H, AVOGADRO_CONST, AMU_to_KG, AU_TO_J,
+                                    GAS_CONSTANT, KB, H, AVOGADRO_CONST, AMU_TO_KG, AU_TO_J,
                                     )
 
 
-GAS_CONSTANT = 8.3144621  # J / K / mol
-KB = 1.3806488e-23  # J / K, BOLTZMANN_CONSTANT
-H = 6.62606957e-34  # J * s, PLANCK_CONSTANT
-AVOGADRO_CONST = 6.0221415e23  # 1 / mol, AVOGADRO_CONSTANT
-AMU_to_KG = 1.66053886E-27  # UNIT CONVERSION
-ATM_TO_KPA = 101.325
-AU_TO_J = 4.184 * 627.509541 * 1000.0  # UNIT CONVERSION, J_TO_AU
+# Below are values originally used; updated per NIST
+# GAS_CONSTANT = 8.3144621  # J / K / mol
+# KB = 1.3806488e-23  # J / K, BOLTZMANN_CONSTANT
+# H = 6.62606957e-34  # J * s, PLANCK_CONSTANT
+# AVOGADRO_CONST = 6.0221415e23  # 1 / mol, AVOGADRO_CONSTANT
+# AMU_to_KG = 1.66053886E-27  # UNIT CONVERSION
+# ATM_TO_KPA = 101.325
+# AU_TO_J = 4.184 * 627.509541 * 1000.0  # UNIT CONVERSION, J_TO_AU
 
 
 Str_char = "U%d"
@@ -1058,7 +1059,7 @@ def calc_translational_entropy(molecular_mass, conc, temperature, solv):
     Needs the molecular mass. Convert mass in amu to kg; conc in mol/l to number per m^3
     s_trans = R(Ln(2 pi mkT/h^2)^3/2(1/C)) + 1 + 3/2)
     """
-    e_lambda = ((2.0 * np.pi * molecular_mass * AMU_to_KG * KB * temperature) ** 0.5) / H
+    e_lambda = ((2.0 * np.pi * molecular_mass * AMU_TO_KG * KB * temperature) ** 0.5) / H
     freespace = get_free_space(solv)
     n_dens = conc * 1000 * AVOGADRO_CONST / (freespace / 1000.0)
     entropy = GAS_CONSTANT * (2.5 + np.log(e_lambda ** 3 / n_dens))

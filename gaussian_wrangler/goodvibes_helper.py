@@ -11,12 +11,13 @@ import sys
 import argparse
 import re
 import numpy as np
-import goodvibes_hm
+import gaussian_wrangler.goodvibes_hm
 import jpype
 import jpype.imports
 from common_wrangler.common import (InvalidDataError, warning, RG, KB, H, EHPART_TO_KCAL_MOL,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                                    write_csv, silent_remove, create_out_fname, make_fig, parse_stoich, capture_stderr)
+                                    write_csv, silent_remove, create_out_fname, make_fig, parse_stoich, capture_stdout,
+                                    list_to_file)
 
 __author__ = 'hmayes'
 
@@ -36,10 +37,10 @@ FREQ1 = 'Freq 1'
 FREQ2 = 'Freq 2'
 # noinspection PyPep8, PyPep8Naming
 AWK_GRAB_GAUSS_VER = ['awk', "/\*\*\*/{getline; print; exit}"]
-GAUSSIAN_SEPARATOR = '******************************************'
 GOODVIBES_OUT_FNAME = "Goodvibes_output.dat"
 GOODVIBES_ERROR_PAT = re.compile(r"x .*")
-GOODVIBES_DATA_PAT = re.compile(r" {3}Structure .*")
+GOODVIBES_DATA_PAT = re.compile(r"Structure .*")
+# STAR_SEP_PAT = re.compile(r"----------------.*")
 REACT_PROD_SEP = 'TS'
 
 # for printing
@@ -309,11 +310,8 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
             file_set = file_set + ["-c", "1"]
         if REACT_PROD_SEP in file_set:
             file_set.remove(REACT_PROD_SEP)
-        # vibes_out = goodvibes_hmayes(file_set + ["--check"])
-        vibes_out = goodvibes_hm.main(file_set)
-        vibes_out = subprocess.check_output(["python", "-m", "goodvibes"] + file_set +
-                                            ["--check"]).decode("utf-8").strip().split("\n")
-        # vibes_out = goodvibes_hmayes.main(file_set + ["--check"]).decode("utf-8").strip().split("\n")
+        with capture_stdout(gaussian_wrangler.goodvibes_hm.main, file_set + ["--check"]) as output:
+            vibes_out = output.split("\n")
         for line in vibes_out:
             if GOODVIBES_ERROR_PAT.match(line):
                 if 'Different charge and multiplicity' in line:
@@ -324,7 +322,8 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
     return solvent, ts_index
 
 
-def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_output_fname, qh_h_opt, vib_scale):
+def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_output_fname, qh_h_opt, vib_scale,
+                   write_mode):
     """
     Calls GoodVibes to get thermochem at a range of temps
     :param file_set: list of reactant file(s), TS file (or separator), and optionally products
@@ -335,6 +334,7 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
     :param tog_output_fname: None or string (file name) if saving each GoodVibes output together
     :param qh_h_opt: boolean to use the '-q' option in GoodVibes (corrections to both entropy and enthalpy)
     :param vib_scale: either None (if default scaling is to be used) or a float for option to be used with that value
+    :param write_mode: boolean to start a new to add to an all-together goodvibes output file
     :return: nothing
     """
     h = []
@@ -350,15 +350,14 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
             qh_gt.append(np.full([len(temps)], np.nan))
             continue
         vibes_input = [file, "--ti", temp_range]
-        # vibes_input = [file, "--ti", temp_range]
         if solvent:
             vibes_input += ["-c", "1"]
         if qh_h_opt:
             vibes_input += ["-q"]
         if vib_scale:
             vibes_input += ["-v", str(vib_scale)]
-        with capture_stderr(goodvibes_hm.main, vibes_input) as output:
-            vibes_out = output
+        with capture_stdout(gaussian_wrangler.goodvibes_hm.main, vibes_input) as output:
+            vibes_out = output.split('\n')
         found_structure = False
         skip_line = True
         h.append([])
@@ -366,9 +365,9 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
         gt.append([])
         qh_gt.append([])
         # we know the last line should be dropped, and at least the first 10
-        for line in vibes_out[10:-1]:
+        for line in vibes_out[10:-2]:
             if GOODVIBES_ERROR_PAT.match(line):
-                raise InvalidDataError("See GoodVibes error checking report: {}".format(GOODVIBES_OUT_FNAME))
+                raise InvalidDataError("See GoodVibes output: {}".format(output))
             if not found_structure:
                 if GOODVIBES_DATA_PAT.match(line):
                     found_structure = True
@@ -379,22 +378,21 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
             else:
                 vals = line.split()
                 if index == 0:
-                    temps.append(float(vals[2]))
-                h[index].append(float(vals[3]))
+                    temps.append(float(vals[1]))
+                h[index].append(float(vals[2]))
                 if qh_h_opt:
-                    qh_h[index].append(float(vals[4]))
+                    qh_h[index].append(float(vals[3]))
                 gt[index].append(float(vals[-2]))
                 qh_gt[index].append(float(vals[-1]))
         if save_vibes:
-            vibes_out_fname = create_out_fname(file, suffix='_vibes', base_dir=out_dir, ext='.dat')
-            os.rename(GOODVIBES_OUT_FNAME, vibes_out_fname)
+            vibes_out_fname = os.path.relpath(create_out_fname(file, suffix='_vibes', base_dir=out_dir, ext='.dat'))
+            list_to_file(vibes_out, vibes_out_fname, print_message=False)
             print('Saved GoodVibes output as: {}'.format(vibes_out_fname))
         if tog_output_fname:
-            with open(tog_output_fname, 'a') as f:
-                with open(GOODVIBES_OUT_FNAME) as infile:
-                    f.write(infile.read())
-            if index == 0:
-                print("Added GoodVibes output to: {}".format(tog_output_fname))
+            list_to_file(vibes_out, tog_output_fname, mode=write_mode, print_message=False)
+            if write_mode == 'w':
+                print("Adding all GoodVibes output to: {}".format(tog_output_fname))
+                write_mode = "a"
 
     temps = np.asarray(temps)
     # for each molecule, multiply the array to convert to kcal/mol
@@ -574,9 +572,7 @@ def main(argv=None):
         print_mode = 'w'  # for the AEa output, so only prints header once, and then appends to file
         print_message = True
         if args[0].tog_vibes:
-            tog_fname = create_out_fname(args[0].output_fname, suffix='_vibes', ext='.dat')
-            # delete if exits because program always appends to it
-            silent_remove(tog_fname)
+            tog_fname = os.path.relpath(create_out_fname(args[0].output_fname, suffix='_vibes', ext='.dat'))
         else:
             tog_fname = None
         # Todo: optimize--don't do the same calc multiple times on the same output file
@@ -584,7 +580,7 @@ def main(argv=None):
             solvent, ts_index = check_gausslog_fileset(file_set, args[0].hartree_call, args[0].vibes_check)
             temps, h, qh_h, gt, qh_gt = get_thermochem(file_set, args[0].temp_range, solvent, args[0].save_vibes,
                                                        args[0].out_dir, tog_fname, args[0].quasiharmonic,
-                                                       args[0].vib_scale)
+                                                       args[0].vib_scale, print_mode)
             delta_h_ts, delta_h_rxn = get_deltas(temps, h, ts_index)
             if args[0].quasiharmonic:
                 qh_delta_h_ts, qh_delta_h_rxn = get_deltas(temps, qh_h, ts_index)

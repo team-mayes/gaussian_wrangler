@@ -154,7 +154,7 @@ class TestGoodVibesHM(unittest.TestCase):
             self.assertTrue("688.0              -230.149811   -230.150105   0.102064   0.101784   -230.251875   "
                             "-230.251889" in output)
             self.assertTrue("788.0              -230.144259   -230.144593   0.122832   0.122467   -230.267091   "
-                            "-230.267060" in output)
+                            "-230.267061" in output)
             self.assertTrue("888.0              -230.138341   -230.138717   0.144694   0.144240   -230.283035   "
                             "-230.282956" in output)
 

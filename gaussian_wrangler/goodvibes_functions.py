@@ -710,9 +710,9 @@ class GetPES:
                                             self.g_species_qhgzero[n][i].append(zero_conf)  # Raw data for graphing
                                     except KeyError:
                                         base_name = os.path.relpath(file)
-                                        warning(f"Structure {structure} has not been defined correctly "
-                                                f"in {base_name}\n")
-                                        raise InvalidDataError(f"   Please edit {base_name} and try again\n")
+                                        warning("Structure {} has not been defined correctly "
+                                                "in {}\n".format(structure, base_name))
+                                        raise InvalidDataError("   Please edit {} and try again\n".format(base_name))
                                     self.species[n].append(point)
                                     self.e_abs[n].append(e_abs)
                                     self.spc_abs[n].append(spc_abs)
@@ -768,7 +768,7 @@ class GetPES:
                             pass
 
 
-def pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, stars, zero_vals):
+def pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, delim_row, zero_vals):
     for j, e_abs in enumerate(pes.e_abs[i]):
         if options.qh:
             species = [pes.spc_abs[i][j], pes.e_abs[i][j], pes.zpe_abs[i][j], pes.h_abs[i][j],
@@ -843,15 +843,15 @@ def pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, stars, zero
     if pes.boltz == 'ee' and len(sels) == 2:
         ee = [sels[0][x] - sels[1][x] for x in range(len(sels[0]))]
         if options.spc is False:
-            print("\n" + stars + "\n   " + '{:<39} {:13.1f}%{:24.1f}%{:35.1f}%{:13.1f}%'
+            print("\n" + delim_row + "\n   " + '{:<39} {:13.1f}%{:24.1f}%{:35.1f}%{:13.1f}%'
                   .format('ee (%)', *ee))
         else:
-            print("\n" + stars + "\n   " + '{:<39} {:27.1f} {:24.1f} {:35.1f} {:13.1f} '.
+            print("\n" + delim_row + "\n   " + '{:<39} {:27.1f} {:24.1f} {:35.1f} {:13.1f} '.
                   format('ee (%)', *ee))
-    print("\n" + stars + "\n")
+    print("\n" + delim_row + "\n")
 
 
-def output_rel_e_data(options, stars, thermo_data):
+def output_rel_e_data(options, delim_row, thermo_data):
     # Making IDe happy
     e_sum, g_sum, h_sum, qhg_sum, sels = None, None, None, None, None
 
@@ -885,9 +885,9 @@ def output_rel_e_data(options, stars, thermo_data):
                 qhg_sum += np.exp(-relative[8] * AU_TO_J / GAS_CONSTANT / options.temperature)
                 cosmo_qhg_sum += np.exp(-relative[9] * AU_TO_J / GAS_CONSTANT / options.temperature)
 
-        print_select_pes_output(options, path, pes, stars)
+        print_select_pes_output(options, path, pes, delim_row)
 
-        pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, stars, zero_vals)
+        pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, delim_row, zero_vals)
 
 
 def get_species(i, j, options, pes):
@@ -903,7 +903,7 @@ def get_species(i, j, options, pes):
     return species
 
 
-def print_select_pes_output(options, path, pes, stars):
+def print_select_pes_output(options, path, pes, delim_row):
     if options.spc is False:
         print("\n   " + '{:<40}'.format("RXN: " + path + " (" + pes.units + ") ", ))
         if options.qh and options.cosmo:
@@ -937,10 +937,11 @@ def print_select_pes_output(options, path, pes, stars):
             print('{:>13} {:>13} {:>10} {:>13} {:>10} {:>10} {:>14} {:>14}'.
                   format(" DE_SPC", "DE", "DZPE", "DH_SPC", "T.DS", "T.qh-DS", "DG(T)_SPC",
                          "qh-DG(T)_SPC"))
-    print("\n" + stars)
+    print("\n" + delim_row)
+
 
 def calc_enantio_excess(clustering, clusters, dup_list, files, options, thermo_data):
-    select_stars = "   " + '*' * 109
+    delim_row = "   " + '-' * 109
     boltz_facts, weighted_free_energy, boltz_sum = get_boltz(files, thermo_data, clustering, clusters,
                                                              options.temperature, dup_list)
     ee, er, ratio, dd_free_energy, failed, preference = get_selectivity(options.ee, files, boltz_facts,
@@ -950,10 +951,10 @@ def calc_enantio_excess(clustering, clusters, dup_list, files, options, thermo_d
         print("\n   " + '{:<39} {:>13} {:>13} {:>13} {:>13} {:>13}'.format("Selectivity", "Excess (%)",
                                                                            "Ratio (%)", "Ratio", "Major Iso",
                                                                            "ddG"))
-        print("\n" + select_stars)
+        print("\n" + delim_row)
         print('\no {:<40} {:13.2f} {:>13} {:>13} {:>13} {:13.2f}'.format('', ee, er, ratio, preference,
                                                                          dd_free_energy))
-        print("\n" + select_stars + "\n")
+        print("\n" + delim_row + "\n")
 
 
 def get_boltz(files, thermo_data, clustering, clusters, temperature, dup_list):
@@ -1065,10 +1066,10 @@ def get_selectivity(pattern, files, boltz_facs, boltz_sum, temperature, dup_list
     return ee, r, ratio, dd_free_energy, failed, pref
 
 
-def output_pes_temp_interval(options, stars, interval, interval_bbe_data, interval_thermo_data, file_list):
+def output_pes_temp_interval(options, delim_row, interval, interval_bbe_data, interval_thermo_data, file_list):
     e_sum, h_sum, g_sum, qhg_sum, sels = None, None, None, None, None  # make IDE happy
     # Interval applied to PES
-    stars = stars + '*' * 22
+    delim_row = delim_row + '-' * 22
     for i in range(len(interval)):
         bbe_vals = []
         for j in range(len(interval_bbe_data)):
@@ -1147,7 +1148,7 @@ def output_pes_temp_interval(options, stars, interval, interval_bbe_data, interv
                     print('{:>13} {:>13} {:>10} {:>13} {:>10} {:>10} {:>14} '
                           '{:>14}'.format(" DE_SPC", "DE", "DZPE", "DH_SPC", "T.DS", "T.qh-DS",
                                           "DG(T)_SPC", "qh-DG(T)_SPC"))
-            print(stars)
+            print(delim_row)
 
             for l, e_abs in enumerate(pes.e_abs[k]):
                 if options.qh:
@@ -1225,10 +1226,10 @@ def output_pes_temp_interval(options, stars, interval, interval_bbe_data, interv
             if pes.boltz == 'ee' and len(sels) == 2:
                 ee = [sels[0][x] - sels[1][x] for x in range(len(sels[0]))]
                 if options.spc is False:
-                    print(stars + '\n   {:<39} {:13.1f} {:24.1f} {:35.1f} {:13.1f}'.format('ee (%)', *ee))
+                    print(delim_row + '\n   {:<39} {:13.1f} {:24.1f} {:35.1f} {:13.1f}'.format('ee (%)', *ee))
                 else:
-                    print(stars + '\n   {:<39} {:27.1f} {:24.1f} {:35.1f} {:13.1f}'.format('ee (%)', *ee))
-            print(stars)
+                    print(delim_row + '\n   {:<39} {:27.1f} {:24.1f} {:35.1f} {:13.1f}'.format('ee (%)', *ee))
+            print(delim_row)
         j += 1
 
 
@@ -1248,7 +1249,7 @@ def output_cosmos_rs_interval(files, options, s_m, l_o_t):
     if options.freq_scale_factor is not False:
         if 'ONIOM' not in l_o_t[0]:
             print("\nUser-defined vibrational scale factor " + str(options.freq_scale_factor) + " for " +
-                  l_o_t[0] + " level of theory")
+                  l_o_t[0] + " level of theory\n")
         else:
             print("\nUser-defined vibrational scale factor " + str(options.freq_scale_factor) +
                   " for QM region of " + l_o_t[0])
@@ -1335,49 +1336,49 @@ def output_cosmos_rs_interval(files, options, s_m, l_o_t):
         options.S_freq_cutoff = options.freq_cutoff
         options.h_freq_cutoff = options.freq_cutoff
 
-        # Summary of the quasi-harmonic treatment; print out the relevant reference
-        print("\nEntropic quasi-harmonic treatment: frequency cut-off value of " + str(
-            options.S_freq_cutoff) + " wavenumbers will be applied.")
-        if options.qs == "grimme":
-            print("    qs = Grimme: Using a mixture of RRHO and Free-rotor vibrational entropies.")
-            qs_ref = GRIMME_REF
-        elif options.qs == "truhlar":
-            print("    qs = Truhlar: Using an RRHO treatment where low frequencies are adjusted to the cut-off value.")
-            qs_ref = TRUHLAR_REF
-        else:
-            raise InvalidDataError("\n   FATAL ERROR: Unknown quasi-harmonic model " + options.qs +
-                                   " specified (qs must = grimme or truhlar).")
-        print("    REF: " + qs_ref + '\n')
+    # Summary of the quasi-harmonic treatment; print out the relevant reference
+    print("Entropic quasi-harmonic treatment: frequency cut-off value of " + str(
+        options.S_freq_cutoff) + " wavenumbers will be applied.")
+    if options.qs == "grimme":
+        print("    qs = Grimme: Using a mixture of RRHO and Free-rotor vibrational entropies.")
+        qs_ref = GRIMME_REF
+    elif options.qs == "truhlar":
+        print("    qs = Truhlar: Using an RRHO treatment where low frequencies are adjusted to the cut-off value.")
+        qs_ref = TRUHLAR_REF
+    else:
+        raise InvalidDataError("\n   FATAL ERROR: Unknown quasi-harmonic model " + options.qs +
+                               " specified (qs must = grimme or truhlar).")
+    print("    REF: " + qs_ref + '\n')
 
-        # Check if qh-H correction should be applied
-        if options.qh:
-            print("Enthalpy quasi-harmonic treatment: frequency cut-off value of " + str(
-                options.h_freq_cutoff) + " wavenumbers will be applied.")
-            print("    qh = Head-Gordon: Using an RRHO treatment with an approximation term for vibrational energy.")
-            print("    REF: {}\n".format(HEAD_GORDON_REF))
+    # Check if qh-H correction should be applied
+    if options.qh:
+        print("Enthalpy quasi-harmonic treatment: frequency cut-off value of " + str(
+            options.h_freq_cutoff) + " wavenumbers will be applied.")
+        print("    qh = Head-Gordon: Using an RRHO treatment with an approximation term for vibrational energy.")
+        print("    REF: {}\n".format(HEAD_GORDON_REF))
 
-        # Check if D3 corrections should be applied
-        if options.D3:
-            print("D3-Dispersion energy with zero-damping will be calculated and included in the energy and "
-                  "enthalpy terms.\n    REF: {}\n".format(D3_REF))
-        if options.D3BJ:
-            print("D3-Dispersion energy with Becke-Johnson damping will be calculated and added to the "
-                  "energy terms.\n    REF: {}\n".format(D3BJ_REF))
-        if options.ATM:
-            print("The repulsive Axilrod-Teller-Muto 3-body term will be included in the dispersion "
-                  "correction.\n    REF: {}\n".format(ATM_REF))
+    # Check if D3 corrections should be applied
+    if options.D3:
+        print("D3-Dispersion energy with zero-damping will be calculated and included in the energy and "
+              "enthalpy terms.\n    REF: {}\n".format(D3_REF))
+    if options.D3BJ:
+        print("D3-Dispersion energy with Becke-Johnson damping will be calculated and added to the "
+              "energy terms.\n    REF: {}\n".format(D3BJ_REF))
+    if options.ATM:
+        print("The repulsive Axilrod-Teller-Muto 3-body term will be included in the dispersion "
+              "correction.\n    REF: {}\n".format(ATM_REF))
 
-        # Check if entropy symmetry correction should be applied
-        if options.ssymm:
-            print("Ssymm requested. Symmetry contribution to entropy to be calculated using S. Patchkovskii's \n"
-                  "    open source software 'Brute Force Symmetry Analyzer' available under GNU General Public "
-                  'License.\n   REF: (C) 1996, 2003 S. Patchkovskii, Serguei.Patchkovskii@sympatico.ca\n'
-                  '    Atomic radii used to calculate internal symmetry based on Cambridge Structural Database '
-                  'covalent radii.\n   REF: {}\n'.format(CSD_REF))
+    # Check if entropy symmetry correction should be applied
+    if options.ssymm:
+        print("Ssymm requested. Symmetry contribution to entropy to be calculated using S. Patchkovskii's \n"
+              "    open source software 'Brute Force Symmetry Analyzer' available under GNU General Public "
+              'License.\n   REF: (C) 1996, 2003 S. Patchkovskii, Serguei.Patchkovskii@sympatico.ca\n'
+              '    Atomic radii used to calculate internal symmetry based on Cambridge Structural Database '
+              'covalent radii.\n   REF: {}\n'.format(CSD_REF))
 
-        # Whether linked single-point energies are to be used
-        if options.spc:
-            print("    Link job: combining final single point energy with thermal corrections.\n")
+    # Whether linked single-point energies are to be used
+    if options.spc:
+        print("    Link job: combining final single point energy with thermal corrections.\n")
 
     return cosmo_solv, gsolv_dicts, t_interval
 

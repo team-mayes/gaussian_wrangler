@@ -41,8 +41,7 @@ from gaussian_wrangler.vib_scale_factors import (GetOutData, CalcBBE)
 from gaussian_wrangler.goodvibes_functions import (ALPHABET, output_pes_temp_interval, create_plot, output_rel_e_data,
                                                    calc_enantio_excess, get_boltz, output_cosmos_rs_interval, all_same,
                                                    print_check_fails)
-from common_wrangler.common import (InvalidDataError, warning,
-    # GAS_CONSTANT, KB, H, AMU_to_KG, AVOGADRO_CONST, ATM_TO_KPA, IO_ERROR, EHPART_TO_KCAL_MOL,
+from common_wrangler.common import (InvalidDataError, warning,  GAS_CONSTANT, ATM_TO_KPA, AU_TO_J,
                                     GOOD_RET, INPUT_ERROR, INVALID_DATA)
 
 # VERSION NUMBER
@@ -51,13 +50,14 @@ __version__ = "3.0.1.hmayes"
 
 SUPPORTED_EXTENSIONS = {'.out', '.log'}
 
-GAS_CONSTANT = 8.3144621  # J / K / mol
-KB = 1.3806488e-23  # J / K, BOLTZMANN_CONSTANT
-H = 6.62606957e-34  # J * s, PLANCK_CONSTANT
-AVOGADRO_CONST = 6.0221415e23  # 1 / mol, AVOGADRO_CONSTANT
-AMU_to_KG = 1.66053886E-27  # UNIT CONVERSION
-ATM_TO_KPA = 101.325
-AU_TO_J = 4.184 * 627.509541 * 1000.0  # UNIT CONVERSION, J_TO_AU
+# Below are the values originally used by
+# GAS_CONSTANT = 8.3144621  # J / K / mol
+# KB = 1.3806488e-23  # J / K, BOLTZMANN_CONSTANT
+# H = 6.62606957e-34  # J * s, PLANCK_CONSTANT
+# AVOGADRO_CONST = 6.0221415e23  # 1 / mol, AVOGADRO_CONSTANT
+# AMU_to_KG = 1.66053886E-27  # UNIT CONVERSION
+# ATM_TO_KPA = 101.325
+# AU_TO_J = 4.184 * 627.509541 * 1000.0  # UNIT CONVERSION, J_TO_AU
 
 GOODVIBES_REF = ("Luchini, G.; Alegre-Requena J. V.; Guan, Y.; Funes-Ardoiz, I.; Paton, R. S. (2019)."
                  "\n         http://doi.org/10.5281/zenodo.595246")
@@ -291,7 +291,6 @@ def add_time(tm, cpu):
 def check_dup(files, thermo_data):
     e_cutoff = 1e-4
     ro_cutoff = 1e-4
-    freq_cutoff = 100
     mae_freq_cutoff = 10
     max_freq_cutoff = 10
     dup_list = []
@@ -317,13 +316,13 @@ def check_dup(files, thermo_data):
     return dup_list
 
 
-def check_files(files, thermo_data, options, stars, l_o_t):
+def check_files(files, thermo_data, options, delimiter_row, l_o_t):
     # Perform careful checks on calculation output files
     # Check for Gaussian version, solvation state/gas phase consistency, level of theory/basis set consistency,
     # charge and multiplicity consistency, standard concentration used, potential linear molecule error,
     # transition state verification, empirical dispersion models.
     print("Checks for thermochemistry calculations (frequency calculations):")
-    print(stars)
+    print(delimiter_row)
     # Check program used and version
     version_check = [thermo_data[key].version_program for key in thermo_data]
     file_check = [thermo_data[key].file for key in thermo_data]
@@ -486,12 +485,12 @@ def check_files(files, thermo_data, options, stars, l_o_t):
             print("o  Using " + dispersion_check[0] + " in all calculations.")
     else:
         print_check_fails(dispersion_check, file_check, "dispersion models")
-    print(stars)
+    print(delimiter_row)
 
     # Check for single-point corrections
     if options.spc is not False:
         print("    Checks for single-point corrections:")
-        print(stars)
+        print(delimiter_row)
         names_spc, version_check_spc = [], []
         for file in files:
             name, ext = os.path.splitext(file)
@@ -591,7 +590,7 @@ def check_files(files, thermo_data, options, stars, l_o_t):
                 print("o  Using " + dispersion_check_spc[0] + " in all the singe-point calculations.")
         else:
             print_check_fails(dispersion_check_spc, file_check, "dispersion models")
-        print(stars)
+        print(delimiter_row)
 
 
 def parse_cmdline(argv):
@@ -707,11 +706,12 @@ def main(argv=None):
 
     try:
         # If requested, turn on head-gordon enthalpy correction
-        if options.Q: options.qh = True
+        if options.Q:
+            options.qh = True
         if options.qh:
-            stars = "*" * 142
+            delimiter_row = "-" * 142
         else:
-            stars = "*" * 128
+            delimiter_row = "-" * 128
         # If user has specified different file extensions
         if options.custom_ext or os.environ.get('GOODVIBES_CUSTOM_EXT', ''):
             custom_extensions = options.custom_ext.split(',') + os.environ.get('GOODVIBES_CUSTOM_EXT', '').split(',')
@@ -886,19 +886,19 @@ def main(argv=None):
 
         # Adjust printing according to options requested
         if options.spc:
-            stars += '*' * 14
+            delimiter_row += '-' * 14
         if options.cosmo:
-            stars += '*' * 30
+            delimiter_row += '-' * 30
         if options.imag_freq:
-            stars += '*' * 9
+            delimiter_row += '-' * 9
         if options.boltz:
-            stars += '*' * 7
+            delimiter_row += '-' * 7
         if options.ssymm:
-            stars += '*' * 13
+            delimiter_row += '-' * 13
 
         # Perform checks for consistent options provided in calculation files (level of theory)
         if options.check:
-            check_files(files, thermo_data, options, stars, l_o_t)
+            check_files(files, thermo_data, options, delimiter_row, l_o_t)
 
         # Standard mode: tabulate thermochemistry output from file(s) at a single temperature and concentration
         interval = None
@@ -928,7 +928,7 @@ def main(argv=None):
                 print('{:>9}'.format("im freq"))
             if options.ssymm:
                 print('{:>13}'.format("Point Group"))
-            print(stars)
+            print(delimiter_row)
             # Look for duplicates or enantiomers
             if options.duplicate:
                 dup_list = check_dup(files, thermo_data)
@@ -1072,7 +1072,7 @@ def main(argv=None):
                             print('{:>37}'.format('---'))
                 # Cluster files if requested
                 if clustering:
-                    dashes = "-" * (len(stars) - 3)
+                    dashes = "-" * (len(delimiter_row) - 3)
                     for n, cluster in enumerate(clusters):
                         for struct_id, structure in enumerate(cluster):
                             if structure == file:
@@ -1080,12 +1080,12 @@ def main(argv=None):
                                     print("\n   " + dashes)
                                     print("\n   " + '{name:<{var_width}} {gval:13.6f} {weight:6.2f}'.format(
                                         name='Boltzmann-weighted Cluster ' + ALPHABET[n].upper(),
-                                        var_width=len(stars) - 24,
+                                        var_width=len(delimiter_row) - 24,
                                         gval=weighted_free_energy['cluster-' + ALPHABET[n].upper()] / boltz_facts[
                                             'cluster-' + ALPHABET[n].upper()],
                                         weight=100 * boltz_facts['cluster-' + ALPHABET[n].upper()] / boltz_sum))
                                     print("\n   " + dashes)
-            print(stars)
+            print(delimiter_row)
 
         # Running a variable temperature analysis of the enthalpy, entropy and the free energy
         elif options.temperature_interval:
@@ -1133,7 +1133,7 @@ def main(argv=None):
                     print(print_format_3.format("Structure", "Temp/K", "H", "T.S", "T.qh-S", "G(T)", "qh-G(T)"))
 
             for h, file in enumerate(files):  # Temperature interval
-                print(stars)
+                print(delimiter_row)
                 base_name = os.path.basename(file)
                 name_str = '{:<39}'.format(base_name)
                 interval_bbe_data.append([])
@@ -1238,7 +1238,7 @@ def main(argv=None):
                                                   '{:13.6f}'.format(name_temp, bbe.zpe, bbe.enthalpy,
                                                                     (temp * bbe.entropy), (temp * bbe.qh_entropy),
                                                                     bbe.gibbs_free_energy, bbe.qh_gibbs_free_energy))
-                print(stars)
+                print(delimiter_row)
 
         # Print CPU usage if requested
         if options.cputime:
@@ -1258,10 +1258,10 @@ def main(argv=None):
                     raise InvalidDataError("\nWarning! Could not find thermodynamic data for " + key + "\n")
 
             if options.temperature_interval:
-                output_pes_temp_interval(options, stars, interval, interval_bbe_data, interval_thermo_data, file_list)
+                output_pes_temp_interval(options, delimiter_row, interval, interval_bbe_data, interval_thermo_data, file_list)
             else:
                 # Output the relative energy data
-                output_rel_e_data(options, stars, thermo_data)
+                output_rel_e_data(options, delimiter_row, thermo_data)
 
         if options.ee is not False:
             # Compute enantiomeric excess
