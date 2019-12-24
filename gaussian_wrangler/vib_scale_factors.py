@@ -486,6 +486,7 @@ class CalcBBE:
 
             # Rotational and Vibrational contributions to the energy entropy
             if len(frequency_wn) > 0:
+                # todo: allow different scaling factor for zpe
                 zpe = calc_zeropoint_energy(frequency_wn, freq_scale_factor, fract_model_sys)
                 u_rot = calc_rotational_energy(self.zero_point_corr, temperature, linear_mol)
                 u_vib = calc_vibrational_energy(frequency_wn, temperature, freq_scale_factor, fract_model_sys)

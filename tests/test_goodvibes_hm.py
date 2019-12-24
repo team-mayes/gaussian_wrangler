@@ -129,56 +129,56 @@ class TestGoodVibesHM(unittest.TestCase):
         test_input = [TEST_LOG1, "-t", "788.15", "-v", "0.984", "--ti", "688.15,888.15,25"]
         # main(test_input)
         with capture_stdout(main, test_input) as output:
-            self.assertTrue("688.0              -230.149811   0.102064   0.101784   -230.251875   "
-                            "-230.251595" in output)
-            self.assertTrue("788.0              -230.144259   0.122832   0.122467   -230.267091   "
-                            "-230.266726" in output)
-            self.assertTrue("888.0              -230.138341   0.144694   0.144240   -230.283035   "
-                            "-230.282581" in output)
+            self.assertTrue("688.15              -230.149803   0.102094   0.101814   -230.251897   "
+                            "-230.251617" in output)
+            self.assertTrue("788.15              -230.144250   0.122864   0.122499   -230.267114   "
+                            "-230.266749" in output)
+            self.assertTrue("888.15              -230.138332   0.144728   0.144273   -230.283060   "
+                            "-230.282605" in output)
 
     def testTempRangeVibConc(self):
         test_input = [TEST_LOG1, "-t", "788.15", "-v", "0.984", "-c", "1", "--ti", "688.15,888.15,25"]
         # main(test_input)
         with capture_stdout(main, test_input) as output:
-            self.assertTrue("688.0              -230.149811   0.093276   0.092996   -230.243087   "
-                            "-230.242807" in output)
-            self.assertTrue("788.0              -230.144259   0.112428   0.112063   -230.256687   "
-                            "-230.256322" in output)
-            self.assertTrue("888.0              -230.138341   0.132634   0.132179   -230.270975   "
-                            "-230.270521" in output)
+            self.assertTrue("688.15              -230.149803   0.093304   0.093023   -230.243107   "
+                            "-230.242827" in output)
+            self.assertTrue("788.15              -230.144250   0.112457   0.112093   -230.256708   "
+                            "-230.256343" in output)
+            self.assertTrue("888.15              -230.138332   0.132665   0.132210   -230.270997   "
+                            "-230.270543" in output)
 
     def testTempRangeVibQ(self):
         test_input = [TEST_LOG1, "-t", "788.15", "-v", "0.984", "--ti", "688.15,888.15,25", "-q"]
         # main(test_input)
         with capture_stdout(main, test_input) as output:
-            self.assertTrue("688.0              -230.149811   -230.150105   0.102064   0.101784   -230.251875   "
-                            "-230.251889" in output)
-            self.assertTrue("788.0              -230.144259   -230.144593   0.122832   0.122467   -230.267091   "
-                            "-230.267061" in output)
-            self.assertTrue("888.0              -230.138341   -230.138717   0.144694   0.144240   -230.283035   "
-                            "-230.282956" in output)
+            self.assertTrue("688.15              -230.149803   -230.150097   0.102094   0.101814   -230.251897   "
+                            "-230.251911" in output)
+            self.assertTrue("788.15              -230.144250   -230.144585   0.122864   0.122499   -230.267114   "
+                            "-230.267084" in output)
+            self.assertTrue("888.15              -230.138332   -230.138708   0.144728   0.144273   -230.283060   "
+                            "-230.282981" in output)
 
     def testTempRangeVibConcQ(self):
         test_input = [TEST_LOG1, "-t", "788.15", "-v", "0.984", "-c", "1", "--ti", "688.15,888.15,25", "-q"]
         # main(test_input)
         with capture_stdout(main, test_input) as output:
-            self.assertTrue("688.0              -230.149811   -230.150105   0.093276   0.092996   -230.243087   "
-                            "-230.243101" in output)
-            self.assertTrue("788.0              -230.144259   -230.144593   0.112428   0.112063   -230.256687   "
-                            "-230.256657" in output)
-            self.assertTrue("888.0              -230.138341   -230.138717   0.132634   0.132179   -230.270975   "
-                            "-230.270896" in output)
+            self.assertTrue("688.15              -230.149803   -230.150097   0.093304   0.093023   -230.243107   "
+                            "-230.243121" in output)
+            self.assertTrue("788.15              -230.144250   -230.144585   0.112457   0.112093   -230.256708   "
+                            "-230.256677" in output)
+            self.assertTrue("888.15              -230.138332   -230.138708   0.132665   0.132210   -230.270997   "
+                            "-230.270918" in output)
 
     def testTempRangeVibConcQAltInput(self):
         test_input = [TEST_LOG2, "-t", "788.15", "-v", "0.984", "-c", "1", "--ti", "688.15,888.15,25", "-q"]
         # main(test_input)
         with capture_stdout(main, test_input) as output:
-            self.assertTrue("688.0              -839.735142   -839.741153   0.211931   0.200195   -839.947074   "
-                            "-839.941348" in output)
-            self.assertTrue("788.0              -839.717116   -839.723992   0.261659   0.247292   -839.978776   "
-                            "-839.971284" in output)
-            self.assertTrue("888.0              -839.698030   -839.705771   0.314768   0.297659   -840.012798   "
-                            "-840.003430" in output)
+            self.assertTrue("688.15              -839.735116   -839.741128   0.212003   0.200263   -839.947119   "
+                            "-839.941391" in output)
+            self.assertTrue("788.15              -839.717088   -839.723965   0.261737   0.247365   -839.978825   "
+                            "-839.971331" in output)
+            self.assertTrue("888.15              -839.698000   -839.705743   0.314850   0.297737   -840.012851   "
+                            "-840.003480" in output)
 
     def testTempRangeVibConcQCheck(self):
         test_input = [TEST_LOG1, TEST_LOG2, "-t", "788.15", "-v", "0.984", "-c", "1", "--ti", "688.15,888.15,25", "-q",

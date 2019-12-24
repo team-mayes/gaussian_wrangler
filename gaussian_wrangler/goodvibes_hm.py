@@ -41,12 +41,11 @@ from gaussian_wrangler.vib_scale_factors import (GetOutData, CalcBBE)
 from gaussian_wrangler.goodvibes_functions import (ALPHABET, output_pes_temp_interval, create_plot, output_rel_e_data,
                                                    calc_enantio_excess, get_boltz, output_cosmos_rs_interval, all_same,
                                                    print_check_fails)
-from common_wrangler.common import (InvalidDataError, warning,  GAS_CONSTANT, ATM_TO_KPA, AU_TO_J,
+from common_wrangler.common import (InvalidDataError, warning, GAS_CONSTANT, ATM_TO_KPA, AU_TO_J,
                                     GOOD_RET, INPUT_ERROR, INVALID_DATA)
 
 # VERSION NUMBER
 __version__ = "3.0.1.hmayes"
-
 
 SUPPORTED_EXTENSIONS = {'.out', '.log'}
 
@@ -109,42 +108,45 @@ def find_level_of_theory(file):
         if line.strip().find('External calculation') > -1:
             level, bs = 'ext', 'ext'
             break
-        if '\\Freq\\' in line.strip() and repeated_theory == 0:
-            try:
-                level, bs = (line.strip().split("\\")[4:6])
-                repeated_theory = 1
-            except IndexError:
-                pass
-        elif '|Freq|' in line.strip() and repeated_theory == 0:
-            try:
-                level, bs = (line.strip().split("|")[4:6])
-                repeated_theory = 1
-            except IndexError:
-                pass
-        if '\\SP\\' in line.strip() and repeated_theory == 0:
-            try:
-                level, bs = (line.strip().split("\\")[4:6])
-                repeated_theory = 1
-            except IndexError:
-                pass
-        elif '|SP|' in line.strip() and repeated_theory == 0:
-            try:
-                level, bs = (line.strip().split("|")[4:6])
-                repeated_theory = 1
-            except IndexError:
-                pass
-        if 'DLPNO BASED TRIPLES CORRECTION' in line.strip():
-            level = 'DLPNO-CCSD(T)'
-        if 'Estimated CBS total energy' in line.strip():
-            try:
-                bs = ("Extrapol." + line.strip().split()[4])
-            except IndexError:
-                pass
-        # Remove the restricted R or unrestricted U label
-        if level[0] in ('R', 'U'):
-            level = level[1:]
+        bs, level = find_freq_sp_dlpno_cbs(bs, level, line, repeated_theory)
     level_of_theory = '/'.join([level, bs])
     return level_of_theory
+
+
+def find_freq_sp_dlpno_cbs(bs, level, line, repeated_theory):
+    if '\\Freq\\' in line.strip() and repeated_theory == 0:
+        try:
+            level, bs = (line.strip().split("\\")[4:6])
+            repeated_theory = 1
+        except IndexError:
+            pass
+    elif '|Freq|' in line.strip() and repeated_theory == 0:
+        try:
+            level, bs = (line.strip().split("|")[4:6])
+            repeated_theory = 1
+        except IndexError:
+            pass
+    if '\\SP\\' in line.strip() and repeated_theory == 0:
+        try:
+            level, bs = (line.strip().split("\\")[4:6])
+        except IndexError:
+            pass
+    elif '|SP|' in line.strip() and repeated_theory == 0:
+        try:
+            level, bs = (line.strip().split("|")[4:6])
+        except IndexError:
+            pass
+    if 'DLPNO BASED TRIPLES CORRECTION' in line.strip():
+        level = 'DLPNO-CCSD(T)'
+    if 'Estimated CBS total energy' in line.strip():
+        try:
+            bs = ("Extrapol." + line.strip().split()[4])
+        except IndexError:
+            pass
+    # Remove the restricted R or unrestricted U label
+    if level[0] in ('R', 'U'):
+        level = level[1:]
+    return bs, level
 
 
 # At beginning of procedure, read level of theory, solvation model, and check for normal termination
@@ -156,7 +158,6 @@ def read_initial(file):
     a, repeated_theory = 0, 0
     no_grid = True
     dft, dft_used, level, bs, scf_iradan, cphf_iradan = False, 'F', 'none', 'none', False, False
-    grid_lookup = {1: 'sg1', 2: 'coarse', 4: 'fine', 5: 'ultrafine', 7: 'superfine'}
 
     for line in data:
         # Determine program to find solvation model used
@@ -170,46 +171,9 @@ def read_initial(file):
         if line.strip().find('Standard orientation:') > -1:
             orientation = 'Standard'
         if line.strip().find('IExCor=') > -1 and no_grid:
-            try:
-                dft_used = line.split('=')[2].split()[0]
-                grid = grid_lookup[int(dft_used)]
-                no_grid = False
-            except:
-                pass
-        if '\\Freq\\' in line.strip() and repeated_theory == 0:
-            try:
-                level, bs = (line.strip().split("\\")[4:6])
-                repeated_theory = 1
-            except IndexError:
-                pass
-        elif '|Freq|' in line.strip() and repeated_theory == 0:
-            try:
-                level, bs = (line.strip().split("|")[4:6])
-                repeated_theory = 1
-            except IndexError:
-                pass
-        if '\\SP\\' in line.strip() and repeated_theory == 0:
-            try:
-                level, bs = (line.strip().split("\\")[4:6])
-                repeated_theory = 1
-            except IndexError:
-                pass
-        elif '|SP|' in line.strip() and repeated_theory == 0:
-            try:
-                level, bs = (line.strip().split("|")[4:6])
-                repeated_theory = 1
-            except IndexError:
-                pass
-        if 'DLPNO BASED TRIPLES CORRECTION' in line.strip():
-            level = 'DLPNO-CCSD(T)'
-        if 'Estimated CBS total energy' in line.strip():
-            try:
-                bs = ("Extrapol." + line.strip().split()[4])
-            except IndexError:
-                pass
-        # Remove the restricted R or unrestricted U label
-        if level[0] in ('R', 'U'):
-            level = level[1:]
+            dft_used = line.split('=')[2].split()[0]
+            no_grid = False
+        bs, level = find_freq_sp_dlpno_cbs(bs, level, line, repeated_theory)
 
     # print(file,level)
     # Grab solvation models - Gaussian files
@@ -217,15 +181,15 @@ def read_initial(file):
     if program is 'Gaussian':
         for i, line in enumerate(data):
             if '#' in line.strip() and a == 0:
-                for j, line in enumerate(data[i:i + 10]):
-                    if '--' in line.strip():
+                for j, d_line in enumerate(data[i:i + 10]):
+                    if '--' in d_line.strip():
                         a = a + 1
                         break
                     if a != 0:
                         break
                     else:
-                        for k in range(len(line.strip().split("\n"))):
-                            keyword_line += line.strip().split("\n")[k]
+                        for k in range(len(d_line.strip().split("\n"))):
+                            keyword_line += d_line.strip().split("\n")[k]
             if 'Normal termination' in line:
                 progress = 'Normal'
             elif 'Error termination' in line:
@@ -352,7 +316,7 @@ def check_files(files, thermo_data, options, delimiter_row, l_o_t):
             print("o  Using a standard concentration of 1 atm for gas phase.")
         elif solvent_check[0] == "gas phase" and str(round(options.conc, 4)) != str(round(0.0408740470708, 4)):
             print("x  Caution! Standard concentration is not 1 atm for gas phase (using {} M).".
-                      format(options.conc))
+                  format(options.conc))
         elif solvent_check[0] != "gas phase" and str(round(options.conc, 4)) == str(round(0.0408740470708, 4)):
             print("x  Using a standard concentration of 1 atm for solvent phase (option -c 1 should be "
                   "included for 1 M).")
@@ -361,7 +325,7 @@ def check_files(files, thermo_data, options, delimiter_row, l_o_t):
         elif solvent_check[0] != "gas phase" and str(round(options.conc, 4)) != str(round(0.0408740470708, 4)) and str(
                 options.conc) != str(1.0):
             print("x  Caution! Standard concentration is not 1 M for solvent phase (using {} M).".format(options.conc))
-    if all_same(solvent_check) == False and "gas phase" in solvent_check:
+    if not all_same(solvent_check) and "gas phase" in solvent_check:
         print("x  Caution! The right standard concentration cannot be determined because the calculations use a "
               "combination of gas and solvent phases.")
     if all_same(solvent_check) is False and "gas phase" not in solvent_check:
@@ -371,7 +335,7 @@ def check_files(files, thermo_data, options, delimiter_row, l_o_t):
     # Check charge and multiplicity
     charge_check = [thermo_data[key].charge for key in thermo_data]
     multiplicity_check = [thermo_data[key].multiplicity for key in thermo_data]
-    if all_same(charge_check) != False and all_same(multiplicity_check) != False:
+    if all_same(charge_check) and all_same(multiplicity_check):
         print("o  Using charge {} and multiplicity {} in all calculations.".format(charge_check[0],
                                                                                    multiplicity_check[0]))
     else:
@@ -423,10 +387,10 @@ def check_files(files, thermo_data, options, delimiter_row, l_o_t):
                 for j in range(len(linear_fails_list[0][i])):
                     for k in range(len(linear_fails_list[0][i])):
                         if k > j:
-                            for l in range(len(linear_fails_list[1][i][j])):
+                            for m in range(len(linear_fails_list[1][i][j])):
                                 if linear_fails_list[0][i][j] == linear_fails_list[0][i][k]:
-                                    if linear_fails_list[1][i][j][l] > (-linear_fails_list[1][i][k][l] - 0.1) and \
-                                            linear_fails_list[1][i][j][l] < (-linear_fails_list[1][i][k][l] + 0.1):
+                                    if (-linear_fails_list[1][i][k][m] - 0.1) < linear_fails_list[1][i][j][m] < \
+                                            (-linear_fails_list[1][i][k][m] + 0.1):
                                         count_linear = count_linear + 1
                                         if count_linear == 3:
                                             if len(linear_fails_list[2][i]) == 4:
@@ -455,7 +419,7 @@ def check_files(files, thermo_data, options, delimiter_row, l_o_t):
             print("-  No linear molecules found.")
         if len(linear_mol_wrong) >= 1:
             print("x  Caution! Potential linear molecules with wrong number of frequencies found "
-                      "(correct number = 3N-5) -{}.".format(linear_wrong_print))
+                  "(correct number = 3N-5) -{}.".format(linear_wrong_print))
     elif len(linear_mol_correct) >= 1:
         if len(linear_mol_wrong) == 0:
             print("o  All the linear molecules have the correct number of frequencies -{}.".format(
@@ -523,15 +487,15 @@ def check_files(files, thermo_data, options, delimiter_row, l_o_t):
         # Check SPC charge and multiplicity
         charge_spc_check = [thermo_data[key].sp_charge for key in thermo_data]
         multiplicity_spc_check = [thermo_data[key].sp_multiplicity for key in thermo_data]
-        if all_same(charge_spc_check) != False and all_same(multiplicity_spc_check) != False:
+        if all_same(charge_spc_check) and all_same(multiplicity_spc_check):
             print("o  Using charge and multiplicity {} {} in all the single-point corrections.".
-                format(charge_spc_check[0], multiplicity_spc_check[0]))
+                  format(charge_spc_check[0], multiplicity_spc_check[0]))
         else:
             print_check_fails(charge_spc_check, file_check, "charge and multiplicity", multiplicity_spc_check)
 
         # Check if the geometries of freq calculations match their corresponding structures in single-point calculations
         geom_duplic_list, geom_duplic_list_spc, geom_duplic_cart, geom_duplic_files, geom_duplic_cart_spc, \
-        geom_duplic_files_spc = [], [], [], [], [], []
+            geom_duplic_files_spc = [], [], [], [], [], []
         for file in files:
             geom_duplic = GetOutData(file)
             geom_duplic_cart.append(geom_duplic.cartesians)
@@ -553,18 +517,18 @@ def check_files(files, thermo_data, options, delimiter_row, l_o_t):
                     if count == 1:
                         if geom_duplic_list[0][i][j] == geom_duplic_list_spc[0][i][j]:
                             count = count
-                        elif '{0:.3f}'.format(geom_duplic_list[0][i][j][0]) == '{0:.3f}'.\
-                                format(geom_duplic_list_spc[0][i][j][0] * (-1)) or '{0:.3f}'.\
-                                format(geom_duplic_list[0][i][j][0]) == '{0:.3f}'.\
+                        elif '{0:.3f}'.format(geom_duplic_list[0][i][j][0]) == '{0:.3f}'. \
+                                format(geom_duplic_list_spc[0][i][j][0] * (-1)) or '{0:.3f}'. \
+                                format(geom_duplic_list[0][i][j][0]) == '{0:.3f}'. \
                                 format(geom_duplic_list_spc[0][i][j][0]):
-                            if '{0:.3f}'.format(geom_duplic_list[0][i][j][1]) == '{0:.3f}'.\
-                                    format(geom_duplic_list_spc[0][i][j][1] * (-1)) or '{0:.3f}'.\
-                                    format(geom_duplic_list[0][i][j][1]) == '{0:.3f}'.\
+                            if '{0:.3f}'.format(geom_duplic_list[0][i][j][1]) == '{0:.3f}'. \
+                                    format(geom_duplic_list_spc[0][i][j][1] * (-1)) or '{0:.3f}'. \
+                                    format(geom_duplic_list[0][i][j][1]) == '{0:.3f}'. \
                                     format(geom_duplic_list_spc[0][i][j][1] * (-1)):
                                 count = count
-                            if '{0:.3f}'.format(geom_duplic_list[0][i][j][2]) == '{0:.3f}'.\
-                                    format(geom_duplic_list_spc[0][i][j][2] * (-1)) or '{0:.3f}'.\
-                                    format(geom_duplic_list[0][i][j][2]) == '{0:.3f}'.\
+                            if '{0:.3f}'.format(geom_duplic_list[0][i][j][2]) == '{0:.3f}'. \
+                                    format(geom_duplic_list_spc[0][i][j][2] * (-1)) or '{0:.3f}'. \
+                                    format(geom_duplic_list[0][i][j][2]) == '{0:.3f}'. \
                                     format(geom_duplic_list_spc[0][i][j][2] * (-1)):
                                 count = count
                         else:
@@ -601,7 +565,6 @@ def parse_cmdline(argv):
     if argv is None:
         argv = sys.argv[1:]
 
-    hartree_help_string = ""
     # initialize the parser object:
     parser = argparse.ArgumentParser(description='This script is based on https://github.com/bobbypaton/GoodVibes, '
                                                  'copied here to allow tailored input and output.')
@@ -817,7 +780,6 @@ def main(argv=None):
         cosmo_solv, gsolv_dicts, t_interval = output_cosmos_rs_interval(files, options, s_m, l_o_t)
 
         # Check for special options
-        inverted_freqs, inverted_files = [], []
         if options.ssymm:
             ssymm_option = options.ssymm
         else:
@@ -847,7 +809,7 @@ def main(argv=None):
             #         damp = 'bj'
             #     if options.ATM: abc_term = True
             #     try:
-            #         file_data = getoutData(file)
+            #         file_data = GetOutData(file)
             #         d3_calc = dftd3.calcD3(file_data, functional, s6, rs6, s8, bj_a1, bj_a2, damp, abc_term,
             #                                intermolecular, pairwise, verbose)
             #         d3_energy = (d3_calc.attractive_r6_vdw + d3_calc.attractive_r8_vdw + d3_calc.repulsive_abc) / \
@@ -1096,13 +1058,14 @@ def main(argv=None):
                 # If no temperature step was defined, divide the region into 10
                 if len(temperature_interval) == 2:
                     temperature_interval.append((temperature_interval[1] - temperature_interval[0]) / 10.0)
-                interval = range(int(temperature_interval[0]), int(temperature_interval[1] + 1),
-                                 int(temperature_interval[2]))
-                print("    T init:  {:.1f},  T final:  {:.1f},  T interval: {:.1f}\n".
+                # below assumes that the interval is great than 1; no big deal if it isn't
+                interval = np.arange(float(temperature_interval[0]), float(temperature_interval[1] + 1),
+                                     float(temperature_interval[2]))
+                print("    T init:  {:.2f},  T final:  {:.2f},  T interval: {:.2f}\n".
                       format(temperature_interval[0], temperature_interval[1], temperature_interval[2]))
             else:
                 interval = t_interval
-                print("    T init:  {:.1f},   T final: {:.1f}\n".format(interval[0], interval[-1]))
+                print("    T init:  {:.2f},   T final: {:.2f}\n".format(interval[0], interval[-1]))
 
             if options.qh:
                 qh_print_format = "{:<39} {:>13} {:>24} {:>13} {:>10} {:>10} {:>13} {:>13}"
@@ -1168,7 +1131,7 @@ def main(argv=None):
                         if not hasattr(bbe, "gibbs_free_energy"):
                             print("Warning! Couldn't find frequency information ...")
                         else:
-                            name_temp = '{:<39} {:13.1f}'.format(base_name, temp)
+                            name_temp = '{:<39} {:13.2f}'.format(base_name, temp)
                             if not options.media:
                                 if all(getattr(bbe, attrib) for attrib in
                                        ["enthalpy", "entropy", "qh_entropy", "gibbs_free_energy",
@@ -1258,7 +1221,8 @@ def main(argv=None):
                     raise InvalidDataError("\nWarning! Could not find thermodynamic data for " + key + "\n")
 
             if options.temperature_interval:
-                output_pes_temp_interval(options, delimiter_row, interval, interval_bbe_data, interval_thermo_data, file_list)
+                output_pes_temp_interval(options, delimiter_row, interval, interval_bbe_data, interval_thermo_data,
+                                         file_list)
             else:
                 # Output the relative energy data
                 output_rel_e_data(options, delimiter_row, thermo_data)

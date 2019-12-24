@@ -36,7 +36,8 @@ def print_check_fails(check_attribute, file, attribute, option2=False):
     # Function for printing unique checks
     unique_attr = {}
     for i, attr in enumerate(check_attribute):
-        if option2 is not False: attr = (attr, option2[i])
+        if option2 is not False:
+            attr = (attr, option2[i])
         if attr not in unique_attr:
             unique_attr[attr] = [file[i]]
         else:
@@ -227,7 +228,7 @@ def graph_reaction_profile(graph_data, options):
 
     # Annotate points with energy level
     if label_point:
-        for i, d_path in enumerate(graph_data.path):
+        for d_path in graph_data.path:
             for i, point in enumerate(data[d_path]):
                 if dec is 1:
                     ax.annotate("{:.1f}".format(point), (i, point - fig.get_figheight() * fig.dpi * 0.025),
@@ -303,7 +304,7 @@ class GetPES:
         # Default values
         self.dec, self.units, self.boltz = 2, 'kcal/mol', False
 
-        g_corr = None  # Make IDE happy
+        g_corr, qg_corr = None, None  # Make IDE happy
 
         with open(file) as f:
             data = f.readlines()
@@ -395,12 +396,14 @@ class GetPES:
                             pass
 
         for i in range(len(files)):
-            if len(files[i]) is 1:
+            if len(files[i]) == 1:
                 files[i] = files[i][0]
         species = dict(zip(names, files))
         self.path, self.species = [], []
-        self.spc_abs, self.e_abs, self.zpe_abs, self.h_abs, self.qh_abs, self.s_abs, self.qs_abs, self.g_abs, self.qhg_abs, self.cosmo_qhg_abs = [], [], [], [], [], [], [], [], [], []
-        self.spc_zero, self.e_zero, self.zpe_zero, self.h_zero, self.qh_zero, self.ts_zero, self.qhts_zero, self.g_zero, self.qhg_zero, self.cosmo_qhg_zero = [], [], [], [], [], [], [], [], [], []
+        self.spc_abs, self.e_abs, self.zpe_abs, self.h_abs, self.qh_abs, self.s_abs, self.qs_abs, self.g_abs, \
+            self.qhg_abs, self.cosmo_qhg_abs = [], [], [], [], [], [], [], [], [], []
+        self.spc_zero, self.e_zero, self.zpe_zero, self.h_zero, self.qh_zero, self.ts_zero, self.qhts_zero, \
+            self.g_zero, self.qhg_zero, self.cosmo_qhg_zero = [], [], [], [], [], [], [], [], [], []
         self.g_qhgvals, self.g_species_qhgzero, self.g_rel_val = [], [], []
         # Loop over .yaml file, grab energies, populate arrays and compute Boltzmann factors
         with open(file) as f:
@@ -790,21 +793,21 @@ def pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, delim_row, 
             formatted_list = formatted_list[1:]
             if options.qh and options.cosmo:
                 if pes.dec == 1:
-                    print('{:<39} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
+                    print('{:<39} {:13.2f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
                           '{:13.1f} {:13.1f}'.format(pes.species[i][j], *formatted_list))
                 if pes.dec == 2:
                     print('{:<39} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} '
                           '{:13.2f} {:13.2f}'.format(pes.species[i][j], *formatted_list))
             elif options.qh or options.cosmo:
                 if pes.dec == 1:
-                    print('{:<39} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
+                    print('{:<39} {:13.2f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
                           '{:13.1f}'.format(pes.species[i][j], *formatted_list))
                 if pes.dec == 2:
                     print('{:<39} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} '
                           '{:13.2f}'.format(pes.species[i][j], *formatted_list))
             else:
                 if pes.dec == 1:
-                    print('{:<39} {:13.1f} {:10.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
+                    print('{:<39} {:13.2f} {:10.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
                           '{:13.1f}'.format(pes.species[i][j], *formatted_list))
                 if pes.dec == 2:
                     print('{:<39} {:13.2f} {:10.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} '
@@ -812,21 +815,21 @@ def pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, delim_row, 
         else:
             if options.qh and options.cosmo:
                 if pes.dec == 1:
-                    print('{:<39} {:13.1f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} '
+                    print('{:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} '
                           '{:13.1f} {:13.1f} {:13.1f}'.format(pes.species[i][j], *formatted_list))
                 if pes.dec == 2:
-                    print('{:<39} {:13.1f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} '
+                    print('{:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} '
                           '{:13.2f} {:13.2f} {:13.2f}'.format(pes.species[i][j], *formatted_list))
             elif options.qh or options.cosmo:
                 if pes.dec == 1:
-                    print('{:<39} {:13.1f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} '
+                    print('{:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} '
                           '{:13.1f} {:13.1f}'.format(pes.species[i][j], *formatted_list))
                 if pes.dec == 2:
-                    print('{:<39} {:13.1f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} '
+                    print('{:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} '
                           '{:13.2f} {:13.2f}'.format(pes.species[i][j], *formatted_list))
             else:
                 if pes.dec == 1:
-                    print('{:<39} {:13.1f} {:13.1f} {:10.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
+                    print('{:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
                           '{:13.1f}'.format(pes.species[i][j], *formatted_list))
                 if pes.dec == 2:
                     print('{:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} '
@@ -843,10 +846,10 @@ def pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, delim_row, 
     if pes.boltz == 'ee' and len(sels) == 2:
         ee = [sels[0][x] - sels[1][x] for x in range(len(sels[0]))]
         if options.spc is False:
-            print("\n" + delim_row + "\n   " + '{:<39} {:13.1f}%{:24.1f}%{:35.1f}%{:13.1f}%'
+            print("\n" + delim_row + "\n   " + '{:<39} {:13.2f}%{:24.1f}%{:35.1f}%{:13.1f}%'
                   .format('ee (%)', *ee))
         else:
-            print("\n" + delim_row + "\n   " + '{:<39} {:27.1f} {:24.1f} {:35.1f} {:13.1f} '.
+            print("\n" + delim_row + "\n   " + '{:<39} {:27.2f} {:24.1f} {:35.1f} {:13.1f} '.
                   format('ee (%)', *ee))
     print("\n" + delim_row + "\n")
 
@@ -1168,7 +1171,7 @@ def output_pes_temp_interval(options, delim_row, interval, interval_bbe_data, in
                     formatted_list = [EHPART_TO_KCAL_MOL * x for x in relative]  # Defaults to kcal/mol
                 if options.spc is False:
                     formatted_list = formatted_list[1:]
-                    format_1 = 'o  {:<39} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} ' \
+                    format_1 = 'o  {:<39} {:13.2f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} ' \
                                '{:13.1f} {:13.1f}'
                     format_2 = 'o  {:<39} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} ' \
                                '{:13.2f} {:13.2f}'
@@ -1190,25 +1193,25 @@ def output_pes_temp_interval(options, delim_row, interval, interval_bbe_data, in
                 else:
                     if options.qh and options.cosmo_int:
                         if pes.dec == 1:
-                            print('o  {:<39} {:13.1f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} '
+                            print('o  {:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} '
                                   '{:10.1f} {:13.1f} {:13.1f} {:13.1f}'.format(pes.species[k][l],
                                                                                *formatted_list))
                         if pes.dec == 2:
-                            print('o  {:<39} {:13.1f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} '
+                            print('o  {:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} '
                                   '{:10.2f} {:13.2f} {:13.2f} {:13.2f}'.format(pes.species[k][l],
                                                                                *formatted_list))
                     elif options.qh or options.cosmo_int:
                         if pes.dec == 1:
-                            print('o  {:<39} {:13.1f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} '
+                            print('o  {:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} '
                                   '{:10.1f} {:13.1f} {:13.1f}'.format(pes.species[k][l],
                                                                       *formatted_list))
                         if pes.dec == 2:
-                            print('o  {:<39} {:13.1f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} '
+                            print('o  {:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} '
                                   '{:10.2f} {:13.2f} {:13.2f}'.format(pes.species[k][l],
                                                                       *formatted_list))
                     else:
                         if pes.dec == 1:
-                            print('o  {:<39} {:13.1f} {:13.1f} {:10.1f} {:13.1f} {:10.1f} {:10.1f} '
+                            print('o  {:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:10.1f} {:10.1f} '
                                   '{:13.1f} {:13.1f}'.format(pes.species[k][l], *formatted_list))
                         if pes.dec == 2:
                             print('o  {:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:10.2f} {:10.2f} '
@@ -1226,9 +1229,9 @@ def output_pes_temp_interval(options, delim_row, interval, interval_bbe_data, in
             if pes.boltz == 'ee' and len(sels) == 2:
                 ee = [sels[0][x] - sels[1][x] for x in range(len(sels[0]))]
                 if options.spc is False:
-                    print(delim_row + '\n   {:<39} {:13.1f} {:24.1f} {:35.1f} {:13.1f}'.format('ee (%)', *ee))
+                    print(delim_row + '\n   {:<39} {:13.2f} {:24.1f} {:35.1f} {:13.1f}'.format('ee (%)', *ee))
                 else:
-                    print(delim_row + '\n   {:<39} {:27.1f} {:24.1f} {:35.1f} {:13.1f}'.format('ee (%)', *ee))
+                    print(delim_row + '\n   {:<39} {:27.2f} {:24.1f} {:35.1f} {:13.1f}'.format('ee (%)', *ee))
             print(delim_row)
         j += 1
 
@@ -1404,7 +1407,8 @@ def cosmo_rs_out(dat_file, names, interval=False):
                 if line.find('(' + name.split('.')[0] + ')') > -1 and line.find('Compound') > -1:
                     if data[i - 5].find('Temperature') > -1:
                         temp = data[i - 5].split()[2]
-                    if float(temp) > float(interval[0]) and float(temp) < float(interval[1]):
+                    temp = float(temp)
+                    if temp > float(interval[0]) and temp < float(interval[1]):
                         if float(temp) not in t_interval:
                             t_interval.append(float(temp))
                         if data[i + 10].find('Gibbs') > -1:

@@ -36,7 +36,7 @@ SOLV = 'Solvent type'
 FREQ1 = 'Freq 1'
 FREQ2 = 'Freq 2'
 # noinspection PyPep8, PyPep8Naming
-AWK_GRAB_GAUSS_VER = ['awk', "/\*\*\*/{getline; print; exit}"]
+AWK_GRAB_GAUSS_VER = ['awk', r"/\*\*\*/{getline; print; exit}"]
 GOODVIBES_OUT_FNAME = "Goodvibes_output.dat"
 GOODVIBES_ERROR_PAT = re.compile(r"x .*")
 GOODVIBES_DATA_PAT = re.compile(r"Structure .*")
@@ -62,6 +62,7 @@ QH_DELTA_G_RXN = 'qh_\u0394G_rxn (kcal/mol)'
 OUTPUT_HEADERS = [FILE1, FILE2, FILE3, FILE4, FILE5, A, EA, DELTA_G_TEMP, DELTA_G_TS, DELTA_G_RXN,
                   QH_A, QH_EA, QH_DELTA_G_TS, QH_DELTA_G_RXN]
 
+
 class HartreeWrapper:
     def __init__(self):
         jpype.addClassPath("gaussian_wrangler/hartree/*")
@@ -69,11 +70,13 @@ class HartreeWrapper:
         jpype.startJVM(convertStrings=False)
 
         # TODO: Figure out how to scope these imports for the class
+        # noinspection PyUnresolvedReferences
         from org.cmayes.hartree.loader.gaussian import SnapshotLoader
 
         self.loader = SnapshotLoader()
 
     def read_all_gaussian(self, files):
+        # noinspection PyUnresolvedReferences
         from java.io import FileReader
         mapped_results = {}
         for cur_file in files:
@@ -82,6 +85,7 @@ class HartreeWrapper:
         return mapped_results
 
     def read_gaussian(self, tgt_file):
+        # noinspection PyUnresolvedReferences
         from java.io import FileReader
         return self.loader.load(tgt_file, FileReader(tgt_file))
 
@@ -183,7 +187,7 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
+def check_gausslog_fileset(file_set, good_vibes_check):
     """
     checks include:
        using hartree to get info to check for:
@@ -194,7 +198,6 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
         awk for same versions of Gaussian
         made GoodVibes checks optional to save run time
     :param file_set: list of reactant file(s) and TS file
-    :param hartree_call: bash call to invoke hartree
     :param good_vibes_check: boolean to run goodvibes checking; will slow down calculations
     :return: reaction_type: integer for molecularity of reaction
     """
@@ -233,7 +236,8 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
         # exclude any crazy two imaginary frequency files
         freq_vals = gauss_result.getFrequencyValues()
         if len(freq_vals) < 2:
-            warning(f"Too few frequencies ({freq_vals.size()} vs. {len(freq_vals)}.  Skipping")
+            warning("Too few frequencies ({} vs. {}.  Skipping file set: {}".format(freq_vals.size(), len(freq_vals),
+                                                                                    file_set))
             continue
 
         if freq_vals[0] < 0 and freq_vals[1] < 0:
@@ -577,7 +581,7 @@ def main(argv=None):
             tog_fname = None
         # Todo: optimize--don't do the same calc multiple times on the same output file
         for file_set in row_list:
-            solvent, ts_index = check_gausslog_fileset(file_set, args[0].hartree_call, args[0].vibes_check)
+            solvent, ts_index = check_gausslog_fileset(file_set, args[0].vibes_check)
             temps, h, qh_h, gt, qh_gt = get_thermochem(file_set, args[0].temp_range, solvent, args[0].save_vibes,
                                                        args[0].out_dir, tog_fname, args[0].quasiharmonic,
                                                        args[0].vib_scale, print_mode)
