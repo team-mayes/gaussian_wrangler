@@ -1200,8 +1200,8 @@ def get_free_space(solv):
     solv_molarity = molarity[n_solv]
     solv_volume = molecular_vol[n_solv]
     if n_solv > 0:
-        v_free = 8 * ((1E27 / (solv_molarity * AVOGADRO_CONST)) ** 0.333333 - solv_volume ** 0.333333) ** 3
-        freespace = v_free * solv_molarity * AVOGADRO_CONST * 1E-24
+        v_free = 8 * ((1e27 / (solv_molarity * AVOGADRO_CONST)) ** 0.333333 - solv_volume ** 0.333333) ** 3
+        freespace = v_free * solv_molarity * AVOGADRO_CONST * 1e-24
     else:
         freespace = 1000.0
     return freespace

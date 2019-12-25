@@ -25,6 +25,7 @@ TEST_LOG5 = os.path.join(SUB_DATA_DIR, 'lmethyllactate_1_8_cp.log')
 TEST_LOG6 = os.path.join(SUB_DATA_DIR, 'acetic_acid_1_w.log')
 
 FILE_LIST = os.path.join(SUB_DATA_DIR, 'file_list.txt')
+FILE_MISSING_LIST = os.path.join(SUB_DATA_DIR, 'file_list_missing_files.txt')
 
 INCOMPLETE_LOG = os.path.join(SUB_DATA_DIR, 'ipah_d_incomplete.log')
 FAILED_LOG = os.path.join(SUB_DATA_DIR, 'co_fail_gas.log')
@@ -62,7 +63,7 @@ class TestGoodVibesNoOut(unittest.TestCase):
         if logger.isEnabledFor(logging.DEBUG):
             main(test_input)
         with capture_stderr(main, test_input) as output:
-            self.assertTrue("No file names" in output)
+            self.assertTrue("Could not find" in output)
 
     def testIncompleteFile(self):
         test_input = [INCOMPLETE_LOG]
@@ -86,9 +87,15 @@ class TestGoodVibesNoOut(unittest.TestCase):
 
     def testCPWithSPC(self):
         test_input = [TEST_LOG5, "--spc"]
-        main(test_input)
+        # main(test_input)
         with capture_stderr(main, test_input) as output:
             self.assertTrue("SPC calculation" in output)
+
+    def testListMissingFile(self):
+        test_input = ["-l", FILE_MISSING_LIST, "-f", "0",]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("Could not find" in output)
 
 
 class TestGoodVibesHM(unittest.TestCase):
@@ -147,7 +154,7 @@ class TestGoodVibesHM(unittest.TestCase):
     def testImplicitWaterVibZPEDiff(self):
         # Only change is to the ZPE
         test_input = [TEST_LOG6, "-v", "0.9871", "-f", "0", "-z", "0.9754"]
-        main(test_input)
+        # main(test_input)
         with capture_stdout(main, test_input) as output:
             self.assertTrue("-229.096161   0.060515   -229.029384   0.032761   0.032761   -229.062144   "
                             "-229.062144" in output)
@@ -237,6 +244,7 @@ class TestGoodVibesHM(unittest.TestCase):
 
     def testList(self):
         # Set up so could test again Gaussian; a couple differed in the digit of G(T)--that's fine!
+        # also makes sure it can handle a blank line, and ignores a duplicate file name
         test_input = ["-l", FILE_LIST, "-f", "0", "-v", "1.0"]
         good_output = "pdc2_eghtsct_ircf_opt.log                 -951.199098   0.213051   -950.968434   0.062721   " \
                       "0.062721   -951.031155   -951.031155\npdc2_eghtsct.log                          -951.161848   " \
