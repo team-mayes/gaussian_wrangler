@@ -22,6 +22,9 @@ TEST_LOG2 = os.path.join(SUB_DATA_DIR, 'tpaegh1ats_ts.log')
 TEST_LOG3 = os.path.join(SUB_DATA_DIR, 'ts3b_ircr_opt_gas.log')
 TEST_LOG4 = os.path.join(SUB_DATA_DIR, 'co_gas.log')
 TEST_LOG5 = os.path.join(SUB_DATA_DIR, 'lmethyllactate_1_8_cp.log')
+TEST_LOG6 = os.path.join(SUB_DATA_DIR, 'acetic_acid_1_w.log')
+
+FILE_LIST = os.path.join(SUB_DATA_DIR, 'file_list.txt')
 
 INCOMPLETE_LOG = os.path.join(SUB_DATA_DIR, 'ipah_d_incomplete.log')
 FAILED_LOG = os.path.join(SUB_DATA_DIR, 'co_fail_gas.log')
@@ -125,6 +128,38 @@ class TestGoodVibesHM(unittest.TestCase):
             self.assertTrue("-230.257454   0.084552   -230.144250   0.112457   0.112093   -230.256708   "
                             "-230.256343" in output)
 
+    def testImplicitWater(self):
+        # checking that results equal those from Gaussian--they do!
+        test_input = [TEST_LOG6, "-v", "1.0", "-f", "0"]
+        # main(test_input)
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue("-229.096161   0.062042   -229.028612   0.032709   0.032709   -229.061321   "
+                            "-229.061321" in output)
+
+    def testImplicitWaterVib(self):
+        # Baseline of scaling ZPE and harmonic the same
+        test_input = [TEST_LOG6,  "-v", "0.9871", "-f", "0"]
+        # main(test_input)
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue("-229.096161   0.061241   -229.029384   0.032761   0.032761   -229.062144   "
+                            "-229.062144" in output)
+
+    def testImplicitWaterVibZPEDiff(self):
+        # Only change is to the ZPE
+        test_input = [TEST_LOG6, "-v", "0.9871", "-f", "0", "-z", "0.9754"]
+        main(test_input)
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue("-229.096161   0.060515   -229.029384   0.032761   0.032761   -229.062144   "
+                            "-229.062144" in output)
+
+    def testImplicitWaterAltTemp(self):
+        # checking that results equal those from Gaussian--they do!
+        test_input = [TEST_LOG6, "-v", "1.0", "-f", "0", "-t", "788.15"]
+        # main(test_input)
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue("-229.096161   0.062042   -229.010117   0.114078   0.114078   -229.124195   "
+                            "-229.124195" in output)
+
     def testTempRangeVib(self):
         test_input = [TEST_LOG1, "-t", "788.15", "-v", "0.984", "--ti", "688.15,888.15,25"]
         # main(test_input)
@@ -199,3 +234,28 @@ class TestGoodVibesHM(unittest.TestCase):
             self.assertTrue(good_output in output)
         with capture_stderr(main, test_input) as output:
             self.assertTrue(good_error in output)
+
+    def testList(self):
+        # Set up so could test again Gaussian; a couple differed in the digit of G(T)--that's fine!
+        test_input = ["-l", FILE_LIST, "-f", "0", "-v", "1.0"]
+        good_output = "pdc2_eghtsct_ircf_opt.log                 -951.199098   0.213051   -950.968434   0.062721   " \
+                      "0.062721   -951.031155   -951.031155\npdc2_eghtsct.log                          -951.161848   " \
+                      "0.207682   -950.936560   0.063345   0.063345   -950.999904   -950.999904\n" \
+                      "tpainter_tsc_ts_ircr_opt.log              -993.913719   0.292987   -993.598427   0.076794   " \
+                      "0.076794   -993.675220   -993.675220\ntpainter_tsc_ts.log                       -993.859475   " \
+                      "0.290412   -993.548506   0.071383   0.071383   -993.619889   -993.619889"
+        # main(test_input)
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue(good_output in output)
+
+    def testListProdOptions(self):
+        test_input = ["-l", FILE_LIST, "-f", "0", "-t", "788.15", "-v", "0.9871", "-z", "0.9754", "-c", "1"]
+        good_output = "pdc2_eghtsct_ircf_opt.log                 -951.199098   0.207810   -950.896845   0.267112   " \
+                      "0.267112   -951.163956   -951.163956\npdc2_eghtsct.log                          -951.161848   " \
+                      "0.202573   -950.865998   0.267020   0.267020   -951.133017   -951.133017\n" \
+                      "tpainter_tsc_ts_ircr_opt.log              -993.913719   0.285780   -993.511226   0.328939   " \
+                      "0.328939   -993.840165   -993.840165\ntpainter_tsc_ts.log                       -993.859475   " \
+                      "0.283267   -993.462968   0.311733   0.311733   -993.774701   -993.774701"
+        # main(test_input)
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue(good_output in output)

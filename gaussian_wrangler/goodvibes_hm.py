@@ -28,6 +28,7 @@ correct or incorrect transition states, and empirical dispersion models.
 
 Authors:     Rob Paton, Ignacio Funes-Ardoiz Guilian Luchini, Juan V. Alegre-Requena, Yanfei Guan
 Last modified:  July 22, 2019
+Further modified by Heather Mayes, Dec 2019
 """
 
 import os
@@ -42,7 +43,7 @@ from gaussian_wrangler.goodvibes_functions import (ALPHABET, output_pes_temp_int
                                                    calc_enantio_excess, get_boltz, output_cosmos_rs_interval, all_same,
                                                    print_check_fails)
 from common_wrangler.common import (InvalidDataError, warning, GAS_CONSTANT, ATM_TO_KPA, AU_TO_J,
-                                    GOOD_RET, INPUT_ERROR, INVALID_DATA)
+                                    GOOD_RET, INPUT_ERROR, INVALID_DATA, file_rows_to_list)
 
 # VERSION NUMBER
 __version__ = "3.0.1.hmayes"
@@ -568,6 +569,16 @@ def parse_cmdline(argv):
     # initialize the parser object:
     parser = argparse.ArgumentParser(description='This script is based on https://github.com/bobbypaton/GoodVibes, '
                                                  'copied here to allow tailored input and output.')
+    parser.add_argument("-c", dest="conc", default=False, type=float, metavar="CONC",
+                        help="Concentration (mol/l) (default 1 atm)")
+    parser.add_argument("-f", dest="freq_cutoff", default=100, type=float, metavar="FREQ_CUTOFF",
+                        help="Cut-off frequency for both entropy and enthalpy (wavenumbers) (default = 100)", )
+    parser.add_argument("--fs", dest="S_freq_cutoff", default=100.0, type=float, metavar="S_FREQ_CUTOFF",
+                        help="Cut-off frequency for entropy (wavenumbers) (default = 100)")
+    parser.add_argument("--fh", dest="h_freq_cutoff", default=100.0, type=float, metavar="h_freq_cutoff",
+                        help="Cut-off frequency for enthalpy (wavenumbers) (default = 100)")
+    parser.add_argument("-l", dest="file_list", default=None, type=str, metavar="LIST",
+                        help="List of file names to process, with one file per line.",)
     parser.add_argument("-q", dest="Q", action="store_true", default=False,
                         help="Quasi-harmonic entropy correction and enthalpy correction applied (default S=Grimme, "
                              "H=Head-Gordon)")
@@ -576,21 +587,17 @@ def parse_cmdline(argv):
                         help="Type of quasi-harmonic entropy correction (Grimme or Truhlar) (default Grimme)", )
     parser.add_argument("--qh", dest="qh", action="store_true", default=False,
                         help="Type of quasi-harmonic enthalpy correction (Head-Gordon)")
-    parser.add_argument("-f", dest="freq_cutoff", default=100, type=float, metavar="FREQ_CUTOFF",
-                        help="Cut-off frequency for both entropy and enthalpy (wavenumbers) (default = 100)", )
-    parser.add_argument("--fs", dest="S_freq_cutoff", default=100.0, type=float, metavar="S_FREQ_CUTOFF",
-                        help="Cut-off frequency for entropy (wavenumbers) (default = 100)")
-    parser.add_argument("--fh", dest="h_freq_cutoff", default=100.0, type=float, metavar="h_freq_cutoff",
-                        help="Cut-off frequency for enthalpy (wavenumbers) (default = 100)")
     parser.add_argument("-t", dest="temperature", default=298.15, type=float, metavar="TEMP",
                         help="Temperature (K) (default 298.15)")
-    parser.add_argument("-c", dest="conc", default=False, type=float, metavar="CONC",
-                        help="Concentration (mol/l) (default 1 atm)")
     parser.add_argument("--ti", dest="temperature_interval", default=False, metavar="TI",
                         help="Initial temp, final temp, step size (K)")
     parser.add_argument("-v", dest="freq_scale_factor", default=False, type=float, metavar="SCALE_FACTOR",
-                        help="Frequency scaling factor. If not set, try to find a suitable value in database. "
-                             "If not found, use 1.0")
+                        help="Frequency scaling factor. If not set, the program will look for a suitable value in "
+                             "its database. If not found, the program will use 1.0.")
+    parser.add_argument("-z", dest="zpe_scale_factor", default=False, type=float, metavar="ZPE_SCALE_FACTOR",
+                        help="Frequency scaling factor for calculation of the zero-point energy correction. "
+                             "If not set, the same value will be used as for the frequency scaling factor "
+                             "('-v' option) used for estimating entropy.")
     parser.add_argument("--vmm", dest="mm_freq_scale_factor", default=False, type=float, metavar="MM_SCALE_FACTOR",
                         help="Additional frequency scaling factor used in ONIOM calculations")
     parser.add_argument("--spc", dest="spc",
@@ -668,6 +675,10 @@ def main(argv=None):
     clustering = False
 
     try:
+        # Start printing results
+        start_time = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime())
+        print("GoodVibes v{} {}\n    REF: {}\n".format(__version__, start_time, GOODVIBES_REF))
+
         # If requested, turn on head-gordon enthalpy correction
         if options.Q:
             options.qh = True
@@ -697,6 +708,10 @@ def main(argv=None):
                     options.boltz = True
                     n_clust = -1
         # Get the filenames from the command line prompt
+        # add any that come from the list command
+        if options.file_list:
+            file_list = file_rows_to_list(options.file_list)
+            args += file_list
         for elem in args:
             if clustering:
                 if elem == 'clust:':
@@ -725,9 +740,6 @@ def main(argv=None):
             except IndexError:
                 pass
 
-        # Start printing results
-        start_time = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime())
-        print("GoodVibes v{} {}\n    REF: {}\n".format(__version__, start_time, GOODVIBES_REF))
         # Check if user has specified any files, if not quit now
         if len(files) == 0:
             raise InvalidDataError("No file names provided. Please provide GoodVibes with calculation output files on "
@@ -818,9 +830,9 @@ def main(argv=None):
             #         print('\n   ! Dispersion Correction Failed')
             #         d3_energy = 0.0
             bbe = CalcBBE(file, options.qs, options.qh, options.S_freq_cutoff, options.h_freq_cutoff,
-                          options.temperature,
-                          options.conc, options.freq_scale_factor, options.freespace, options.spc, options.invert,
-                          d3_energy, cosmo=cosmo_option, ssymm=ssymm_option, mm_freq_scale_factor=vmm_option)
+                          options.temperature, options.conc, options.freq_scale_factor, options.zpe_scale_factor,
+                          options.freespace, options.spc, options.invert, d3_energy,
+                          cosmo=cosmo_option, ssymm=ssymm_option, mm_freq_scale_factor=vmm_option)
 
             # Populate bbe_vals with individual bbe entries for each file
             bbe_vals.append(bbe)
@@ -1114,8 +1126,8 @@ def main(argv=None):
                     if options.cosmo_int is False:
                         # haven't implemented D3 for this option
                         bbe = CalcBBE(file, options.qs, options.qh, options.S_freq_cutoff, options.h_freq_cutoff, temp,
-                                      conc, options.freq_scale_factor, options.freespace, options.spc, options.invert,
-                                      0.0, cosmo=cosmo_option)
+                                      conc, options.freq_scale_factor, options.zpe_scale_factor, options.freespace,
+                                      options.spc, options.invert, 0.0, cosmo=cosmo_option)
                     interval_bbe_data[h].append(bbe)
                     linear_warning.append(bbe.linear_warning)
                     if linear_warning == [['Warning! Potential invalid calculation of linear molecule from Gaussian.']]:

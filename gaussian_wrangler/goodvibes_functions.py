@@ -596,9 +596,9 @@ class GetPES:
                                     # Create values to populate
                                     point_structures = point.replace(' ', '').split('+')
                                     e_abs, spc_abs, zpe_abs, h_abs, qh_abs, s_abs, g_abs, qs_abs, qhg_abs, \
-                                    cosmo_qhg_abs = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+                                        cosmo_qhg_abs = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
                                     qh_conf, qh_tot, qs_conf, qs_tot, h_conf, h_tot, s_conf, s_tot, g_corr, \
-                                    qg_corr = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+                                        qg_corr = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
                                     min_conf = False
                                     rel_val = 0.0
                                     self.g_qhgvals[n].append([])
@@ -1249,13 +1249,13 @@ def output_cosmos_rs_interval(files, options, s_m, l_o_t):
 
     # Attempt to automatically obtain frequency scale factor,
     # Application of freq scale factors requires all outputs to be same level of theory
-    if options.freq_scale_factor is not False:
+    if options.freq_scale_factor:
         if 'ONIOM' not in l_o_t[0]:
-            print("\nUser-defined vibrational scale factor " + str(options.freq_scale_factor) + " for " +
-                  l_o_t[0] + " level of theory\n")
+            print("\nUser-defined vibrational scale factor of {} for {} level of theory".
+                  format(options.freq_scale_factor, l_o_t[0]))
         else:
-            print("\nUser-defined vibrational scale factor " + str(options.freq_scale_factor) +
-                  " for QM region of " + l_o_t[0])
+            print("\nUser-defined vibrational scale factor for QM region is {}".
+                  format(options.freq_scale_factor, l_o_t[0]))
     else:
         # Look for vibrational scaling factor automatically
         if all_same(l_o_t):
@@ -1277,8 +1277,13 @@ def output_cosmos_rs_interval(files, options, s_m, l_o_t):
             filtered_calcs_l_o_t.append(levels_l_o_t)
             print_check_fails(filtered_calcs_l_o_t[1], filtered_calcs_l_o_t[0], "levels of theory")
 
-    # Exit program if a comparison of Boltzmann factors is requested and level of theory is not uniform across all
-    # files
+    if options.zpe_scale_factor:
+        print("    For calculating the ZPE, a scale factor of {} will be used.\n".format(options.zpe_scale_factor))
+    else:
+        options.zpe_scale_factor = options.freq_scale_factor
+        print("    The same scaling factor will be used to calculate the ZPE.\n")
+
+    # Exit program if a comparison of Boltzmann factors is requested and level of theory is not uniform across all files
     if not all_same(l_o_t) and (options.boltz is not False or options.ee is not False):
         raise InvalidDataError("When comparing files with Boltzmann factors (with bolts, ee, dr "
                                "options), the level of theory used should be the same for all files.\n ")
@@ -1322,7 +1327,7 @@ def output_cosmos_rs_interval(files, options, s_m, l_o_t):
         args = options.cosmo_int.split(',')
         c_file = args[0]
         c_interval = args[1:]
-        print('\n\n   Reading COSMO-RS file: ' + c_file + ' over a T range of ' + c_interval[0] + '-' +
+        print('\n   Reading COSMO-RS file: ' + c_file + ' over a T range of ' + c_interval[0] + '-' +
               c_interval[1] + ' K.')
 
         t_interval, gsolv_dicts = cosmo_rs_out(c_file, files, interval=c_interval)
@@ -1340,18 +1345,23 @@ def output_cosmos_rs_interval(files, options, s_m, l_o_t):
         options.h_freq_cutoff = options.freq_cutoff
 
     # Summary of the quasi-harmonic treatment; print out the relevant reference
-    print("Entropic quasi-harmonic treatment: frequency cut-off value of " + str(
-        options.S_freq_cutoff) + " wavenumbers will be applied.")
-    if options.qs == "grimme":
-        print("    qs = Grimme: Using a mixture of RRHO and Free-rotor vibrational entropies.")
-        qs_ref = GRIMME_REF
-    elif options.qs == "truhlar":
-        print("    qs = Truhlar: Using an RRHO treatment where low frequencies are adjusted to the cut-off value.")
-        qs_ref = TRUHLAR_REF
+    print("Entropic quasi-harmonic treatment: frequency cut-off value of {} wavenumbers will be "
+          "applied.".format(options.S_freq_cutoff))
+    # Only print reference if actually cutting off wavenumbers
+    if options.S_freq_cutoff > 0.0:
+        if options.qs == "grimme":
+            print("    qs = Grimme: Using a mixture of RRHO and Free-rotor vibrational entropies.")
+            qs_ref = GRIMME_REF
+        elif options.qs == "truhlar":
+            print("    qs = Truhlar: Using an RRHO treatment where low frequencies are adjusted to the cut-off value.")
+            qs_ref = TRUHLAR_REF
+        else:
+            raise InvalidDataError("\n   FATAL ERROR: Unknown quasi-harmonic model " + options.qs +
+                                   " specified (qs must = grimme or truhlar).")
+        print("    REF: " + qs_ref + '\n')
     else:
-        raise InvalidDataError("\n   FATAL ERROR: Unknown quasi-harmonic model " + options.qs +
-                               " specified (qs must = grimme or truhlar).")
-    print("    REF: " + qs_ref + '\n')
+        # adding one blank line...
+        print("")
 
     # Check if qh-H correction should be applied
     if options.qh:

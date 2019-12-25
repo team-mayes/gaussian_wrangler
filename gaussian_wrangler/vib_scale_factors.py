@@ -5,6 +5,7 @@ Comments and/or additions are welcome (send e-mail to: robert.paton@chem.ox.ac.u
 vib_scale_factors.py
 Written by:  Rob Paton and Guilian Luchini
 Last modified:  2019
+Futher modified by Heather Mayes, Dec 2019
 
 Frequency scaling factors, taken from version 4 of The Truhlar group database
 (https://t1.chem.umn.edu/freqscale/index.html
@@ -314,8 +315,8 @@ def element_id(mass_num, num=False):
 class CalcBBE:
     # The function to compute the "black box" entropy and enthalpy values
     # along with all other thermochemical quantities
-    def __init__(self, file, qs, qh, s_freq_cutoff, h_freq_cutoff, temperature, conc, freq_scale_factor, solv, spc,
-                 invert, d3_term, ssymm=False, cosmo=None, mm_freq_scale_factor=False):
+    def __init__(self, file, qs, qh, s_freq_cutoff, h_freq_cutoff, temperature, conc, freq_scale_factor,
+                 zpe_scale_factor, solv, spc, invert, d3_term, ssymm=False, cosmo=None, mm_freq_scale_factor=False):
 
         h_damp, u_vib_qrrho, qh_u_vib = None, None, None   # make IDE happy
 
@@ -432,7 +433,7 @@ class CalcBBE:
             elif 'Multiplicity' in g_line:
                 try:
                     self.mult = int(g_line.split('=')[-1].strip().split()[0])
-                except:
+                except IndexError:  # not really sure what error might happen, or why the below would fix it
                     self.mult = int(g_line.split()[-1])
             # Grab molecular mass
             elif g_line.startswith('Molecular mass:'):
@@ -487,7 +488,7 @@ class CalcBBE:
             # Rotational and Vibrational contributions to the energy entropy
             if len(frequency_wn) > 0:
                 # todo: allow different scaling factor for zpe
-                zpe = calc_zeropoint_energy(frequency_wn, freq_scale_factor, fract_model_sys)
+                zpe = calc_zeropoint_energy(frequency_wn, zpe_scale_factor, fract_model_sys)
                 u_rot = calc_rotational_energy(self.zero_point_corr, temperature, linear_mol)
                 u_vib = calc_vibrational_energy(frequency_wn, temperature, freq_scale_factor, fract_model_sys)
                 s_rot = calc_rotational_entropy(self.zero_point_corr, linear_mol, sym_no, rot_temp, temperature)
@@ -1035,19 +1036,19 @@ def calc_rotational_energy(zpe, temperature, linear):
     return energy
 
 
-def calc_zeropoint_energy(frequency_wn, freq_scale_factor, fract_model_sys):
+def calc_zeropoint_energy(frequency_wn, scale_factor, fract_model_sys):
     """
     # Vibrational Zero point energy evaluation
     # Depends on frequencies and scaling factor: default = 1.0
     Calculates the vibrational ZPE (J/mol)
     E_ZPE = Sum(0.5 hv/k)
     """
-    if fract_model_sys is not False:
-        freq_scale_factor = [freq_scale_factor[0] * fract_model_sys[i] + freq_scale_factor[1] *
-                             (1.0 - fract_model_sys[i]) for i in range(len(fract_model_sys))]
-        factor = [(H * frequency_wn[i] * SPEED_OF_LIGHT * freq_scale_factor[i]) / KB for i in range(len(frequency_wn))]
+    if fract_model_sys:
+        scale_factor = [scale_factor[0] * fract_model_sys[i] + scale_factor[1] *
+                        (1.0 - fract_model_sys[i]) for i in range(len(fract_model_sys))]
+        factor = [(H * frequency_wn[i] * SPEED_OF_LIGHT * scale_factor[i]) / KB for i in range(len(frequency_wn))]
     else:
-        factor = [(H * freq * SPEED_OF_LIGHT * freq_scale_factor) / KB for freq in frequency_wn]
+        factor = [(H * freq * SPEED_OF_LIGHT * scale_factor) / KB for freq in frequency_wn]
     energy = [0.5 * entry * GAS_CONSTANT for entry in factor]
     return sum(energy)
 
