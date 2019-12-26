@@ -66,7 +66,7 @@ OUTPUT_HEADERS = [FILE1, FILE2, FILE3, FILE4, FILE5, A, EA, DELTA_G_TEMP, DELTA_
 
 class HartreeWrapper:
     def __init__(self):
-        jar_path = Path(__file__).parent  / "hartree"
+        jar_path = Path(__file__).parent / "hartree"
         found_jars = sorted(jar_path.glob('*.jar'))
         if len(found_jars) == 0:
             raise Exception(f"Could not find any JARs in dir {jar_path}")
