@@ -14,6 +14,7 @@ import numpy as np
 import gaussian_wrangler.goodvibes_hm
 import jpype
 import jpype.imports
+from pathlib import Path
 from common_wrangler.common import (InvalidDataError, warning, RG, KB, H, EHPART_TO_KCAL_MOL,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                     write_csv, silent_remove, create_out_fname, make_fig, parse_stoich, capture_stdout,
@@ -65,8 +66,16 @@ OUTPUT_HEADERS = [FILE1, FILE2, FILE3, FILE4, FILE5, A, EA, DELTA_G_TEMP, DELTA_
 
 class HartreeWrapper:
     def __init__(self):
-        jpype.addClassPath("gaussian_wrangler/hartree/*")
+        jar_path = Path(__file__).parent  / "hartree"
+        found_jars = sorted(jar_path.glob('*.jar'))
+        if len(found_jars) == 0:
+            raise Exception(f"Could not find any JARs in dir {jar_path}")
+
+        for found_jar in found_jars:
+            jpype.addClassPath(found_jar)
+
         print("Classpath: ", jpype.getClassPath())
+
         jpype.startJVM(convertStrings=False)
 
         # TODO: Figure out how to scope these imports for the class
