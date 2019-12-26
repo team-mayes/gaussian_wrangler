@@ -92,7 +92,7 @@ class TestGoodVibesNoOut(unittest.TestCase):
             self.assertTrue("SPC calculation" in output)
 
     def testListMissingFile(self):
-        test_input = ["-l", FILE_MISSING_LIST, "-f", "0",]
+        test_input = ["-l", FILE_MISSING_LIST, "-f", "0"]
         # main(test_input)
         with capture_stderr(main, test_input) as output:
             self.assertTrue("Could not find" in output)
@@ -116,7 +116,7 @@ class TestGoodVibesHM(unittest.TestCase):
 
     def testTempVibFreq(self):
         test_input = [TEST_LOG3, "-t", "788.15", "-v", "0.984", "-f", '30']
-        main(test_input)
+        # main(test_input)
         with capture_stdout(main, test_input) as output:
             self.assertTrue("-460.884947   0.180092   -460.642788   0.204516   0.204169   -460.847303   "
                             "-460.846956" in output)

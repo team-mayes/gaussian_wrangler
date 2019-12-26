@@ -36,7 +36,7 @@ def print_check_fails(check_attribute, file, attribute, option2=False):
     # Function for printing unique checks
     unique_attr = {}
     for i, attr in enumerate(check_attribute):
-        if option2 is not False:
+        if option2:
             attr = (attr, option2[i])
         if attr not in unique_attr:
             unique_attr[attr] = [file[i]]
@@ -44,7 +44,7 @@ def print_check_fails(check_attribute, file, attribute, option2=False):
             unique_attr[attr].append(file[i])
     warning("Different {} found: ".format(attribute))
     for attr in unique_attr:
-        if option2 is not False:
+        if option2:
             if float(attr[0]) < 0:
                 atr_str = '       {} {}:'.format(attr[0], attr[1])
             else:

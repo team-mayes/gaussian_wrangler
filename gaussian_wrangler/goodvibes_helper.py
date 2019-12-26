@@ -69,7 +69,7 @@ class HartreeWrapper:
         jar_path = Path(__file__).parent / "hartree"
         found_jars = sorted(jar_path.glob('*.jar'))
         if len(found_jars) == 0:
-            raise Exception(f"Could not find any JARs in dir {jar_path}")
+            raise Exception("Could not find any JARs in dir {}".format(jar_path))
 
         for found_jar in found_jars:
             jpype.addClassPath(found_jar)

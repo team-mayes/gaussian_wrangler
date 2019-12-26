@@ -185,7 +185,7 @@ def read_initial(file):
     # print(file,level)
     # Grab solvation models - Gaussian files
     solvation_model = None
-    if program is 'Gaussian':
+    if program == 'Gaussian':
         for i, line in enumerate(data):
             if '#' in line.strip() and a == 0:
                 for j, d_line in enumerate(data[i:i + 10]):
@@ -228,7 +228,7 @@ def read_initial(file):
                         end_scrf = len(keyword_line)
                     solvation_model = "scrf=" + keyword_line[start_scrf:end_scrf]
     # ORCA parsing for solvation model
-    elif program is 'Orca':
+    elif program == 'Orca':
         keyword_line_1 = "gas phase"
         keyword_line_2 = ''
         keyword_line_3 = ''
@@ -303,9 +303,9 @@ def check_files(files, thermo_data, options, delimiter_row, l_o_t):
         print_check_fails(version_check, file_check, "programs or versions")
 
     # Check level of theory
-    if all_same(l_o_t) is not False:
+    if all_same(l_o_t):
         print("o  Using {} in all calculations.".format(l_o_t[0]))
-    elif all_same(l_o_t) is False:
+    else:
         print_check_fails(l_o_t, file_check, "levels of theory")
 
     # Check for solvent models
@@ -335,7 +335,7 @@ def check_files(files, thermo_data, options, delimiter_row, l_o_t):
     if not all_same(solvent_check) and "gas phase" in solvent_check:
         print("x  Caution! The right standard concentration cannot be determined because the calculations use a "
               "combination of gas and solvent phases.")
-    if all_same(solvent_check) is False and "gas phase" not in solvent_check:
+    if (not all_same(solvent_check)) and ("gas phase" not in solvent_check):
         print("x  Caution! Different solvents used, fix this issue and use option -c 1 for a standard "
               "concentration of 1 M.")
 
@@ -459,7 +459,7 @@ def check_files(files, thermo_data, options, delimiter_row, l_o_t):
     print(delimiter_row)
 
     # Check for single-point corrections
-    if options.spc is not False:
+    if options.spc:
         print("    Checks for single-point corrections:")
         print(delimiter_row)
         names_spc, version_check_spc = [], []
@@ -674,7 +674,7 @@ def output_pes_data(options, thermo_data, delimiter_row, interval, interval_bbe_
     for key in thermo_data:
         if not hasattr(thermo_data[key], "qh_gibbs_free_energy"):
             raise InvalidDataError("\nWarning! Could not find thermodynamic data for " + key + "\n")
-        if not hasattr(thermo_data[key], "sp_energy") and options.spc is not False:
+        if (not hasattr(thermo_data[key], "sp_energy")) and options.spc:
             raise InvalidDataError("\nWarning! Could not find thermodynamic data for " + key + "\n")
 
     if options.temperature_interval:
@@ -685,10 +685,13 @@ def output_pes_data(options, thermo_data, delimiter_row, interval, interval_bbe_
         output_rel_e_data(options, delimiter_row, thermo_data)
 
 
-def variable_temp_analysis(options, delimiter_row, files, gsolv_dicts, t_interval, interval_bbe_data, gas_phase):
+def variable_temp_analysis(options, delimiter_row, files, t_interval, interval_bbe_data, gas_phase):
     print("Variable-Temperature analysis of the enthalpy, entropy and the entropy at a constant "
           "pressure between")
-    if options.cosmo_int is False:
+    if options.cosmo_int:
+        interval = t_interval
+        print("    T init:  {:.2f},   T final: {:.2f}\n".format(interval[0], interval[-1]))
+    else:
         temperature_interval = [float(temp) for temp in options.temperature_interval.split(',')]
         # If no temperature step was defined, divide the region into 10
         if len(temperature_interval) == 2:
@@ -698,9 +701,6 @@ def variable_temp_analysis(options, delimiter_row, files, gsolv_dicts, t_interva
                              float(temperature_interval[2]))
         print("    T init:  {:.2f},  T final:  {:.2f},  T interval: {:.2f}\n".
               format(temperature_interval[0], temperature_interval[1], temperature_interval[2]))
-    else:
-        interval = t_interval
-        print("    T init:  {:.2f},   T final: {:.2f}\n".format(interval[0], interval[-1]))
 
     if options.qh:
         qh_print_format = "{:<39} {:>13} {:>24} {:>13} {:>10} {:>10} {:>13} {:>13}"
@@ -741,15 +741,13 @@ def variable_temp_analysis(options, delimiter_row, files, gsolv_dicts, t_interva
             else:
                 conc = options.conc
             linear_warning = []
-            if options.cosmo_int is False:
-                cosmo_option = False
-            else:
-                cosmo_option = gsolv_dicts[i][file]
-            if options.cosmo_int is False:
+            if options.cosmo_int:
                 # haven't implemented D3 for this option
+                pass
+            else:
                 bbe = CalcBBE(file, options.qs, options.qh, options.S_freq_cutoff, options.h_freq_cutoff, temp,
                               conc, options.freq_scale_factor, options.zpe_scale_factor, options.freespace,
-                              options.spc, options.invert, 0.0, cosmo=cosmo_option)
+                              options.spc, options.invert, 0.0, cosmo=False)
             interval_bbe_data[h].append(bbe)
             linear_warning.append(bbe.linear_warning)
             if linear_warning == [['Warning! Potential invalid calculation of linear molecule from Gaussian.']]:
@@ -920,7 +918,7 @@ def main(argv=None):
         if clustering:
             command += '(clustering active)'
         print(command)
-        if options.temperature_interval is False:
+        if not options.temperature_interval:
             print("    Temperature = " + str(options.temperature) + " Kelvin")
         # If not at standard temp, need to correct the molarity of 1 atmosphere (assuming pressure is still 1 atm)
         if options.conc:
@@ -1021,7 +1019,7 @@ def main(argv=None):
                 inverted_files.append(file)
 
         # Check if user has chosen to make any low lying imaginary frequencies positive
-        if options.invert is not False:
+        if options.invert:
             for i, file in enumerate(inverted_files):
                 if len(inverted_freqs[i]) == 1:
                     print("\n   The following frequency was made positive and used in calculations: " +
@@ -1049,15 +1047,8 @@ def main(argv=None):
         # Standard mode: tabulate thermochemistry output from file(s) at a single temperature and concentration
         interval = None
         dup_list = []
-        if options.temperature_interval is False:
-            if options.spc is False:
-                if options.qh:
-                    print('{:<39} {:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} '
-                          '{:>13}'.format("Structure", "E", "ZPE", "H", "qh-H", "T.S", "T.qh-S", "G(T)", "qh-G(T)"))
-                else:
-                    print('{:<39} {:>13} {:>10} {:>13} {:>10} {:>10} {:>13} {:>13}'.
-                          format("Structure", "E", "ZPE", "H", "T.S", "T.qh-S", "G(T)", "qh-G(T)"))
-            else:
+        if not options.temperature_interval:
+            if options.spc:
                 print("\n")
                 if options.qh:
                     print('{:<39} {:>13} {:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13}'.
@@ -1066,11 +1057,19 @@ def main(argv=None):
                 else:
                     print('{:<39} {:>13} {:>13} {:>10} {:>13} {:>10} {:>10} {:>13} {:>13}'.
                           format("Structure", "E_SPC", "E", "ZPE", "H_SPC", "T.S", "T.qh-S", "G(T)_SPC", "qh-G(T)_SPC"))
-            if options.cosmo is not False:
+            else:
+                if options.qh:
+                    print('{:<39} {:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} '
+                          '{:>13}'.format("Structure", "E", "ZPE", "H", "qh-H", "T.S", "T.qh-S", "G(T)", "qh-G(T)"))
+                else:
+                    print('{:<39} {:>13} {:>10} {:>13} {:>10} {:>10} {:>13} {:>13}'.
+                          format("Structure", "E", "ZPE", "H", "T.S", "T.qh-S", "G(T)", "qh-G(T)"))
+
+            if options.cosmo:
                 print('{:>13} {:>16}'.format("COSMO-RS", "COSMO-qh-G(T)"))
-            if options.boltz is True:
+            if options.boltz:
                 print('{:>7}'.format("Boltz"))
-            if options.imag_freq is True:
+            if options.imag_freq:
                 print('{:>9}'.format("im freq"))
             if options.ssymm:
                 print('{:>13}'.format("Point Group"))
@@ -1117,7 +1116,7 @@ def main(argv=None):
                     else:
                         e_str = ''
                         if hasattr(bbe, "gibbs_free_energy"):
-                            if options.spc is not False:
+                            if options.spc:
                                 if bbe.sp_energy != '!':
                                     print('{} {:13.6f}'.format(name_str, bbe.sp_energy))
                                 if bbe.sp_energy == '!':
@@ -1206,9 +1205,9 @@ def main(argv=None):
                     if options.cosmo and cosmo_solv is not None:
                         print('{:13.6f} {:16.6f}'.format(cosmo_solv[file], bbe.qh_gibbs_free_energy +
                                                          cosmo_solv[file]))
-                    if options.boltz is True:
+                    if options.boltz:
                         print('{:7.3f}'.format(boltz_facts[file] / boltz_sum))
-                    if options.imag_freq is True and hasattr(bbe, "im_frequency_wn"):
+                    if options.imag_freq and hasattr(bbe, "im_frequency_wn"):
                         for freq in bbe.im_frequency_wn:
                             print('{:9.2f}'.format(freq))
                     if options.ssymm:
@@ -1235,7 +1234,7 @@ def main(argv=None):
 
         # Running a variable temperature analysis of the enthalpy, entropy and the free energy
         elif options.temperature_interval:
-            variable_temp_analysis(options, delimiter_row, files, gsolv_dicts, t_interval, interval_bbe_data, gas_phase)
+            variable_temp_analysis(options, delimiter_row, files, t_interval, interval_bbe_data, gas_phase)
 
         # Print CPU usage if requested
         if options.cputime:
@@ -1248,11 +1247,11 @@ def main(argv=None):
             output_pes_data(options, thermo_data, delimiter_row, interval, interval_bbe_data, interval_thermo_data,
                             files)
 
-        if options.ee is not False:
+        if options.ee:
             # Compute enantiomeric excess
             calc_enantio_excess(clustering, clusters, dup_list, files, options, thermo_data)
 
-        if options.graph is not False:
+        if options.graph:
             # Graph reaction profiles
             create_plot(options, thermo_data)
 
