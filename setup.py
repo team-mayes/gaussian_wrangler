@@ -46,7 +46,7 @@ setup(
 
     test_suite='tests',
     # to install jpype1, use conda: install -c conda-forge jpype1
-    install_requires=['numpy', 'six', 'matplotlib', 'common-wrangler>=0.2.6', 'jpype1'],
+    install_requires=['numpy', 'six', 'matplotlib', 'common-wrangler>=0.2.7', 'jpype1'],
 
     # install_requires=requirements,
     # Additional entries you may want simply uncomment the lines you want and fill in the data
