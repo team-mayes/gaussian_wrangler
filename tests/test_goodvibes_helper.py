@@ -197,7 +197,7 @@ class TestGoodVibesHelper(unittest.TestCase):
     def testTPA(self):
         # check handles it when not all atoms in are in all molecules
         # also checks saving GoodVibes output together
-        test_input = ["-l", TPA_LIST, "-d", SUB_DATA_DIR, "-t","-f", "100"]
+        test_input = ["-l", TPA_LIST, "-d", SUB_DATA_DIR, "-t", "-f", "100"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(TPA_OUT, GOOD_TPA_OUT))
