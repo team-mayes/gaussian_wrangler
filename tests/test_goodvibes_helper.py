@@ -65,6 +65,7 @@ PLOT3 = os.path.join(SUB_DATA_DIR, 'aea_out_h.png')
 PLOT4 = os.path.join(SUB_DATA_DIR, 'aea_out_h_qh.png')
 
 MISSING_PROD_LIST = os.path.join(SUB_DATA_DIR, 'list_missing_one_prod.txt')
+MULT_TS_LIST = os.path.join(SUB_DATA_DIR, 'list_mult_ts.txt')
 
 
 class TestGoodVibesHelperNoOut(unittest.TestCase):
@@ -104,7 +105,6 @@ class TestGoodVibesHelperInputError(unittest.TestCase):
             with capture_stderr(main, test_input) as output:
                 self.assertTrue("Problems reading file" in output)
         finally:
-            silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
             silent_remove(GOODVIBES_CSV, disable=DISABLE_REMOVE)
             pass
 
@@ -115,7 +115,6 @@ class TestGoodVibesHelperInputError(unittest.TestCase):
             with capture_stderr(main, test_input) as output:
                 self.assertTrue("Check stoichiometries" in output)
         finally:
-            silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
             silent_remove(GOODVIBES_CSV, disable=DISABLE_REMOVE)
             pass
 
@@ -127,7 +126,6 @@ class TestGoodVibesHelperInputError(unittest.TestCase):
                 print("Output: ", output)
                 self.assertTrue("Different solvents" in output)
         finally:
-            silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
             silent_remove(GOODVIBES_CSV, disable=DISABLE_REMOVE)
             pass
 
@@ -138,7 +136,6 @@ class TestGoodVibesHelperInputError(unittest.TestCase):
             with capture_stderr(main, test_input) as output:
                 self.assertTrue("Different basis sets" in output)
         finally:
-            silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
             silent_remove(GOODVIBES_CSV, disable=DISABLE_REMOVE)
             pass
 
@@ -147,11 +144,17 @@ class TestGoodVibesHelperInputError(unittest.TestCase):
         with capture_stderr(main, test_input) as output:
             self.assertTrue("Check stoichiometries of reactant(s) and product(s)" in output)
 
+    def testMultTS(self):
+        test_input = ["-l", MULT_TS_LIST]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("Unexpectedly found an imaginary frequency" in output)
+
 
 class TestGoodVibesHelper(unittest.TestCase):
     # These test/demonstrate different options
     def testTwoUni(self):
-        test_input = ["-l", FILE_LIST, "-d", TEMP_DIR, "-q", "-o", AE_OUT_BASE_NAME]
+        test_input = ["-l", FILE_LIST, "-d", TEMP_DIR, "-q", "-o", AE_OUT_BASE_NAME, "-f", "100"]
         try:
             silent_remove(TEMP_DIR, dir_with_files=True)
             main(test_input)
@@ -162,7 +165,7 @@ class TestGoodVibesHelper(unittest.TestCase):
 
     def testBimolecular(self):
         # checks a bimolecular reaction and also saving GoodVibes output for each file
-        test_input = ["-l", BI_LIST, "-d", SUB_DATA_DIR, "-s", "-o", AE_OUT]
+        test_input = ["-l", BI_LIST, "-d", SUB_DATA_DIR, "-s", "-o", AE_OUT, "-f", "100"]
         # make sure files not left from a previous run
         for fname in [BI_VIBES_OUT1, BI_VIBES_OUT2, BI_VIBES_OUT3]:
             silent_remove(fname)
@@ -174,7 +177,6 @@ class TestGoodVibesHelper(unittest.TestCase):
         finally:
             for fname in [BI_VIBES_OUT1, BI_VIBES_OUT2, BI_VIBES_OUT3]:
                 silent_remove(fname, disable=DISABLE_REMOVE)
-            silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
             silent_remove(AE_OUT, disable=DISABLE_REMOVE)
             pass
 
@@ -188,7 +190,6 @@ class TestGoodVibesHelper(unittest.TestCase):
             self.assertFalse(diff_lines(AE_OUT, GOOD_AE_TI_OUT))
             self.assertTrue(os.path.exists(AEA_VIBES_OUT))
         finally:
-            silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
             silent_remove(AE_OUT, disable=DISABLE_REMOVE)
             silent_remove(AEA_VIBES_OUT, disable=DISABLE_REMOVE)
             pass
@@ -196,7 +197,7 @@ class TestGoodVibesHelper(unittest.TestCase):
     def testTPA(self):
         # check handles it when not all atoms in are in all molecules
         # also checks saving GoodVibes output together
-        test_input = ["-l", TPA_LIST, "-d", SUB_DATA_DIR, "-t"]
+        test_input = ["-l", TPA_LIST, "-d", SUB_DATA_DIR, "-t","-f", "100"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(TPA_OUT, GOOD_TPA_OUT))
@@ -206,7 +207,7 @@ class TestGoodVibesHelper(unittest.TestCase):
             pass
 
     def testTPAAltVib(self):
-        test_input = ["-l", TPA_LIST, "-d", SUB_DATA_DIR, "-t", "-v", "0.984"]
+        test_input = ["-l", TPA_LIST, "-d", SUB_DATA_DIR, "-t", "-v", "0.984", "-f", "100"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(TPA_OUT, GOOD_TPA_SCALED_OUT))
@@ -219,7 +220,7 @@ class TestGoodVibesHelper(unittest.TestCase):
         # check handles it when not all atoms in are in all molecules
         # also checks saving GoodVibes output together
         test_input = ["-l", PROD_LIST, "-d", SUB_DATA_DIR, "-o", "aea_prod.csv", "-t",
-                      "-ti", "300,600,25", "--temp", "500"]
+                      "-ti", "300,600,25", "--temp", "500", "-f", "100"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(PROD_OUT, GOOD_PROD_OUT))
@@ -232,7 +233,7 @@ class TestGoodVibesHelper(unittest.TestCase):
         # check handles it when not all atoms in are in all molecules
         # also checks saving GoodVibes output together
         test_input = ["-l", PROD_NO_TS_LIST, "-d", SUB_DATA_DIR, "-o", "aea_prod.csv",
-                      "-ti", "300.15,600.15,25", "--temp", "500.15", "-t"]
+                      "-ti", "300.15,600.15,25", "--temp", "500.15", "-t", "-f", "100"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(PROD_OUT, GOOD_PROD_NO_TS_OUT))
@@ -248,13 +249,12 @@ class TestGoodVibesHelper(unittest.TestCase):
         for fname in plot_list:
             silent_remove(fname)
         test_input = ["-l", PLOT_LIST, "-d", SUB_DATA_DIR, "-p", "-pl", "pdc2,ipa", "-o", AE_OUT,
-                      "-ti", "400,500,25", "--temp", "500", "-q"]
+                      "-ti", "400,500,25", "--temp", "500", "-q", "-f", "100"]
         try:
             main(test_input)
             for fname in plot_list:
                 self.assertTrue(os.path.exists(fname))
         finally:
-            silent_remove(GOODVIBES_DAT, disable=DISABLE_REMOVE)
             silent_remove(AE_OUT, disable=DISABLE_REMOVE)
             for fname in plot_list:
                 silent_remove(fname)
