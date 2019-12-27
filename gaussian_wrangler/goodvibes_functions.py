@@ -53,7 +53,7 @@ def print_check_fails(check_attribute, file, attribute, option2=False):
             atr_str = '        -{}: '.format(attr)
         for filename in unique_attr[attr]:
             rel_path = os.path.relpath(filename)
-            if filename is unique_attr[attr][-1]:
+            if filename == unique_attr[attr][-1]:
                 warning('{} {}'.format(atr_str, rel_path))
             else:
                 warning('{} {}, '.format(atr_str, rel_path))
@@ -67,7 +67,7 @@ def create_plot(options, thermo_data):
     for key in thermo_data:
         if not hasattr(thermo_data[key], "qh_gibbs_free_energy"):
             raise InvalidDataError("\nWarning! Could not find thermodynamic data for " + key + "\n")
-        if not hasattr(thermo_data[key], "sp_energy") and options.spc is not False:
+        if not hasattr(thermo_data[key], "sp_energy") and options.spc:
             raise InvalidDataError("\nWarning! Could not find thermodynamic data for " + key + "\n")
     graph_data = GetPES(options.graph, thermo_data, options.temperature, options.gconf, options.qh)
     graph_reaction_profile(graph_data, options)
@@ -185,14 +185,14 @@ def graph_reaction_profile(graph_data, options):
     fig, ax = plt.subplots()
     for i, d_path in enumerate(graph_data.path):
         for j in range(len(data[d_path]) - 1):
-            if colors is not None:
+            if colors is None:
+                color = 'k'
+                colors = ['k']
+            else:
                 if len(colors) > 1:
                     color = colors[i]
                 else:
                     color = colors[0]
-            else:
-                color = 'k'
-                colors = ['k']
             if j == 0:
                 path_patch = m_patches.PathPatch(g_path([(j, data[d_path][j]), (j + 0.5, data[d_path][j]),
                                                          (j + 0.5, data[d_path][j + 1]), (j + 1, data[d_path][j + 1])],
@@ -230,7 +230,7 @@ def graph_reaction_profile(graph_data, options):
     if label_point:
         for d_path in graph_data.path:
             for i, point in enumerate(data[d_path]):
-                if dec is 1:
+                if dec == 1:
                     ax.annotate("{:.1f}".format(point), (i, point - fig.get_figheight() * fig.dpi * 0.025),
                                 horizontalalignment='center')
                 else:
@@ -239,10 +239,11 @@ def graph_reaction_profile(graph_data, options):
     if ylim is not None:
         ax.set_ylim(float(ylim[0]), float(ylim[1]))
     if show_title:
-        if title is not None:
-            ax.set_title(title)
-        else:
+        if title is None:
             ax.set_title("Reaction Profile")
+        else:
+            ax.set_title(title)
+
     ax.set_ylabel(r"$G_{rel}$ (kcal / mol)")
     plt.minorticks_on()
     ax.tick_params(axis='x', which='minor', bottom=False)
@@ -258,17 +259,17 @@ def graph_reaction_profile(graph_data, options):
         new_ax_text = []
         ax_label.append(d_path)
         for j, e_abs in enumerate(graph_data.e_abs[i]):
-            if i is 0:
+            if i == 0:
                 xaxis_text.append(graph_data.species[i][j])
             else:
                 new_ax_text.append(graph_data.species[i][j])
         new_ax_text_list.append(new_ax_text)
     # Label rxn steps
     if label_xaxis:
-        if colors is not None:
-            plt.xticks(range(len(xaxis_text)), xaxis_text, color=colors[0])
-        else:
+        if colors is None:
             plt.xticks(range(len(xaxis_text)), xaxis_text, color='k')
+        else:
+            plt.xticks(range(len(xaxis_text)), xaxis_text, color=colors[0])
         locs, labels = plt.xticks()
         new_ax = []
         for i in range(len(ax_label)):
@@ -293,7 +294,7 @@ def graph_reaction_profile(graph_data, options):
         ax.xaxis.set_ticklabels([])
     if legend:
         plt.legend()
-    if dpi is not False:
+    if dpi:
         plt.savefig('Rxn_profile_' + options.graph.split('.')[0] + '.png', dpi=dpi)
     plt.show()
 
@@ -478,13 +479,12 @@ class GetPES:
                                                 g_rel = thermo_data[conformer].qh_gibbs_free_energy - g_min
                                             boltz_fac = np.exp(-g_rel * AU_TO_J / GAS_CONSTANT / temperature)
                                             boltz_prob = boltz_fac / boltz_sum
-                                            if hasattr(thermo_data[conformer], "sp_energy") and \
-                                                    thermo_data[conformer].sp_energy is not '!':
-                                                spc_zero += thermo_data[conformer].sp_energy * boltz_prob
-                                            if hasattr(thermo_data[conformer], "sp_energy") and \
-                                                    thermo_data[conformer].sp_energy is '!':
-                                                raise InvalidDataError("Not all files contain a SPC value, relative "
-                                                                       "values will not be calculated.")
+                                            if hasattr(thermo_data[conformer], "sp_energy"):
+                                                if thermo_data[conformer].sp_energy == '!':
+                                                    raise InvalidDataError("Not all files contain a SPC value, relative "
+                                                                           "values will not be calculated.")
+                                                else:
+                                                    spc_zero += thermo_data[conformer].sp_energy * boltz_prob
                                             e_zero += thermo_data[conformer].scf_energy * boltz_prob
                                             zpe_zero += thermo_data[conformer].zpe * boltz_prob
                                             if gconf:  # Default calculate gconf correction for conformers
@@ -533,7 +533,7 @@ class GetPES:
                                     conformers = True
                             if conformers and single_structure:
                                 mix = True
-                            if gconf and min_conf is not False:
+                            if gconf and min_conf:
                                 if mix:
                                     h_mix = h_tot + h_zero
                                     s_mix = s_tot + s_zero
@@ -653,14 +653,13 @@ class GetPES:
                                                         g_rel = thermo_data[conformer].qh_gibbs_free_energy - g_min
                                                     boltz_fac = np.exp(-g_rel * AU_TO_J / GAS_CONSTANT / temperature)
                                                     boltz_prob = boltz_fac / boltz_sum
-                                                    if hasattr(thermo_data[conformer], "sp_energy") and \
-                                                            thermo_data[conformer].sp_energy is not '!':
-                                                        spc_abs += thermo_data[conformer].sp_energy * boltz_prob
-                                                    if hasattr(thermo_data[conformer], "sp_energy") and \
-                                                            thermo_data[conformer].sp_energy is '!':
-                                                        raise InvalidDataError("\n   Not all files contain a SPC value,"
-                                                                               " relative values will not be "
-                                                                               "calculated.\n")
+                                                    if hasattr(thermo_data[conformer], "sp_energy"):
+                                                        if thermo_data[conformer].sp_energy == '!':
+                                                            raise InvalidDataError("\n   Not all files contain a SPC "
+                                                                                   "value; relative values will not "
+                                                                                   " be calculated.\n")
+                                                        else:
+                                                            spc_abs += thermo_data[conformer].sp_energy * boltz_prob
                                                     e_abs += thermo_data[conformer].scf_energy * boltz_prob
                                                     zpe_abs += thermo_data[conformer].zpe * boltz_prob
                                                     if cosmo:
@@ -729,7 +728,7 @@ class GetPES:
                                             conformers = True
                                     if conformers and single_structure:
                                         mix = True
-                                    if gconf and min_conf is not False:
+                                    if gconf and min_conf:
                                         if mix:
                                             h_mix = h_tot + h_abs
                                             s_mix = s_tot + s_abs
@@ -789,7 +788,31 @@ def pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, delim_row, 
         else:
             formatted_list = [EHPART_TO_KCAL_MOL * x for x in relative]  # Defaults to kcal/mol
         print("\no  ")
-        if options.spc is False:
+        if options.spc:
+            if options.qh and options.cosmo:
+                if pes.dec == 1:
+                    print('{:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} '
+                          '{:13.1f} {:13.1f} {:13.1f}'.format(pes.species[i][j], *formatted_list))
+                if pes.dec == 2:
+                    print('{:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} '
+                          '{:13.2f} {:13.2f} {:13.2f}'.format(pes.species[i][j], *formatted_list))
+            elif options.qh or options.cosmo:
+                if pes.dec == 1:
+                    print('{:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} '
+                          '{:13.1f} {:13.1f}'.format(pes.species[i][j], *formatted_list))
+                if pes.dec == 2:
+                    print('{:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} '
+                          '{:13.2f} {:13.2f}'.format(pes.species[i][j], *formatted_list))
+            else:
+                if pes.dec == 1:
+                    print('{:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
+                          '{:13.1f}'.format(pes.species[i][j], *formatted_list))
+                if pes.dec == 2:
+                    print('{:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} '
+                          '{:13.2f}'.format(pes.species[i][j], *formatted_list))
+
+
+        else:
             formatted_list = formatted_list[1:]
             if options.qh and options.cosmo:
                 if pes.dec == 1:
@@ -812,28 +835,7 @@ def pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, delim_row, 
                 if pes.dec == 2:
                     print('{:<39} {:13.2f} {:10.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} '
                           '{:13.2f}'.format(pes.species[i][j], *formatted_list))
-        else:
-            if options.qh and options.cosmo:
-                if pes.dec == 1:
-                    print('{:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} '
-                          '{:13.1f} {:13.1f} {:13.1f}'.format(pes.species[i][j], *formatted_list))
-                if pes.dec == 2:
-                    print('{:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} '
-                          '{:13.2f} {:13.2f} {:13.2f}'.format(pes.species[i][j], *formatted_list))
-            elif options.qh or options.cosmo:
-                if pes.dec == 1:
-                    print('{:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} '
-                          '{:13.1f} {:13.1f}'.format(pes.species[i][j], *formatted_list))
-                if pes.dec == 2:
-                    print('{:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} '
-                          '{:13.2f} {:13.2f}'.format(pes.species[i][j], *formatted_list))
-            else:
-                if pes.dec == 1:
-                    print('{:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
-                          '{:13.1f}'.format(pes.species[i][j], *formatted_list))
-                if pes.dec == 2:
-                    print('{:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} '
-                          '{:13.2f}'.format(pes.species[i][j], *formatted_list))
+
         if pes.boltz:
             boltz = [np.exp(-relative[1] * AU_TO_J / GAS_CONSTANT / options.temperature) / e_sum,
                      np.exp(-relative[3] * AU_TO_J / GAS_CONSTANT / options.temperature) / h_sum,
@@ -845,12 +847,13 @@ def pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, delim_row, 
         formatted_list = [round(formatted_list[x], 6) for x in range(len(formatted_list))]
     if pes.boltz == 'ee' and len(sels) == 2:
         ee = [sels[0][x] - sels[1][x] for x in range(len(sels[0]))]
-        if options.spc is False:
-            print("\n" + delim_row + "\n   " + '{:<39} {:13.2f}%{:24.1f}%{:35.1f}%{:13.1f}%'
-                  .format('ee (%)', *ee))
-        else:
+        if options.spc:
             print("\n" + delim_row + "\n   " + '{:<39} {:27.2f} {:24.1f} {:35.1f} {:13.1f} '.
                   format('ee (%)', *ee))
+        else:
+            print("\n" + delim_row + "\n   " + '{:<39} {:13.2f}%{:24.1f}%{:35.1f}%{:13.1f}%'
+                  .format('ee (%)', *ee))
+
     print("\n" + delim_row + "\n")
 
 
@@ -907,22 +910,7 @@ def get_species(i, j, options, pes):
 
 
 def print_select_pes_output(options, path, pes, delim_row):
-    if options.spc is False:
-        print("\n   " + '{:<40}'.format("RXN: " + path + " (" + pes.units + ") ", ))
-        if options.qh and options.cosmo:
-            print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13} {:>13}'.
-                  format(" DE", "DZPE", "DH", "qh-DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)",
-                         'COSMO-qh-G(T)'))
-        elif options.qh:
-            print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13}'.
-                  format(" DE", "DZPE", "DH", "qh-DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)"))
-        elif options.cosmo:
-            print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13}'.
-                  format(" DE", "DZPE", "DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)", 'COSMO-qh-G(T)'))
-        else:
-            print('{:>13} {:>10} {:>13} {:>10} {:>10} {:>13} {:>13}'.
-                  format(" DE", "DZPE", "DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)"))
-    else:
+    if options.spc:
         print("\n   " + '{:<40}'.format("RXN: " + path + " (" + pes.units + ") ", ))
         if options.qh and options.cosmo:
             print('{:>13} {:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>14} {:>14} {:>14}'.
@@ -940,6 +928,21 @@ def print_select_pes_output(options, path, pes, delim_row):
             print('{:>13} {:>13} {:>10} {:>13} {:>10} {:>10} {:>14} {:>14}'.
                   format(" DE_SPC", "DE", "DZPE", "DH_SPC", "T.DS", "T.qh-DS", "DG(T)_SPC",
                          "qh-DG(T)_SPC"))
+    else:
+        print("\n   " + '{:<40}'.format("RXN: " + path + " (" + pes.units + ") ", ))
+        if options.qh and options.cosmo:
+            print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13} {:>13}'.
+                  format(" DE", "DZPE", "DH", "qh-DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)",
+                         'COSMO-qh-G(T)'))
+        elif options.qh:
+            print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13}'.
+                  format(" DE", "DZPE", "DH", "qh-DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)"))
+        elif options.cosmo:
+            print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13}'.
+                  format(" DE", "DZPE", "DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)", 'COSMO-qh-G(T)'))
+        else:
+            print('{:>13} {:>10} {:>13} {:>10} {:>10} {:>13} {:>13}'.
+                  format(" DE", "DZPE", "DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)"))
     print("\n" + delim_row)
 
 

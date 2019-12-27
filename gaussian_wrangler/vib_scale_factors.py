@@ -325,11 +325,11 @@ class CalcBBE:
             self.cpu, inverted_freqs = 0.0, [], [], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], 0, 0, 0, 0, 1, [0, 0, 0, 0, 0], []
         s_vib_rrqho = []  # make IDE happy
         linear_warning = False
-        if mm_freq_scale_factor is False:
-            fract_model_sys = False
-        else:
+        if mm_freq_scale_factor:
             fract_model_sys = []
             freq_scale_factor = [freq_scale_factor, mm_freq_scale_factor]
+        else:
+            fract_model_sys = False
         self.xyz = GetOutData(file)
         self.job_type = job_type(file)
         # Parse some useful information from the file
@@ -375,7 +375,7 @@ class CalcBBE:
                 if link == freq_loc:
                     frequency_wn = []
                     im_frequency_wn = []
-                    if mm_freq_scale_factor is not False:
+                    if mm_freq_scale_factor:
                         fract_model_sys = []
             # If spc specified will take last Energy from file, otherwise will break after freq calc
             if link > freq_loc:
@@ -383,13 +383,13 @@ class CalcBBE:
             # Iterate over output: look out for low frequencies
             if g_line.startswith('Frequencies -- '):
                 new_line = None  # make IDE happy
-                if mm_freq_scale_factor is not False:
+                if mm_freq_scale_factor:
                     new_line = g_output[i + 3]
                 for j in range(2, 5):
                     try:
                         x = float(g_line.split()[j])
                         # If given MM freq scale factor fill the fract_model_sys array:
-                        if mm_freq_scale_factor is not False:
+                        if mm_freq_scale_factor:
                             y = float(new_line.strip().split()[j]) / 100.0
                             y = float('{:.6f}'.format(y))
                         else:
@@ -401,7 +401,7 @@ class CalcBBE:
                                 fract_model_sys.append(y)
                         # Check if we want to make any low lying imaginary frequencies positive
                         elif x < -1 * im_freq_cutoff:
-                            if invert is not False:
+                            if invert:
                                 if x > float(invert):
                                     frequency_wn.append(x * -1.)
                                     inverted_freqs.append(x)
@@ -535,10 +535,10 @@ class CalcBBE:
 
             # The D3 term is added to the energy term here. If not requested then this term is zero
             # It is added to the SPC energy if defined (instead of the SCF energy)
-            if spc is False:
-                self.scf_energy += d3_term
-            else:
+            if spc:
                 self.sp_energy += d3_term
+            else:
+                self.scf_energy += d3_term
 
             # Add terms (converted to au) to get Free energy - perform separately
             # for harmonic and quasi-harmonic values out of interest
@@ -547,7 +547,7 @@ class CalcBBE:
             if qh:
                 self.qh_enthalpy = self.scf_energy + (u_trans + u_rot + qh_u_vib + GAS_CONSTANT * temperature) / AU_TO_J
             # Single point correction replaces energy from optimization with single point value
-            if spc is not False:
+            if spc:
                 try:
                     self.enthalpy = self.enthalpy - self.scf_energy + self.sp_energy
                 except TypeError:
@@ -724,7 +724,7 @@ def calc_rrho_entropy(frequency_wn, temperature, freq_scale_factor, fract_model_
     harmonic-oscillator description for a list of vibrational modes
     Sv = RSum(hv/(kT(e^(hv/kT)-1) - ln(1-e^(-hv/kT)))
     """
-    if fract_model_sys is not False:
+    if fract_model_sys:
         freq_scale_factor = [freq_scale_factor[0] * fract_model_sys[i] + freq_scale_factor[1] *
                              (1.0 - fract_model_sys[i]) for i in range(len(fract_model_sys))]
         factor = [(H * frequency_wn[i] * SPEED_OF_LIGHT * freq_scale_factor[i]) /
@@ -1087,7 +1087,7 @@ def calc_vibrational_energy(frequency_wn, temperature, freq_scale_factor, fract_
     Includes ZPE (0K) and thermal contributions
     Evib = R * Sum(0.5 hv/k + (hv/k)/(e^(hv/KT)-1))
     """
-    if fract_model_sys is not False:
+    if fract_model_sys:
         freq_scale_factor = [
             freq_scale_factor[0] * fract_model_sys[i] + freq_scale_factor[1] * (1.0 - fract_model_sys[i])
             for i in range(len(fract_model_sys))]
@@ -1159,7 +1159,7 @@ def calc_free_rot_entropy(frequency_wn, temperature, freq_scale_factor, fract_mo
     """
     # This is the average moment of inertia used by Grimme
     bav = 1.00e-44
-    if fract_model_sys is not False:
+    if fract_model_sys:
         freq_scale_factor = [freq_scale_factor[0] * fract_model_sys[i] + freq_scale_factor[1] *
                              (1.0 - fract_model_sys[i]) for i in range(len(fract_model_sys))]
         mu = [H / (8 * np.pi ** 2 * frequency_wn[i] * SPEED_OF_LIGHT * freq_scale_factor[i]) for i in
