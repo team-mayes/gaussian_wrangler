@@ -37,6 +37,7 @@ TI_LIST = os.path.join(SUB_DATA_DIR, 'list_ti.txt')
 TI_OUT = os.path.join(SUB_DATA_DIR, 'list_ti.csv')
 GOOD_AE_TI_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_ti_good.csv')
 AEA_VIBES_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_vibes.dat')
+AEA_PROD_VIBES_OUT = os.path.join(SUB_DATA_DIR, 'aea_prod_vibes.dat')
 
 TPA_LIST = os.path.join(SUB_DATA_DIR, 'tpa_testing.txt')
 TPA_OUT = os.path.join(SUB_DATA_DIR, 'tpa_testing.csv')
@@ -212,7 +213,7 @@ class TestGoodVibesHelper(unittest.TestCase):
             self.assertFalse(diff_lines(PROD_OUT, GOOD_PROD_OUT))
         finally:
             silent_remove(PROD_OUT, disable=DISABLE_REMOVE)
-            silent_remove(AEA_VIBES_OUT, disable=DISABLE_REMOVE)
+            silent_remove(AEA_PROD_VIBES_OUT, disable=DISABLE_REMOVE)
             pass
 
     def testReactProd(self):
@@ -221,11 +222,10 @@ class TestGoodVibesHelper(unittest.TestCase):
         test_input = ["-l", PROD_NO_TS_LIST, "-d", SUB_DATA_DIR, "-o", "aea_prod.csv",
                       "-ti", "300.15,600.15,25", "--temp", "500.15", "-t"]
         try:
-            print(PROD_OUT)
-            print(GOOD_PROD_NO_TS_OUT)
             main(test_input)
             self.assertFalse(diff_lines(PROD_OUT, GOOD_PROD_NO_TS_OUT))
         finally:
+            silent_remove(AEA_PROD_VIBES_OUT, disable=DISABLE_REMOVE)
             silent_remove(PROD_OUT, disable=DISABLE_REMOVE)
             pass
 

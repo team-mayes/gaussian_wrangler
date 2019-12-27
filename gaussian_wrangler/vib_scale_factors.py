@@ -5,7 +5,7 @@ Comments and/or additions are welcome (send e-mail to: robert.paton@chem.ox.ac.u
 vib_scale_factors.py
 Written by:  Rob Paton and Guilian Luchini
 Last modified:  2019
-Futher modified by Heather Mayes, Dec 2019
+Further modified by Heather Mayes, Dec 2019
 
 Frequency scaling factors, taken from version 4 of The Truhlar group database
 (https://t1.chem.umn.edu/freqscale/index.html
@@ -478,7 +478,7 @@ class CalcBBE:
         self.inverted_freqs = inverted_freqs
         # Skip the calculation if unable to parse the frequencies or zpe from the output file
         if hasattr(self, "zero_point_corr") and rot_temp:
-            cutoffs = [s_freq_cutoff for freq in frequency_wn]
+            cutoffs = [s_freq_cutoff] * len(frequency_wn)
 
             # Translational and electronic contributions to the energy and entropy do not depend on frequencies
             u_trans = calc_translational_energy(temperature)
@@ -613,6 +613,7 @@ class CalcBBE:
 
 # Read molecule data from a compchem output file
 # Currently supports Gaussian and ORCA output types
+#
 class GetOutData:
     def __init__(self, file):
         with open(file) as f:
@@ -627,11 +628,12 @@ class GetOutData:
                 program = "Orca"
                 break
 
+        # noinspection PyShadowingNames
         def get_freqs(self, outlines, n_atoms, f_format):
             self.FREQS = []
-            self.REDMASS = []
-            self.FORCECONST = []
-            self.NORMALMODE = []
+            self.REDUCED_MASS = []
+            self.FORCE_CONST = []
+            self.NORMAL_MODE = []
             freqs_so_far = 0
             if f_format == "Gaussian":
                 for i in range(0, len(outlines)):
@@ -639,25 +641,26 @@ class GetOutData:
                         n_freqs = len(outlines[i].split())
                         for j in range(2, n_freqs):
                             self.FREQS.append(float(outlines[i].split()[j]))
-                            self.NORMALMODE.append([])
+                            self.NORMAL_MODE.append([])
                         for j in range(3, n_freqs + 1):
-                            self.REDMASS.append(float(outlines[i + 1].split()[j]))
+                            self.REDUCED_MASS.append(float(outlines[i + 1].split()[j]))
                         for j in range(3, n_freqs + 1):
-                            self.FORCECONST.append(float(outlines[i + 2].split()[j]))
+                            self.FORCE_CONST.append(float(outlines[i + 2].split()[j]))
 
                         for j in range(0, n_atoms):
                             for k in range(0, n_freqs - 2):
-                                self.NORMALMODE[(freqs_so_far + k)].append(
+                                self.NORMAL_MODE[(freqs_so_far + k)].append(
                                     [float(outlines[i + 5 + j].split()[3 * k + 2]),
                                      float(outlines[i + 5 + j].split()[3 * k + 3]),
                                      float(outlines[i + 5 + j].split()[3 * k + 4])])
                         freqs_so_far = freqs_so_far + n_freqs - 2
 
+        # noinspection PyShadowingNames
         def getatom_types(self, outlines, program_name):
             if program_name == "Gaussian":
                 for i, p_line in enumerate(outlines):
                     if "Input orientation" in p_line or "Standard orientation" in p_line:
-                        self.atom_nums, self.atom_types, self.cartesians, self.atomictypes, carts = [], [], [], [], \
+                        self.atom_nums, self.atom_types, self.cartesians, self.atomic_types, carts = [], [], [], [], \
                                                                                                     outlines[i + 5:]
                         for j, c_line in enumerate(carts):
                             if "-------" in c_line:
@@ -665,7 +668,7 @@ class GetOutData:
                             split_line = c_line.split()
                             self.atom_nums.append(int(split_line[1]))
                             self.atom_types.append(element_id(int(split_line[1])))
-                            self.atomictypes.append(int(split_line[2]))
+                            self.atomic_types.append(int(split_line[2]))
                             if len(split_line) > 5:
                                 self.cartesians.append([float(split_line[3]), float(split_line[4]),
                                                         float(split_line[5])])
@@ -673,13 +676,13 @@ class GetOutData:
                                 self.cartesians.append([float(split_line[2]), float(split_line[3]),
                                                         float(split_line[4])])
             if program_name == "Orca":
-                for i, o_line in enumerate(outlines):
-                    if "*" in o_line and ">" in o_line and "xyz" in o_line:
+                for i, r_line in enumerate(outlines):
+                    if "*" in r_line and ">" in r_line and "xyz" in r_line:
                         self.atom_nums, self.atom_types, self.cartesians, carts = [], [], [], outlines[i + 1:]
                         for j, c_line in enumerate(carts):
                             if ">" in c_line and "*" in c_line:
                                 break
-                            split_line = o_line.split()
+                            split_line = r_line.split()
                             if len(split_line) > 5:
                                 self.cartesians.append([float(split_line[3]), float(split_line[4]),
                                                         float(split_line[5])])
@@ -693,10 +696,9 @@ class GetOutData:
 
         getatom_types(self, out_data, program)
         n_atoms = len(self.atom_types)
-        try:
-            get_freqs(self, out_data, n_atoms, program)
-        except:
-            pass
+
+        # noinspection PyTypeChecker
+        get_freqs(self, out_data, n_atoms, program)
 
     # Obtain molecule connectivity to be used for internal symmetry determination
     def get_connectivity(self):
@@ -713,12 +715,13 @@ class GetOutData:
                 if distance < cutoff:
                     atom_row.append(j)
             connectivity.append(atom_row)
+            # noinspection PyAttributeOutsideInit
             self.connectivity = connectivity
 
 
-# Rigid rotor harmonic oscillator (RRHO) entropy evaluation - this is the default treatment
 def calc_rrho_entropy(frequency_wn, temperature, freq_scale_factor, fract_model_sys):
     """
+    Rigid rotor harmonic oscillator (RRHO) entropy evaluation - this is the default treatment
     Entropic contributions (J/(mol*K)) according to a rigid-rotor
     harmonic-oscillator description for a list of vibrational modes
     Sv = RSum(hv/(kT(e^(hv/kT)-1) - ln(1-e^(-hv/kT)))
@@ -739,7 +742,6 @@ def calc_rrho_entropy(frequency_wn, temperature, freq_scale_factor, fract_model_
 def job_type(file):
     # Read output for the level of theory and basis set used
     job = ''
-    job_data = []
     with open(file) as f:
         job_data = f.readlines()
     for line in job_data:
@@ -758,7 +760,7 @@ def parse_data(file):
     # Read Gaussian output and obtain single point energy, program type,
     # program version, solvation_model, charge, empirical_dispersion, multiplicity
     spe, program = 'none', 'none'
-    version_program, solvation_model, keyword_line, a = '', '', '', 0
+    version_program, solvation_model, keyword_line = '', '', ''
     charge, multiplicity = None, None
 
     if os.path.exists(os.path.splitext(file)[0] + '.log'):
@@ -813,18 +815,17 @@ def parse_data(file):
 
     # Solvation model and empirical dispersion detection
     empirical_dispersion = None
+    sorted_solvation_model = None
+    display_solvation_model = None
     if 'Gaussian' in version_program.strip():
         for i, line in enumerate(data):
-            if '#' in line.strip() and a == 0:
-                for j, line in enumerate(data[i:i + 10]):
+            if '#' in line.strip():
+                for j, d_line in enumerate(data[i:i + 10]):
                     if '--' in line.strip():
-                        a = a + 1
-                        break
-                    if a != 0:
                         break
                     else:
-                        for k in range(len(line.strip().split("\n"))):
-                            keyword_line += line.strip().split("\n")[k]
+                        for k in range(len(d_line.strip().split("\n"))):
+                            keyword_line += d_line.strip().split("\n")[k]
         keyword_line = keyword_line.lower()
         if 'scrf' not in keyword_line.strip():
             solvation_model = "gas phase"
@@ -862,25 +863,7 @@ def parse_data(file):
             empirical_dispersion = "No empirical dispersion detected"
         elif keyword_line.strip().find('empiricaldispersion') > -1:
             start_emp_disp = keyword_line.strip().find('empiricaldispersion') + 19
-            if '(' in keyword_line[start_emp_disp:start_emp_disp + 4]:
-                start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find('(') + 1
-                end_emp_disp = keyword_line.find(")", start_emp_disp)
-                empirical_dispersion = 'empiricaldispersion=(' + ','.join(
-                    sorted(keyword_line[start_emp_disp:end_emp_disp].lower().split(','))) + ')'
-            else:
-                if ' = ' in keyword_line[start_emp_disp:start_emp_disp + 4]:
-                    start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find(' = ') + 3
-                elif ' =' in keyword_line[start_emp_disp:start_emp_disp + 4]:
-                    start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find(' =') + 2
-                elif '=' in keyword_line[start_emp_disp:start_emp_disp + 4]:
-                    start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find('=') + 1
-                end_emp_disp = keyword_line.find(" ", start_emp_disp)
-                if end_emp_disp == -1:
-                    empirical_dispersion = "empiricaldispersion=(" + ','.join(
-                        sorted(keyword_line[start_emp_disp:].lower().split(','))) + ')'
-                else:
-                    empirical_dispersion = "empiricaldispersion=(" + ','.join(
-                        sorted(keyword_line[start_emp_disp:end_emp_disp].lower().split(','))) + ')'
+            empirical_dispersion = get_emp_dispersion(keyword_line, start_emp_disp)
         elif keyword_line.strip().find('emp=') > -1 or keyword_line.strip().find(
                 'emp =') > -1 or keyword_line.strip().find('emp(') > -1:
             # Check for temp keyword
@@ -911,25 +894,7 @@ def parse_data(file):
                 start_emp_disp += 3
             if (temp and emp_e) or (not temp and keyword_line.strip().find('emp=') > -1) or (
                     not temp and keyword_line.strip().find('emp =')):
-                if '(' in keyword_line[start_emp_disp:start_emp_disp + 4]:
-                    start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find('(') + 1
-                    end_emp_disp = keyword_line.find(")", start_emp_disp)
-                    empirical_dispersion = 'empiricaldispersion=(' + ','.join(
-                        sorted(keyword_line[start_emp_disp:end_emp_disp].lower().split(','))) + ')'
-                else:
-                    if ' = ' in keyword_line[start_emp_disp:start_emp_disp + 4]:
-                        start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find(' = ') + 3
-                    elif ' =' in keyword_line[start_emp_disp:start_emp_disp + 4]:
-                        start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find(' =') + 2
-                    elif '=' in keyword_line[start_emp_disp:start_emp_disp + 4]:
-                        start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find('=') + 1
-                    end_emp_disp = keyword_line.find(" ", start_emp_disp)
-                    if end_emp_disp == -1:
-                        empirical_dispersion = "empiricaldispersion=(" + ','.join(
-                            sorted(keyword_line[start_emp_disp:].lower().split(','))) + ')'
-                    else:
-                        empirical_dispersion = "empiricaldispersion=(" + ','.join(
-                            sorted(keyword_line[start_emp_disp:end_emp_disp].lower().split(','))) + ')'
+                empirical_dispersion = get_emp_dispersion(keyword_line, start_emp_disp)
             elif (temp and emp_p) or (not temp and keyword_line.strip().find('emp(') > -1):
                 start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find('(') + 1
                 end_emp_disp = keyword_line.find(")", start_emp_disp)
@@ -950,15 +915,37 @@ def parse_data(file):
         empirical_dispersion1 = 'No empirical dispersion detected'
         empirical_dispersion2 = ''
         empirical_dispersion3 = ''
-        for i, line in enumerate(data):
-            if keyword_line.strip().find('DFT DISPERSION CORRECTION') > -1:
-                empirical_dispersion1 = ''
-            if keyword_line.strip().find('DFTD3') > -1:
-                empirical_dispersion2 = "D3"
-            if keyword_line.strip().find('USING zero damping') > -1:
-                empirical_dispersion3 = ' with zero damping'
+        if keyword_line.strip().find('DFT DISPERSION CORRECTION') > -1:
+            empirical_dispersion1 = ''
+        if keyword_line.strip().find('DFTD3') > -1:
+            empirical_dispersion2 = "D3"
+        if keyword_line.strip().find('USING zero damping') > -1:
+            empirical_dispersion3 = ' with zero damping'
         empirical_dispersion = empirical_dispersion1 + empirical_dispersion2 + empirical_dispersion3
     return spe, program, version_program, solvation_model, file, charge, empirical_dispersion, multiplicity
+
+
+def get_emp_dispersion(keyword_line, start_emp_disp):
+    if '(' in keyword_line[start_emp_disp:start_emp_disp + 4]:
+        start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find('(') + 1
+        end_emp_disp = keyword_line.find(")", start_emp_disp)
+        empirical_dispersion = 'empiricaldispersion=(' + ','.join(
+            sorted(keyword_line[start_emp_disp:end_emp_disp].lower().split(','))) + ')'
+    else:
+        if ' = ' in keyword_line[start_emp_disp:start_emp_disp + 4]:
+            start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find(' = ') + 3
+        elif ' =' in keyword_line[start_emp_disp:start_emp_disp + 4]:
+            start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find(' =') + 2
+        elif '=' in keyword_line[start_emp_disp:start_emp_disp + 4]:
+            start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find('=') + 1
+        end_emp_disp = keyword_line.find(" ", start_emp_disp)
+        if end_emp_disp == -1:
+            empirical_dispersion = "empiricaldispersion=(" + ','.join(
+                sorted(keyword_line[start_emp_disp:].lower().split(','))) + ')'
+        else:
+            empirical_dispersion = "empiricaldispersion=(" + ','.join(
+                sorted(keyword_line[start_emp_disp:end_emp_disp].lower().split(','))) + ')'
+    return empirical_dispersion
 
 
 def sp_cpu(file):
@@ -984,8 +971,6 @@ def sp_cpu(file):
 
     for line in sp_data:
         if program == "Gaussian":
-            if line.strip().startswith('SCF Done:'):
-                spe = float(line.strip().split()[4])
             if line.strip().find("Job cpu time") > -1:
                 days = int(line.split()[3])
                 hours = int(line.split()[5])
@@ -994,8 +979,6 @@ def sp_cpu(file):
                 msecs = int(float(line.split()[9]) * 1000.0)
                 cpu = [days, hours, mins, secs, msecs]
         if program == "Orca":
-            if line.strip().startswith('FINAL SINGLE POINT ENERGY'):
-                spe = float(line.strip().split()[4])
             if line.strip().find("TOTAL RUN TIME") > -1:
                 days = int(line.split()[3])
                 hours = int(line.split()[5])
@@ -1004,6 +987,7 @@ def sp_cpu(file):
                 msecs = float(line.split()[11])
                 cpu = [days, hours, mins, secs, msecs]
     return cpu
+
 
 def calc_translational_energy(temperature):
     """
@@ -1084,7 +1068,7 @@ def calc_vibrational_energy(frequency_wn, temperature, freq_scale_factor, fract_
     # Depends on frequencies, temperature and scaling factor: default = 1.0
     Calculates the vibrational energy contribution (J/mol).
     Includes ZPE (0K) and thermal contributions
-    Evib = R * Sum(0.5 hv/k + (hv/k)/(e^(hv/KT)-1))
+    E_vib = R * Sum(0.5 hv/k + (hv/k)/(e^(hv/KT)-1))
     """
     if fract_model_sys:
         freq_scale_factor = [
