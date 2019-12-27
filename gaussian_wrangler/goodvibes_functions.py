@@ -270,14 +270,14 @@ def graph_reaction_profile(graph_data, options):
             plt.xticks(range(len(xaxis_text)), xaxis_text, color='k')
         else:
             plt.xticks(range(len(xaxis_text)), xaxis_text, color=colors[0])
-        locs, labels = plt.xticks()
+        locations, labels = plt.xticks()
         new_ax = []
         for i in range(len(ax_label)):
             if i > 0:
                 y = ax.twiny()
                 new_ax.append(y)
         for i in range(len(new_ax)):
-            new_ax[i].set_xticks(locs)
+            new_ax[i].set_xticks(locations)
             new_ax[i].set_xlim(ax.get_xlim())
             if len(colors) > 1:
                 new_ax[i].tick_params(axis='x', colors=colors[i + 1])
@@ -1016,7 +1016,7 @@ def get_selectivity(pattern, files, boltz_facs, boltz_sum, temperature, dup_list
     a_files.extend(glob(pattern[0]))
     b_files.extend(glob(pattern[1]))
 
-    if len(a_files) is 0 or len(b_files) is 0:
+    if len(a_files) == 0 or len(b_files) == 0:
         warning("\n   Filenames have not been formatted correctly for determining selectivity,\n   Make sure the "
                 "filename contains either {} or {}".format(a_item, b_item))
         raise InvalidDataError("   Please edit either your filenames or selectivity pattern argument and try again\n")
@@ -1084,11 +1084,12 @@ def output_pes_temp_interval(options, delim_row, interval, interval_bbe_data, in
     j = 0
     for i in interval:
         temp = float(i)
-        if options.cosmo_int is False:
-            pes = GetPES(options.pes, interval_thermo_data[j], temp, options.gconf, options.qh)
-        else:
+        if options.cosmo_int:
             pes = GetPES(options.pes, interval_thermo_data[j], temp, options.gconf, options.qh,
                          cosmo=True)
+        else:
+            pes = GetPES(options.pes, interval_thermo_data[j], temp, options.gconf, options.qh)
+
         for k, path in enumerate(pes.path):
             if options.qh:
                 zero_vals = [pes.spc_zero[k][0], pes.e_zero[k][0], pes.zpe_zero[k][0], pes.h_zero[k][0],
@@ -1117,25 +1118,7 @@ def output_pes_temp_interval(options, delim_row, interval, interval_bbe_data, in
                     h_sum += np.exp(-relative[3] * AU_TO_J / GAS_CONSTANT / temp)
                     g_sum += np.exp(-relative[7] * AU_TO_J / GAS_CONSTANT / temp)
                     qhg_sum += np.exp(-relative[8] * AU_TO_J / GAS_CONSTANT / temp)
-            if options.spc is False:
-                print("\n   " + '{:<40}'.format("RXN: " + path + " (" + pes.units + ")  at T: " +
-                                                str(temp)))
-                if options.qh and options.cosmo_int:
-                    print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13} '
-                          '{:>13}'.format(" DE", "DZPE", "DH", "qh-DH", "T.DS", "T.qh-DS", "DG(T)",
-                                          "qh-DG(T)", 'COSMO-qh-G(T)'))
-                elif options.qh:
-                    print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} '
-                          '{:>13}'.format(" DE", "DZPE", "DH", "qh-DH", "T.DS", "T.qh-DS", "DG(T)",
-                                          "qh-DG(T)"))
-                elif options.cosmo_int:
-                    print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} '
-                          '{:>13}'.format(" DE", "DZPE", "DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)",
-                                          'COSMO-qh-G(T)'))
-                else:
-                    print('{:>13} {:>10} {:>13} {:>10} {:>10} {:>13} '
-                          '{:>13}'.format(" DE", "DZPE", "DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)"))
-            else:
+            if options.spc:
                 print("\n   " + '{:<40}'.format("RXN: " + path + " (" + pes.units + ")  at T: " +
                                                 str(temp)))
                 if options.qh and options.cosmo_int:
@@ -1154,6 +1137,23 @@ def output_pes_temp_interval(options, delim_row, interval, interval_bbe_data, in
                     print('{:>13} {:>13} {:>10} {:>13} {:>10} {:>10} {:>14} '
                           '{:>14}'.format(" DE_SPC", "DE", "DZPE", "DH_SPC", "T.DS", "T.qh-DS",
                                           "DG(T)_SPC", "qh-DG(T)_SPC"))
+            else:
+                print("\n   " + '{:<40}'.format("RXN: " + path + " (" + pes.units + ")  at T: " + str(temp)))
+                if options.qh and options.cosmo_int:
+                    print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13} '
+                          '{:>13}'.format(" DE", "DZPE", "DH", "qh-DH", "T.DS", "T.qh-DS", "DG(T)",
+                                          "qh-DG(T)", 'COSMO-qh-G(T)'))
+                elif options.qh:
+                    print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} '
+                          '{:>13}'.format(" DE", "DZPE", "DH", "qh-DH", "T.DS", "T.qh-DS", "DG(T)",
+                                          "qh-DG(T)"))
+                elif options.cosmo_int:
+                    print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} '
+                          '{:>13}'.format(" DE", "DZPE", "DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)",
+                                          'COSMO-qh-G(T)'))
+                else:
+                    print('{:>13} {:>10} {:>13} {:>10} {:>10} {:>13} '
+                          '{:>13}'.format(" DE", "DZPE", "DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)"))
             print(delim_row)
 
             for l, e_abs in enumerate(pes.e_abs[k]):
@@ -1172,28 +1172,8 @@ def output_pes_temp_interval(options, delim_row, interval, interval_bbe_data, in
                     formatted_list = [AU_TO_J / 1000.0 * x for x in relative]
                 else:
                     formatted_list = [EHPART_TO_KCAL_MOL * x for x in relative]  # Defaults to kcal/mol
-                if options.spc is False:
-                    formatted_list = formatted_list[1:]
-                    format_1 = 'o  {:<39} {:13.2f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} ' \
-                               '{:13.1f} {:13.1f}'
-                    format_2 = 'o  {:<39} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} ' \
-                               '{:13.2f} {:13.2f}'
-                    if options.qh and options.cosmo_int:
-                        if pes.dec == 1:
-                            print(format_1.format(pes.species[k][l], *formatted_list))
-                        if pes.dec == 2:
-                            print(format_2.format(pes.species[k][l], *formatted_list))
-                    elif options.qh or options.cosmo_int:
-                        if pes.dec == 1:
-                            print(format_1.format(pes.species[k][l], *formatted_list))
-                        if pes.dec == 2:
-                            print(format_2.format(pes.species[k][l], *formatted_list))
-                    else:
-                        if pes.dec == 1:
-                            print(format_1.format(pes.species[k][l], *formatted_list))
-                        if pes.dec == 2:
-                            print(format_2.format(pes.species[k][l], *formatted_list))
-                else:
+
+                if options.spc:
                     if options.qh and options.cosmo_int:
                         if pes.dec == 1:
                             print('o  {:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} '
@@ -1219,6 +1199,28 @@ def output_pes_temp_interval(options, delim_row, interval, interval_bbe_data, in
                         if pes.dec == 2:
                             print('o  {:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:10.2f} {:10.2f} '
                                   '{:13.2f} {:13.2f}'.format(pes.species[k][l], *formatted_list))
+                else:
+                    formatted_list = formatted_list[1:]
+                    format_1 = 'o  {:<39} {:13.2f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} ' \
+                               '{:13.1f} {:13.1f}'
+                    format_2 = 'o  {:<39} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} ' \
+                               '{:13.2f} {:13.2f}'
+                    if options.qh and options.cosmo_int:
+                        if pes.dec == 1:
+                            print(format_1.format(pes.species[k][l], *formatted_list))
+                        if pes.dec == 2:
+                            print(format_2.format(pes.species[k][l], *formatted_list))
+                    elif options.qh or options.cosmo_int:
+                        if pes.dec == 1:
+                            print(format_1.format(pes.species[k][l], *formatted_list))
+                        if pes.dec == 2:
+                            print(format_2.format(pes.species[k][l], *formatted_list))
+                    else:
+                        if pes.dec == 1:
+                            print(format_1.format(pes.species[k][l], *formatted_list))
+                        if pes.dec == 2:
+                            print(format_2.format(pes.species[k][l], *formatted_list))
+
                 if pes.boltz:
                     boltz = [np.exp(-relative[1] * AU_TO_J / GAS_CONSTANT / options.temperature) / e_sum,
                              np.exp(-relative[3] * AU_TO_J / GAS_CONSTANT / options.temperature) / h_sum,
@@ -1231,10 +1233,11 @@ def output_pes_temp_interval(options, delim_row, interval, interval_bbe_data, in
                 formatted_list = [round(formatted_list[x], 6) for x in range(len(formatted_list))]
             if pes.boltz == 'ee' and len(sels) == 2:
                 ee = [sels[0][x] - sels[1][x] for x in range(len(sels[0]))]
-                if options.spc is False:
-                    print(delim_row + '\n   {:<39} {:13.2f} {:24.1f} {:35.1f} {:13.1f}'.format('ee (%)', *ee))
-                else:
+                if options.spc:
                     print(delim_row + '\n   {:<39} {:27.2f} {:24.1f} {:35.1f} {:13.1f}'.format('ee (%)', *ee))
+                else:
+                    print(delim_row + '\n   {:<39} {:13.2f} {:24.1f} {:35.1f} {:13.1f}'.format('ee (%)', *ee))
+
             print(delim_row)
         j += 1
 
@@ -1287,11 +1290,11 @@ def output_cosmos_rs_interval(files, options, s_m, l_o_t):
         print("    The same scaling factor will be used to calculate the ZPE.\n")
 
     # Exit program if a comparison of Boltzmann factors is requested and level of theory is not uniform across all files
-    if not all_same(l_o_t) and (options.boltz is not False or options.ee is not False):
+    if not all_same(l_o_t) and (not options.boltz or not options.ee):
         raise InvalidDataError("When comparing files with Boltzmann factors (with bolts, ee, dr "
                                "options), the level of theory used should be the same for all files.\n ")
     # Exit program if molecular mechanics scaling factor is given and all files are not ONIOM calculations
-    if options.mm_freq_scale_factor is not False:
+    if options.mm_freq_scale_factor:
         if all_same(l_o_t) and 'ONIOM' in l_o_t[0]:
             print("\n   User-defined vibrational scale factor " +
                   str(options.mm_freq_scale_factor) + " for MM region of " + l_o_t[0])
@@ -1300,7 +1303,7 @@ def output_cosmos_rs_interval(files, options, s_m, l_o_t):
             raise InvalidDataError("\n   Option --vmm is only for use in ONIOM calculation output files.\n    "
                                    "For help use option '-h'\n")
 
-    if options.freq_scale_factor is False:
+    if not options.freq_scale_factor:
         options.freq_scale_factor = 1.0  # If no scaling factor is found use 1.0
         if all_same(l_o_t):
             print("\n   Using vibrational scale factor {} for {} level of "
@@ -1430,9 +1433,9 @@ def cosmo_rs_out(dat_file, names, interval=False):
 
                             found = True
             if found:
-                if old_temp is 0:
+                if old_temp == 0:
                     old_temp = temp
-                if temp is not old_temp:
+                if temp != old_temp:
                     gsolv_dicts.append(gsolv)  # Store dict at one temp
                     gsolv = {}  # Clear gsolv
                     gsolv.update(gsolv_temp)  # Grab the first one for the new temp
