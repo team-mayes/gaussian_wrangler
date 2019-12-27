@@ -126,11 +126,7 @@ def parse_cmdline(argv):
                     args.config[PDB_FILE] = args.pdb_file
                 if args.pdb_list_file:
                     args.config[PDB_LIST_FILE] = args.pdb_list_file
-    except IOError as e:
-        warning("Problems reading file:", e)
-        parser.print_help()
-        return args, IO_ERROR
-    except (KeyError, InvalidDataError, MissingSectionHeaderError, SystemExit) as e:
+    except (IOError, KeyError, InvalidDataError, MissingSectionHeaderError, SystemExit) as e:
         if hasattr(e, 'code') and e.code == 0:
             return args, GOOD_RET
         warning(e)

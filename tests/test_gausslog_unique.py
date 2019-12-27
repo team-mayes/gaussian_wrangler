@@ -32,6 +32,15 @@ CALCALL_LIST = os.path.join(SUB_DATA_DIR, 'list_calcall.txt')
 
 
 class TestGausslogUniqueNoOut(unittest.TestCase):
+    def testHelp(self):
+        test_input = ['-h']
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertFalse(output)
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue("optional arguments" in output)
+
     # These all test failure cases
     def testNoArgs(self):
         test_input = []
@@ -51,14 +60,11 @@ class TestGausslogUniqueNoOut(unittest.TestCase):
         with capture_stderr(main, test_input) as output:
             self.assertTrue("Could not find the following file" in output)
 
-    def testHelp(self):
-        test_input = ['-h']
-        if logger.isEnabledFor(logging.DEBUG):
-            main(test_input)
+    def testNoSuchOption(self):
+        test_input = ["-@", LOG_LIST]
+        # main(test_input)
         with capture_stderr(main, test_input) as output:
-            self.assertFalse(output)
-        with capture_stdout(main, test_input) as output:
-            self.assertTrue("optional arguments" in output)
+            self.assertTrue("unrecognized arguments" in output)
 
 
 class TestGausslogUnique(unittest.TestCase):

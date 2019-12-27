@@ -14,6 +14,7 @@ TEST_DIR = os.path.dirname(__file__)
 MAIN_DIR = os.path.dirname(TEST_DIR)
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
 SUB_DATA_DIR = os.path.join(DATA_DIR, 'goodvibes_helper')
+TEMP_DIR = os.path.join(SUB_DATA_DIR, 'temp_dir')
 
 GOODVIBES_DAT = os.path.abspath(os.path.join(TEST_DIR, '..', 'Goodvibes_output.dat'))
 GOODVIBES_CSV = os.path.abspath(os.path.join(TEST_DIR, '..', 'Goodvibes_output.csv'))
@@ -24,8 +25,11 @@ FILE_LIST = os.path.join(SUB_DATA_DIR, 'list.txt')
 FILE_LIST_MISMATCH_SOLV = os.path.join(SUB_DATA_DIR, 'list_mismatch_solv.txt')
 FILE_LIST_MISMATCH_STOICH = os.path.join(SUB_DATA_DIR, 'list_mismatch_stoich.txt')
 
-AE_OUT = os.path.join(SUB_DATA_DIR, 'aea_out.csv')
+AE_OUT_BASE_NAME = 'aea_out.csv'
+AE_OUT = os.path.join(SUB_DATA_DIR, AE_OUT_BASE_NAME)
+AE_OUT_SUB_DIR = os.path.join(TEMP_DIR, AE_OUT_BASE_NAME)
 GOOD_AE_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_good.csv')
+
 
 BI_LIST = os.path.join(SUB_DATA_DIR, 'list_bimolec.txt')
 GOOD_AE_BI_OUT = os.path.join(SUB_DATA_DIR, 'aea_out_bi_good.csv')
@@ -59,6 +63,8 @@ PLOT1 = os.path.join(SUB_DATA_DIR, 'aea_out_g.png')
 PLOT2 = os.path.join(SUB_DATA_DIR, 'aea_out_g_qh.png')
 PLOT3 = os.path.join(SUB_DATA_DIR, 'aea_out_h.png')
 PLOT4 = os.path.join(SUB_DATA_DIR, 'aea_out_h_qh.png')
+
+MISSING_PROD_LIST = os.path.join(SUB_DATA_DIR, 'list_missing_one_prod.txt')
 
 
 class TestGoodVibesHelperNoOut(unittest.TestCase):
@@ -136,16 +142,22 @@ class TestGoodVibesHelperInputError(unittest.TestCase):
             silent_remove(GOODVIBES_CSV, disable=DISABLE_REMOVE)
             pass
 
+    def testMissingProd(self):
+        test_input = ["-l", MISSING_PROD_LIST]
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("Check stoichiometries of reactant(s) and product(s)" in output)
+
 
 class TestGoodVibesHelper(unittest.TestCase):
     # These test/demonstrate different options
     def testTwoUni(self):
-        test_input = ["-l", FILE_LIST, "-d", SUB_DATA_DIR, "-q", "-o", AE_OUT]
+        test_input = ["-l", FILE_LIST, "-d", TEMP_DIR, "-q", "-o", AE_OUT_BASE_NAME]
         try:
+            silent_remove(TEMP_DIR, dir_with_files=True)
             main(test_input)
-            self.assertFalse(diff_lines(AE_OUT, GOOD_AE_OUT))
+            self.assertFalse(diff_lines(AE_OUT_SUB_DIR, GOOD_AE_OUT))
         finally:
-            silent_remove(AE_OUT, disable=DISABLE_REMOVE)
+            silent_remove(TEMP_DIR, disable=DISABLE_REMOVE, dir_with_files=True)
             pass
 
     def testBimolecular(self):

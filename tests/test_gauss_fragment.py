@@ -14,6 +14,7 @@ TEST_DIR = os.path.dirname(__file__)
 MAIN_DIR = os.path.dirname(TEST_DIR)
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
 SUB_DATA_DIR = os.path.join(DATA_DIR, 'gauss_fragment')
+TEMP_DIR = os.path.join(SUB_DATA_DIR, 'temp_dir')
 
 MISSING_FILE_INI = os.path.join(SUB_DATA_DIR, 'ghost_frag.ini')
 
@@ -82,10 +83,13 @@ F2_TPA_OUT = os.path.join(SUB_DATA_DIR, 'tpaegh1ats_ts_ircf_opt_1_2_f2.com')
 GOOD_F2_TPA_OUT = os.path.join(SUB_DATA_DIR, 'tpaegh1ats_ts_ircf_opt_1_2_f2_good.com')
 
 N_TRIPLE_BOND_INI = os.path.join(SUB_DATA_DIR, 'iso_frag.ini')
+N_TRIPLE_BOND_SUB_DIR_INI = os.path.join(SUB_DATA_DIR, 'iso_frag_sub_dir.ini')
 CP_N_OUT = os.path.join(SUB_DATA_DIR, 'initrile_16_8_cp.com')
 GOOD_CP_N_OUT = os.path.join(SUB_DATA_DIR, 'initrile_16_8_cp_good.com')
 F2_N_OUT = os.path.join(SUB_DATA_DIR, 'initrile_16_8_f2.com')
 GOOD_F2_N_OUT = os.path.join(SUB_DATA_DIR, 'initrile_16_8_f2_good.com')
+CP_N_OUT_SUB_DIR = os.path.join(TEMP_DIR, 'initrile_16_8_cp.com')
+F2_N_OUT_SUB_DIR = os.path.join(TEMP_DIR, 'initrile_16_8_f2.com')
 
 METAL_BOND_INI = os.path.join(SUB_DATA_DIR, 'gauss_frag_w_metal.ini')
 CP_METAL_OUT = os.path.join(SUB_DATA_DIR, 'tieg5ipatse_ts_ircr_optts_37_38_cp.com')
@@ -104,6 +108,11 @@ GOOD_CP_FOOTER_F1_OUT = os.path.join(SUB_DATA_DIR, '2011shi_fig5cts_origts_ircf_
 GOOD_CP_FOOTER_F2_OUT = os.path.join(SUB_DATA_DIR, '2011shi_fig5cts_origts_ircf_opt_19_40_f2_good.com')
 
 LOG_AS_COM_INI = os.path.join(SUB_DATA_DIR, 'gauss_log_as_com.ini')
+LOG_AND_COM_INI = os.path.join(SUB_DATA_DIR, 'gauss_log_and_com.ini')
+NO_LOG_OR_COM_INI = os.path.join(SUB_DATA_DIR, 'gauss_no_log_or_com.ini')
+MORE_THAN_TW0_ATOM_PAIR_INI = os.path.join(SUB_DATA_DIR, 'gauss_frag_too_many_atoms.ini')
+INVALID_ATOM_ID_INI = os.path.join(SUB_DATA_DIR, 'gauss_frag_invalid_atom_id.ini')
+FAIL_TO_IGNORE_MAX_INI = os.path.join(SUB_DATA_DIR, 'gauss_frag_no_ignore_max_dist.ini')
 
 
 class TestGausscomFragNoOut(unittest.TestCase):
@@ -135,6 +144,36 @@ class TestGausscomFragNoOut(unittest.TestCase):
         # main(test_input)
         with capture_stderr(main, test_input) as output:
             self.assertTrue("where charge and multiplicity are expected" in output)
+
+    def testLogAndCom(self):
+        test_input = ['-c', LOG_AND_COM_INI]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("Both an" in output)
+
+    def testNoLogOrCom(self):
+        test_input = ['-c', NO_LOG_OR_COM_INI]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("requires either" in output)
+
+    def testMoreThan2AtomsInPair(self):
+        test_input = ['-c', MORE_THAN_TW0_ATOM_PAIR_INI]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("should be sets of two atoms" in output)
+
+    def testInvalidAtomID(self):
+        test_input = ['-c', INVALID_ATOM_ID_INI]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("in 'cut_atoms'" in output)
+
+    def testTooDistant(self):
+        test_input = ['-c', FAIL_TO_IGNORE_MAX_INI]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("Angstroms apart" in output)
 
 
 class TestGausscomFrag(unittest.TestCase):
@@ -226,6 +265,18 @@ class TestGausscomFrag(unittest.TestCase):
         finally:
             silent_remove(CP_N_OUT, disable=DISABLE_REMOVE)
             silent_remove(F2_N_OUT, disable=DISABLE_REMOVE)
+            pass
+
+    def testNTripleBondSubDir(self):
+        # Test that output files were created in subdir
+        test_input = ["-c", N_TRIPLE_BOND_SUB_DIR_INI]
+        try:
+            silent_remove(TEMP_DIR, dir_with_files=True)
+            main(test_input)
+            self.assertFalse(diff_lines(CP_N_OUT_SUB_DIR, GOOD_CP_N_OUT))
+            self.assertFalse(diff_lines(F2_N_OUT_SUB_DIR, GOOD_F2_N_OUT))
+        finally:
+            silent_remove(TEMP_DIR, disable=DISABLE_REMOVE, dir_with_files=True)
             pass
 
     def testSepMolecules(self):

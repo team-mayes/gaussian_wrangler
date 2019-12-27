@@ -154,7 +154,7 @@ def check_and_print(cfg, atom_id, pdb_tpl_content, gausslog_file, pdb_data_secti
     # Check Num atoms and print
     if cfg[PDB_TPL_FILE]:
         if atom_id != pdb_tpl_content[NUM_ATOMS]:
-            raise InvalidDataError('In gausscom file: {}\nfound {} atoms, but pdb expects {} ' 
+            raise InvalidDataError('In gausslog file: {}\nfound {} atoms, while the pdb template has {} atoms' 
                                    'atoms'.format(gausslog_file, atom_id, pdb_tpl_content[NUM_ATOMS]))
     list_to_file(pdb_tpl_content[SEC_HEAD] + pdb_data_section + pdb_tpl_content[SEC_TAIL],
                  f_name, list_format=PDB_FORMAT, mode=mode, print_message=message)
@@ -207,7 +207,12 @@ def process_gausslog_file(cfg, gausslog_file, pdb_tpl_content, f_name):
                                            "output.".format(split_line[1]))
                 # if working from a template, check atom type
                 if cfg[PDB_TPL_FILE]:
-                    pdb_element_type = pdb_data_section[atom_id][8].split(' ')[-1]
+                    try:
+                        pdb_element_type = pdb_data_section[atom_id][8].split(' ')[-1]
+                    except IndexError:
+                        raise InvalidDataError('Gausslog file: {}\n   has more atoms than the expected {} atoms in '
+                                               'the template file: {}'.
+                                               format(gausslog_file, pdb_tpl_content[NUM_ATOMS], cfg[PDB_TPL_FILE]))
                     if element_type != pdb_element_type:
                         warning("Atom element types do not match for atom number {}; pdb atom type is {} while "
                                 "gausscom type is {}".format(atom_id, pdb_element_type, element_type))

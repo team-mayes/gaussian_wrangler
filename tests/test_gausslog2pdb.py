@@ -48,6 +48,8 @@ GOOD_SINGLE_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_good.pdb')
 
 NO_LOG_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_no_logs.ini')
 MISSING_FILE_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_missing_file.ini')
+FEWER_PDB_ATOMS_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_fewer_pdb_atoms.ini')
+MORE_PDB_ATOMS_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_more_pdb_atoms.ini')
 
 
 class TestGausslog2pdbNoOut(unittest.TestCase):
@@ -97,6 +99,19 @@ class TestGausslog2pdbNoOut(unittest.TestCase):
             self.assertTrue("unrecognized arguments" in output)
         with capture_stdout(main, test_input) as output:
             self.assertTrue("optional arguments" in output)
+
+    def testFewerPDBAtoms(self):
+        test_input = ["-c", FEWER_PDB_ATOMS_INI]
+        main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("has more atoms" in output)
+
+    def testMorePDBAtoms(self):
+        test_input = ["-c", MORE_PDB_ATOMS_INI]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("pdb template has" in output)
 
 
 class TestGausslog2pdb(unittest.TestCase):

@@ -122,6 +122,8 @@ def process_gausscom_file(gausscom_file, tpl_com_content, read_new_charge, out_d
                             charge_mult = line.split()
                             int(charge_mult[0])
                             int(charge_mult[1])
+                            if len(charge_mult) % 2 != 0:
+                                raise IndexError
                         except (IndexError, ValueError):
                             raise InvalidDataError("Problem while reading file: {}\nOption to read charge and "
                                                    "multiplicity from template not chosen, but found invalid data on "
@@ -143,7 +145,7 @@ def process_gausscom_file(gausscom_file, tpl_com_content, read_new_charge, out_d
 
                         # if template has atoms, check atom type
                         if tpl_atom_num > 0:
-                            atom_type = atom_info.split('(')[0]
+                            atom_type = atom_info.split()[0].split('(')[0]
                             if atom_type != tpl_atom_types[atom_id]:
                                 raise InvalidDataError("Problem while reading file: {}\nAtom types do not match for "
                                                        "atom number {}: file has type {} while tpl has type "
@@ -151,7 +153,7 @@ def process_gausscom_file(gausscom_file, tpl_com_content, read_new_charge, out_d
                                                                    tpl_atom_types[atom_id], atom_type))
                             atom_info = tpl_atoms[atom_id]
 
-                        atom_xyz = ["{:>12}".format(x) for x in split_line[1:4]]
+                        atom_xyz = ["{:>12}".format(x) for x in split_line[-3:]]
                         atom_content.append('{:18}'.format(atom_info) + '  '.join(atom_xyz))
                         atom_id += 1
                         line = next(d).strip()
