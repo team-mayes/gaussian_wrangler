@@ -226,7 +226,16 @@ def check_gausslog_fileset(file_set, good_vibes_check):
     prod_stoich_dict = {}  # empty dict to make IDE happy
     reading_reactants = True
 
-    hartree_index = 0
+    # get simple set of all files, so can call hartree and goodvibes_hm once each, and avoid re-running the same file
+    unique_fnames = set()
+    for fname in file_set:
+        if fname != REACT_PROD_SEP:
+            unique_fnames.add(fname)
+
+    # gauss_vibes_results_dict = {}
+    # for fname in unique_fnames:
+    #     gauss_vibes_results_dict[fname] = hartree.read_gaussian(fname)
+
     for index, fname in enumerate(file_set):
         if fname == REACT_PROD_SEP:
             ts_index = index
@@ -296,7 +305,6 @@ def check_gausslog_fileset(file_set, good_vibes_check):
             if gauss_ver != file_gauss_ver:
                 raise InvalidDataError("Different Gaussian versions ({}, {}) found for file set: "
                                        "{}".format(gauss_ver, file_gauss_ver, file_set))
-        hartree_index += 1
 
     # Now overall checks
     if len(ts_stoich_dict) > 0:
