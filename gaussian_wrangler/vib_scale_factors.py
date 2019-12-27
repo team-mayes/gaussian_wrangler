@@ -487,7 +487,6 @@ class CalcBBE:
 
             # Rotational and Vibrational contributions to the energy entropy
             if len(frequency_wn) > 0:
-                # todo: allow different scaling factor for zpe
                 zpe = calc_zeropoint_energy(frequency_wn, zpe_scale_factor, fract_model_sys)
                 u_rot = calc_rotational_energy(self.zero_point_corr, temperature, linear_mol)
                 u_vib = calc_vibrational_energy(frequency_wn, temperature, freq_scale_factor, fract_model_sys)
@@ -1188,7 +1187,7 @@ def get_free_space(solv):
     Calculates the free space in a litre of bulk solvent, based on
     Shakhnovich and Whitesides (J. Org. Chem. 1998, 63, 3821-3830)
     """
-    # todo: add more solvents
+    # todo: add more solvents???
     solvent_list = ["none", "H2O", "toluene", "DMF", "AcOH", "chloroform"]
     molarity = [1.0, 55.6, 9.4, 12.9, 17.4, 12.5]  # mol/l
     molecular_vol = [1.0, 27.944, 149.070, 77.442, 86.10, 97.0]  # Angstrom^3
