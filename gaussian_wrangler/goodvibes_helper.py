@@ -5,18 +5,19 @@
 Uses GoodVibes to check input and calculate G at a range of temperatures
 """
 
-import os
-import subprocess
-import sys
 import argparse
+import os
 import re
+import sys
 import numpy as np
-import goodvibes_hm
+import gaussian_wrangler.goodvibes_hm
 import jpype
 import jpype.imports
+from pathlib import Path
+from collections import defaultdict
 from common_wrangler.common import (InvalidDataError, warning, RG, KB, H, EHPART_TO_KCAL_MOL,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                                    write_csv, silent_remove, create_out_fname, make_fig, parse_stoich, capture_stderr)
+                                    write_csv, create_out_fname, make_fig, parse_stoich, capture_stdout, list_to_file)
 
 __author__ = 'hmayes'
 
@@ -32,15 +33,15 @@ DEF_OUT_FILE_NAME = 'aea_out.csv'
 FUNCTIONAL = 'Functional'
 BASIS_SET = 'Basis Set'
 SOLV = 'Solvent type'
-FREQ1 = 'Freq 1'
-FREQ2 = 'Freq 2'
-# noinspection PyPep8, PyPep8Naming
-AWK_GRAB_GAUSS_VER = ['awk', "/\*\*\*/{getline; print; exit}"]
-GAUSSIAN_SEPARATOR = '******************************************'
-GOODVIBES_OUT_FNAME = "Goodvibes_output.dat"
+STOICH = 'Stoichiometry'
+FREQS = 'Frequencies 1 and 2'
+GAUSS_VER_PAT = re.compile(r"Gaussian.*:.*Rev.*")
 GOODVIBES_ERROR_PAT = re.compile(r"x .*")
-GOODVIBES_DATA_PAT = re.compile(r" {3}Structure .*")
+GOODVIBES_DATA_PAT = re.compile(r"Structure .*")
 REACT_PROD_SEP = 'TS'
+
+HARTREE_OUT = 'hartree_output'
+GOODVIBES_OUT = 'goodvibes_output'
 
 # for printing
 FILE1 = 'file1'
@@ -61,18 +62,29 @@ QH_DELTA_G_RXN = 'qh_\u0394G_rxn (kcal/mol)'
 OUTPUT_HEADERS = [FILE1, FILE2, FILE3, FILE4, FILE5, A, EA, DELTA_G_TEMP, DELTA_G_TS, DELTA_G_RXN,
                   QH_A, QH_EA, QH_DELTA_G_TS, QH_DELTA_G_RXN]
 
+
 class HartreeWrapper:
     def __init__(self):
-        jpype.addClassPath("gaussian_wrangler/hartree/*")
+        jar_path = Path(__file__).parent / "hartree"
+        found_jars = sorted(jar_path.glob('*.jar'))
+        if len(found_jars) == 0:
+            raise Exception("Could not find any JARs in dir {}".format(jar_path))
+
+        for found_jar in found_jars:
+            jpype.addClassPath(found_jar)
+
         print("Classpath: ", jpype.getClassPath())
+
         jpype.startJVM(convertStrings=False)
 
         # TODO: Figure out how to scope these imports for the class
+        # noinspection PyUnresolvedReferences
         from org.cmayes.hartree.loader.gaussian import SnapshotLoader
 
         self.loader = SnapshotLoader()
 
     def read_all_gaussian(self, files):
+        # noinspection PyUnresolvedReferences
         from java.io import FileReader
         mapped_results = {}
         for cur_file in files:
@@ -81,6 +93,7 @@ class HartreeWrapper:
         return mapped_results
 
     def read_gaussian(self, tgt_file):
+        # noinspection PyUnresolvedReferences
         from java.io import FileReader
         return self.loader.load(tgt_file, FileReader(tgt_file))
 
@@ -101,8 +114,6 @@ def parse_cmdline(argv):
     if argv is None:
         argv = sys.argv[1:]
 
-    hartree_help_string = "The command to run hartree (see https://github.com/team-mayes/hartree). The program will " \
-                          "use bash to look for the program location with 'which hartree' and 'alias hartree'."
     # initialize the parser object:
     parser = argparse.ArgumentParser(description='Calculates A and Ea from Gaussian output files using GoodVibes. '
                                                  'List files to be analyzed, reactant(s) first and ending with the '
@@ -111,7 +122,8 @@ def parse_cmdline(argv):
                                                  'structure).')
     parser.add_argument("-d", "--out_dir", help="A directory where output files should be saved. The default location "
                                                 "is the current working directory.", default=None)
-    parser.add_argument("-hc", "--hartree_call", help=hartree_help_string, default=None)
+    parser.add_argument("-f", dest="freq_cutoff", help="Cut-off frequency for both entropy and enthalpy (wavenumbers) "
+                                                       "(default = 0)", default="0")
     parser.add_argument("-l", "--list", help="The location of the list of Gaussian output files. "
                                              "The default file name.", default=None)
     parser.add_argument("-q", "--quasiharmonic", help="Use the '-q' option in GoodVibes, which turns on turns on "
@@ -127,9 +139,6 @@ def parse_cmdline(argv):
     parser.add_argument("-v", "--vib_scale", help="Scaling factor to be used for vibrational frequencies. If not "
                                                   "provided, the GoodVibes default value will be used.",
                         default=None)
-    parser.add_argument("-o", "--output_fname", help="The name of the output file to be created. The default is the "
-                                                     "list name with the extension '.csv', or '{}' if no list name "
-                                                     "provided.".format(DEF_OUT_FILE_NAME), default=None)
     parser.add_argument("-p", "--plot", help="Make a \u0394G plot at the specified temp. The default is False.",
                         action='store_true')
     parser.add_argument("-pl", "--plot_labels", help="Optional labels for \u0394G plot. Enter as a list.",
@@ -139,8 +148,12 @@ def parse_cmdline(argv):
                                                     "Gaussian versions), run files through GoodVibes '--check' before "
                                                     "performing calculations. The default is False.",
                         action='store_true')
+    parser.add_argument("-o", "--output_fname", help="The name of the output file to be created. The default is the "
+                                                     "list name with the extension '.csv', or '{}' if no list name "
+                                                     "provided.".format(DEF_OUT_FILE_NAME), default=None)
+
     parser.add_argument("-s", "--save_vibes", help="Save the output from running GoodVibes in separate files, "
-                                                   "renamed with the Gaussian log file prefix and '.dat'. "
+                                                   "named with the Gaussian log file prefix and '.dat'. "
                                                    "The default is False.",
                         action='store_true')
     parser.add_argument("-t", "--tog_vibes", help="Save the output from running GoodVibes in one file, "
@@ -151,26 +164,27 @@ def parse_cmdline(argv):
     args = None
     try:
         args = parser.parse_known_args(argv)
-        if not args[0].out_dir:
-            args[0].out_dir = os.getcwd()
+        options = args[0]
+        if not options.out_dir:
+            options.out_dir = os.getcwd()
         # user can define a new directory as the output directory
-        if not os.path.exists(args[0].out_dir):
-            os.makedirs(args[0].out_dir)
+        if not os.path.exists(options.out_dir):
+            os.makedirs(options.out_dir)
 
-        if args[0].output_fname:
-            args[0].output_fname = os.path.abspath(os.path.join(args[0].out_dir, args[0].output_fname))
-        elif args[0].list:
-            args[0].output_fname = create_out_fname(args[0].list, ext='.csv', base_dir=args[0].out_dir)
+        if options.output_fname:
+            options.output_fname = os.path.abspath(os.path.join(options.out_dir, options.output_fname))
+        elif options.list:
+            options.output_fname = create_out_fname(options.list, ext='.csv', base_dir=options.out_dir)
         else:
-            args[0].output_fname = create_out_fname(DEF_OUT_FILE_NAME, ext='.csv', base_dir=args[0].out_dir)
+            options.output_fname = create_out_fname(DEF_OUT_FILE_NAME, ext='.csv', base_dir=options.out_dir)
 
-        if args[0].plot_labels:
-            args[0].plot_labels = args[0].plot_labels.split(',')
+        if options.plot_labels:
+            options.plot_labels = options.plot_labels.split(',')
         else:
-            args[0].plot_labels = ['']
+            options.plot_labels = ['']
 
-        if args[0].vib_scale:
-            args[0].vib_scale = float(args[0].vib_scale)
+        if options.vib_scale:
+            options.vib_scale = float(options.vib_scale)
 
     except (SystemExit, ValueError) as e:
         if hasattr(e, 'code') and e.code == 0:
@@ -182,7 +196,38 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
+def get_gauss_results(options, unique_fnames):
+    """
+    Run hartree and goodvibes only once per file name
+    :param options: user-specified options, used here to determine goodvibes input
+    :param unique_fnames: a set of unique file names (really, file locations)
+    :return: results_dict: dictionary of results from running hartree and goodvibes
+    """
+    results_dict = defaultdict(dict)
+    for fname in unique_fnames:
+        if fname != REACT_PROD_SEP:
+            base_name = os.path.basename(fname)
+            gauss_results = hartree.read_gaussian(fname)
+            solvent = gauss_results.getSolvent()
+
+            results_dict[base_name][HARTREE_OUT] = gauss_results
+            results_dict[base_name][SOLV] = solvent
+            results_dict[base_name][FREQS] = gauss_results.getFrequencyValues()
+            # later, a regex will be performed on STOICH, and it will expect a standard string, not a java.lang.String
+            results_dict[base_name][STOICH] = str(gauss_results.getStoichiometry())
+            vibes_input = [fname, "--ti", options.temp_range, "-f", options.freq_cutoff]
+            if solvent:
+                vibes_input += ["-c", "1"]
+            if options.quasiharmonic:
+                vibes_input += ["-q"]
+            if options.vib_scale:
+                vibes_input += ["-v", str(options.vib_scale)]
+            with capture_stdout(gaussian_wrangler.goodvibes_hm.main, vibes_input) as output:
+                results_dict[base_name][GOODVIBES_OUT] = output.split('\n')
+    return results_dict
+
+
+def check_gausslog_fileset(file_set, good_vibes_check, results_dict):
     """
     checks include:
        using hartree to get info to check for:
@@ -193,8 +238,8 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
         awk for same versions of Gaussian
         made GoodVibes checks optional to save run time
     :param file_set: list of reactant file(s) and TS file
-    :param hartree_call: bash call to invoke hartree
     :param good_vibes_check: boolean to run goodvibes checking; will slow down calculations
+    :param results_dict: dictionary of results from running hartree and goodvibes
     :return: reaction_type: integer for molecularity of reaction
     """
     total_react_charge = 0
@@ -213,8 +258,8 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
     prod_stoich_dict = {}  # empty dict to make IDE happy
     reading_reactants = True
 
-    hartree_index = 0
     for index, fname in enumerate(file_set):
+        base_name = os.path.basename(fname)
         if fname == REACT_PROD_SEP:
             ts_index = index
             reading_reactants = False
@@ -227,12 +272,13 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
             continue
 
         # now start checks by getting info from hartree
-
-        gauss_result = hartree.read_gaussian(fname)
-        # exclude any crazy two imaginary frequency files
-        freq_vals = gauss_result.getFrequencyValues()
+        gauss_result = results_dict[base_name][HARTREE_OUT]
+        freq_vals = results_dict[base_name][FREQS]
+        stoich = results_dict[base_name][STOICH]
+        # exclude any filesets that have an invalid number of total or imaginary frequencies
         if len(freq_vals) < 2:
-            warning(f"Too few frequencies ({freq_vals.size()} vs. {len(freq_vals)}.  Skipping")
+            warning("Too few frequencies ({} vs. {}.  Skipping file set: {}".
+                    format(freq_vals.size(), len(freq_vals), file_set))
             continue
 
         if freq_vals[0] < 0 and freq_vals[1] < 0:
@@ -240,32 +286,43 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
         # First see if it is the TS
         if freq_vals[0] < 0:
             if not reading_reactants:
-                raise InvalidDataError("In set of filed, only one file with an imaginary frequency is expected (or "
-                                       "none if reactant/product separator is used). Unexpectedly found an imaginary "
-                                       "frequency in file: {}\n after already finding the TS to be: "
+                raise InvalidDataError("In each set of files, only one file with an imaginary frequency is expected\n"
+                                       "    (or none if reactant/product separator is used). Unexpectedly found an "
+                                       "imaginary frequency in\n    file: {}\n    after already finding the TS to be: "
                                        "{}".format(fname, file_set[ts_index]))
             reading_reactants = False
             ts_index = index
             ts_charge = gauss_result.getCharge()
-            ts_stoich_dict = parse_stoich(str(gauss_result.getStoichiometry()))
+            ts_stoich_dict = parse_stoich(stoich)
         elif reading_reactants:
             total_react_charge += gauss_result.getCharge()
             if len(react_stoich_dict) == 0:
-                react_stoich_dict = parse_stoich(str(gauss_result.getStoichiometry()))
+                react_stoich_dict = parse_stoich(stoich)
             else:
-                react_stoich_dict = parse_stoich(str(gauss_result.getStoichiometry()), add_to_dict=react_stoich_dict)
+                react_stoich_dict = parse_stoich(stoich, add_to_dict=react_stoich_dict)
         else:
             total_product_charge += gauss_result.getCharge()
             if len(prod_stoich_dict) == 0:
-                prod_stoich_dict = parse_stoich(str(gauss_result.getStoichiometry()))
+                prod_stoich_dict = parse_stoich(stoich)
             else:
-                prod_stoich_dict = parse_stoich(str(gauss_result.getStoichiometry()), add_to_dict=prod_stoich_dict)
+                prod_stoich_dict = parse_stoich(stoich, add_to_dict=prod_stoich_dict)
 
         # additional checks on all files as we go...
         multiplicities[index] = int(gauss_result.getMult())
-        file_gauss_ver = subprocess.check_output(AWK_GRAB_GAUSS_VER + [fname]).strip().split()[:3]
+        file_gauss_ver = None
+        i = 0
+        with open(fname) as f:
+            for line in f:
+                s_line = line.strip()
+                if GAUSS_VER_PAT.match(s_line):
+                    file_gauss_ver = s_line.split()[:3]
+                    break
+                i += 1
+                # just in case not caught... don't read the whole file
+                if i > 160:
+                    break
         if index == 0:
-            solvent = gauss_result.getSolvent()
+            solvent = results_dict[base_name][SOLV]
             func = gauss_result.getFunctional()
             basis = gauss_result.getBasisSet()
             gauss_ver = file_gauss_ver
@@ -280,9 +337,8 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
                 raise InvalidDataError("Different basis sets ({}, {}) found for file set: "
                                        "{}".format(basis, gauss_result.getBasisSet(), file_set))
             if gauss_ver != file_gauss_ver:
-                raise InvalidDataError("Different Gaussian versions ({}, {}) found for file set: "
-                                       "{}".format(gauss_ver, file_gauss_ver, file_set))
-        hartree_index += 1
+                warning("Different Gaussian versions ({}, {}) found for file set: {}".
+                        format(gauss_ver, file_gauss_ver, file_set))
 
     # Now overall checks
     if len(ts_stoich_dict) > 0:
@@ -309,11 +365,8 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
             file_set = file_set + ["-c", "1"]
         if REACT_PROD_SEP in file_set:
             file_set.remove(REACT_PROD_SEP)
-        # vibes_out = goodvibes_hmayes(file_set + ["--check"])
-        vibes_out = goodvibes_hm.main(file_set)
-        vibes_out = subprocess.check_output(["python", "-m", "goodvibes"] + file_set +
-                                            ["--check"]).decode("utf-8").strip().split("\n")
-        # vibes_out = goodvibes_hmayes.main(file_set + ["--check"]).decode("utf-8").strip().split("\n")
+        with capture_stdout(gaussian_wrangler.goodvibes_hm.main, file_set + ["--check"]) as output:
+            vibes_out = output.split("\n")
         for line in vibes_out:
             if GOODVIBES_ERROR_PAT.match(line):
                 if 'Different charge and multiplicity' in line:
@@ -324,17 +377,16 @@ def check_gausslog_fileset(file_set, hartree_call, good_vibes_check):
     return solvent, ts_index
 
 
-def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_output_fname, qh_h_opt, vib_scale):
+def get_thermochem(file_set, results_dict, save_vibes, out_dir, tog_output_fname, qh_h_opt, write_mode):
     """
     Calls GoodVibes to get thermochem at a range of temps
     :param file_set: list of reactant file(s), TS file (or separator), and optionally products
-    :param temp_range: string with range of temperatures at which to calculate thermochem
-    :param solvent: boolean to decide whether to include
+    :param results_dict: dictionary of results from running hartree and goodvibes
     :param save_vibes: boolean to determine whether to save each GoodVibes output separately
     :param out_dir: directory to save GoodVibes output files (if requested)
     :param tog_output_fname: None or string (file name) if saving each GoodVibes output together
     :param qh_h_opt: boolean to use the '-q' option in GoodVibes (corrections to both entropy and enthalpy)
-    :param vib_scale: either None (if default scaling is to be used) or a float for option to be used with that value
+    :param write_mode: boolean to start a new to add to an all-together goodvibes output file
     :return: nothing
     """
     h = []
@@ -343,22 +395,14 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
     qh_gt = []
     temps = []
     for index, file in enumerate(file_set):
+        base_name = os.path.basename(file)
         if file == REACT_PROD_SEP:
             h.append(np.full([len(temps)], np.nan))
             qh_h.append(np.full([len(temps)], np.nan))
             gt.append(np.full([len(temps)], np.nan))
             qh_gt.append(np.full([len(temps)], np.nan))
             continue
-        vibes_input = [file, "--ti", temp_range]
-        # vibes_input = [file, "--ti", temp_range]
-        if solvent:
-            vibes_input += ["-c", "1"]
-        if qh_h_opt:
-            vibes_input += ["-q"]
-        if vib_scale:
-            vibes_input += ["-v", str(vib_scale)]
-        with capture_stderr(goodvibes_hm.main, vibes_input) as output:
-            vibes_out = output
+        vibes_out = results_dict[base_name][GOODVIBES_OUT]
         found_structure = False
         skip_line = True
         h.append([])
@@ -366,9 +410,9 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
         gt.append([])
         qh_gt.append([])
         # we know the last line should be dropped, and at least the first 10
-        for line in vibes_out[10:-1]:
+        for line in vibes_out[10:-2]:
             if GOODVIBES_ERROR_PAT.match(line):
-                raise InvalidDataError("See GoodVibes error checking report: {}".format(GOODVIBES_OUT_FNAME))
+                raise InvalidDataError("See GoodVibes output: {}".format(vibes_out))
             if not found_structure:
                 if GOODVIBES_DATA_PAT.match(line):
                     found_structure = True
@@ -379,22 +423,21 @@ def get_thermochem(file_set, temp_range, solvent, save_vibes, out_dir, tog_outpu
             else:
                 vals = line.split()
                 if index == 0:
-                    temps.append(float(vals[2]))
-                h[index].append(float(vals[3]))
+                    temps.append(float(vals[1]))
+                h[index].append(float(vals[2]))
                 if qh_h_opt:
-                    qh_h[index].append(float(vals[4]))
+                    qh_h[index].append(float(vals[3]))
                 gt[index].append(float(vals[-2]))
                 qh_gt[index].append(float(vals[-1]))
         if save_vibes:
-            vibes_out_fname = create_out_fname(file, suffix='_vibes', base_dir=out_dir, ext='.dat')
-            os.rename(GOODVIBES_OUT_FNAME, vibes_out_fname)
+            vibes_out_fname = os.path.relpath(create_out_fname(file, suffix='_vibes', base_dir=out_dir, ext='.dat'))
+            list_to_file(vibes_out, vibes_out_fname, print_message=False)
             print('Saved GoodVibes output as: {}'.format(vibes_out_fname))
         if tog_output_fname:
-            with open(tog_output_fname, 'a') as f:
-                with open(GOODVIBES_OUT_FNAME) as infile:
-                    f.write(infile.read())
-            if index == 0:
-                print("Added GoodVibes output to: {}".format(tog_output_fname))
+            list_to_file(vibes_out, tog_output_fname, mode=write_mode, print_message=False)
+            if write_mode == 'w':
+                print("Adding all GoodVibes output to: {}".format(tog_output_fname))
+                write_mode = "a"
 
     temps = np.asarray(temps)
     # for each molecule, multiply the array to convert to kcal/mol
@@ -536,6 +579,48 @@ def plot_delta(fname, temp, delta_ts_list, delta_rxn_list, labels, var='G'):
              )
 
 
+def process_file_set(file_set, options, print_message, print_mode, results_dict, tog_fname, g_ts_list, g_rxn_list,
+                     h_ts_list, h_rxn_list, qh_g_ts_list, qh_g_rxn_list, qh_h_ts_list, qh_h_rxn_list):
+    solvent, ts_index = check_gausslog_fileset(file_set, options.vibes_check, results_dict)
+    temps, h, qh_h, gt, qh_gt = get_thermochem(file_set, results_dict, options.save_vibes,
+                                               options.out_dir, tog_fname, options.quasiharmonic, print_mode)
+    delta_h_ts, delta_h_rxn = get_deltas(temps, h, ts_index)
+    if options.quasiharmonic:
+        qh_delta_h_ts, qh_delta_h_rxn = get_deltas(temps, qh_h, ts_index)
+    else:
+        qh_delta_h_ts, qh_delta_h_rxn = 0, 0  # Just to make IDE happy...
+    delta_gibbs_ts, delta_gibbs_rxn = get_deltas(temps, gt, ts_index)
+    qh_delta_gibbs_ts, qh_delta_gibbs_rxn = get_deltas(temps, qh_gt, ts_index)
+    if REACT_PROD_SEP in file_set:
+        a, ea, qh_a, qh_ea = '', '', '', ''
+    else:
+        kt = get_kt(temps, delta_gibbs_ts)
+        qh_kt = get_kt(temps, qh_delta_gibbs_ts)
+        a, ea = fit_arrhenius(temps, kt)
+        qh_a, qh_ea = fit_arrhenius(temps, qh_kt)
+    g_temp, g_ts, g_rxn = get_delta_at_temp(options.temp, temps, delta_gibbs_ts, delta_gibbs_rxn)
+    g_temp, qh_g_ts, qh_g_rxn = get_delta_at_temp(options.temp, temps, qh_delta_gibbs_ts, qh_delta_gibbs_rxn)
+    g_temp, h_ts, h_rxn = get_delta_at_temp(options.temp, temps, delta_h_ts, delta_h_rxn)
+    if options.quasiharmonic:
+        g_temp, qh_h_ts, qh_h_rxn = get_delta_at_temp(options.temp, temps, qh_delta_h_ts, qh_delta_h_rxn)
+    else:
+        qh_h_ts, qh_h_rxn = 0, 0  # To make IDE happy
+    print_results(a, ea, qh_a, qh_ea, g_temp, g_ts, g_rxn, qh_g_ts, qh_g_rxn,
+                  file_set, options.output_fname, print_mode, print_message=print_message)
+    if options.plot:
+        g_ts_list.append(g_ts)
+        g_rxn_list.append(g_rxn)
+        qh_g_ts_list.append(qh_g_ts)
+        qh_g_rxn_list.append(qh_g_rxn)
+        h_ts_list.append(h_ts)
+        h_rxn_list.append(h_rxn)
+        if options.quasiharmonic:
+            qh_h_ts_list.append(qh_h_ts)
+            qh_h_rxn_list.append(qh_h_rxn)
+    return g_temp, g_ts_list, g_rxn_list, h_ts_list, h_rxn_list, qh_g_ts_list, qh_g_rxn_list, qh_h_ts_list, \
+        qh_h_rxn_list
+
+
 def main(argv=None):
     # Read input
     args, ret = parse_cmdline(argv)
@@ -545,8 +630,9 @@ def main(argv=None):
     try:
         # Make a list of lists; each inner list a set of reactant file(s) with TS
         # Include anything in the "list" file as well as entered on the command line
-        if args[0].list:
-            with open(args[0].list) as f:
+        options = args[0]
+        if options.list:
+            with open(options.list) as f:
                 row_list = [row.strip().split() for row in f.readlines()]
                 row_list = list(filter(None, row_list))
         else:
@@ -556,79 +642,49 @@ def main(argv=None):
         if len(row_list) == 0:
             raise InvalidDataError("No files or list of files found")
 
-        # now a quick first check that all files exist
-        missing_files = []
+        # now a quick first check that all files exist, and get unique names
+        missing_files = set()
+        unique_fnames = set()
         for file_set in row_list:
             for file in file_set:
-                if not os.path.isfile(file) and file != REACT_PROD_SEP:
-                    missing_files.append(file)
+                if file != REACT_PROD_SEP:
+                    if os.path.isfile(file):
+                        unique_fnames.add(file)
+                    else:
+                        missing_files.add(file)
         if len(missing_files) > 0:
-            raise IOError(set(missing_files))
+            raise IOError(missing_files)
 
-        # only used for plotting; made empty to make IDE happy
+        # Initialization to make IDE happy; used for plotting
         g_ts_list, g_rxn_list, qh_g_ts_list, qh_g_rxn_list = [], [], [], []
         g_temp = None
         h_ts_list, h_rxn_list, qh_h_ts_list, qh_h_rxn_list = [], [], [], []
-        qh_delta_h_ts, qh_delta_h_rxn, qh_h_ts, qh_h_rxn = 0, 0, 0, 0
         # now the calculations and printing
         print_mode = 'w'  # for the AEa output, so only prints header once, and then appends to file
         print_message = True
-        if args[0].tog_vibes:
-            tog_fname = create_out_fname(args[0].output_fname, suffix='_vibes', ext='.dat')
-            # delete if exits because program always appends to it
-            silent_remove(tog_fname)
+        if options.tog_vibes:
+            tog_fname = os.path.relpath(create_out_fname(options.output_fname, suffix='_vibes', ext='.dat'))
         else:
             tog_fname = None
-        # Todo: optimize--don't do the same calc multiple times on the same output file
+        results_dict = get_gauss_results(options, unique_fnames)
         for file_set in row_list:
-            solvent, ts_index = check_gausslog_fileset(file_set, args[0].hartree_call, args[0].vibes_check)
-            temps, h, qh_h, gt, qh_gt = get_thermochem(file_set, args[0].temp_range, solvent, args[0].save_vibes,
-                                                       args[0].out_dir, tog_fname, args[0].quasiharmonic,
-                                                       args[0].vib_scale)
-            delta_h_ts, delta_h_rxn = get_deltas(temps, h, ts_index)
-            if args[0].quasiharmonic:
-                qh_delta_h_ts, qh_delta_h_rxn = get_deltas(temps, qh_h, ts_index)
-            delta_gibbs_ts, delta_gibbs_rxn = get_deltas(temps, gt, ts_index)
-            qh_delta_gibbs_ts, qh_delta_gibbs_rxn = get_deltas(temps, qh_gt, ts_index)
-            if REACT_PROD_SEP in file_set:
-                a, ea, qh_a, qh_ea = '', '', '', ''
-            else:
-                kt = get_kt(temps, delta_gibbs_ts)
-                qh_kt = get_kt(temps, qh_delta_gibbs_ts)
-                a, ea = fit_arrhenius(temps, kt)
-                qh_a, qh_ea = fit_arrhenius(temps, qh_kt)
-            g_temp, g_ts, g_rxn = get_delta_at_temp(args[0].temp, temps, delta_gibbs_ts, delta_gibbs_rxn)
-            g_temp, qh_g_ts, qh_g_rxn = get_delta_at_temp(args[0].temp, temps, qh_delta_gibbs_ts, qh_delta_gibbs_rxn)
-            g_temp, h_ts, h_rxn = get_delta_at_temp(args[0].temp, temps, delta_h_ts, delta_h_rxn)
-            if args[0].quasiharmonic:
-                g_temp, qh_h_ts, qh_h_rxn = get_delta_at_temp(args[0].temp, temps, qh_delta_h_ts, qh_delta_h_rxn)
-            print_results(a, ea, qh_a, qh_ea, g_temp, g_ts, g_rxn, qh_g_ts, qh_g_rxn,
-                          file_set, args[0].output_fname, print_mode, print_message=print_message)
+            g_temp, g_ts_list, g_rxn_list, h_ts_list, h_rxn_list, qh_g_ts_list, qh_g_rxn_list, qh_h_ts_list, \
+                qh_h_rxn_list = process_file_set(file_set, options, print_message, print_mode, results_dict, tog_fname,
+                                                 g_ts_list, g_rxn_list, h_ts_list, h_rxn_list, qh_g_ts_list,
+                                                 qh_g_rxn_list, qh_h_ts_list, qh_h_rxn_list)
             print_mode = 'a'
             print_message = False
-            if args[0].plot:
-                g_ts_list.append(g_ts)
-                g_rxn_list.append(g_rxn)
-                qh_g_ts_list.append(qh_g_ts)
-                qh_g_rxn_list.append(qh_g_rxn)
-                h_ts_list.append(h_ts)
-                h_rxn_list.append(h_rxn)
-                if args[0].quasiharmonic:
-                    qh_h_ts_list.append(qh_h_ts)
-                    qh_h_rxn_list.append(qh_h_rxn)
 
-        if args[0].plot:
-            g_fname = create_out_fname(args[0].output_fname, suffix='_g', ext='.png')
-            plot_delta(g_fname, g_temp, g_ts_list, g_rxn_list, args[0].plot_labels)
-            qh_g_fname = create_out_fname(args[0].output_fname, suffix='_g_qh', ext='.png')
-            plot_delta(qh_g_fname, g_temp, qh_g_ts_list, qh_g_rxn_list, args[0].plot_labels)
-            h_fname = create_out_fname(args[0].output_fname, suffix='_h', ext='.png')
-            plot_delta(h_fname, g_temp, h_ts_list, h_rxn_list, args[0].plot_labels, var='H')
-            if args[0].quasiharmonic:
-                qh_h_fname = create_out_fname(args[0].output_fname, suffix='_h_qh', ext='.png')
-                plot_delta(qh_h_fname, g_temp, qh_h_ts_list, qh_h_rxn_list, args[0].plot_labels, var='H')
-        # clean up GoodVibes detritus
-        silent_remove(GOODVIBES_OUT_FNAME)
+        if options.plot:
+            g_fname = create_out_fname(options.output_fname, suffix='_g', ext='.png')
+            plot_delta(g_fname, g_temp, g_ts_list, g_rxn_list, options.plot_labels)
+            qh_g_fname = create_out_fname(options.output_fname, suffix='_g_qh', ext='.png')
+            plot_delta(qh_g_fname, g_temp, qh_g_ts_list, qh_g_rxn_list, options.plot_labels)
+            h_fname = create_out_fname(options.output_fname, suffix='_h', ext='.png')
+            plot_delta(h_fname, g_temp, h_ts_list, h_rxn_list, options.plot_labels, var='H')
+            if options.quasiharmonic:
+                qh_h_fname = create_out_fname(options.output_fname, suffix='_h_qh', ext='.png')
+                plot_delta(qh_h_fname, g_temp, qh_h_ts_list, qh_h_rxn_list, options.plot_labels, var='H')
 
     except IOError as e:
         warning("Problems reading file:", e)

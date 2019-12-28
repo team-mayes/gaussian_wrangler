@@ -14,6 +14,7 @@ TEST_DIR = os.path.dirname(__file__)
 MAIN_DIR = os.path.dirname(TEST_DIR)
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
 SUB_DATA_DIR = os.path.join(DATA_DIR, 'gausslog2pdb')
+TEMP_DIR = os.path.join(SUB_DATA_DIR, 'temp_dir')
 
 DEF_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb.ini')
 # noinspection PyUnresolvedReferences
@@ -31,7 +32,7 @@ PDB2_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_2.pdb')
 GOOD_PDB2_LAST_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_2_last_good.pdb')
 
 COMB_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_comb.ini')
-PDB12_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_comb.pdb')
+PDB12_OUT = os.path.join(TEMP_DIR, 'pet_mono_f1hs_comb.pdb')
 GOOD_PDB12_LAST_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_f1hs_comb_good.pdb')
 
 COMB2_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_comb_mono.ini')
@@ -48,6 +49,9 @@ GOOD_SINGLE_OUT = os.path.join(SUB_DATA_DIR, 'pet_dimer_good.pdb')
 
 NO_LOG_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_no_logs.ini')
 MISSING_FILE_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_missing_file.ini')
+FEWER_PDB_ATOMS_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_fewer_pdb_atoms.ini')
+MORE_PDB_ATOMS_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_more_pdb_atoms.ini')
+COMB_NO_OUT_NAME_INI = os.path.join(SUB_DATA_DIR, 'gausslog2pdb_comb_no_out_name.ini')
 
 
 class TestGausslog2pdbNoOut(unittest.TestCase):
@@ -98,6 +102,25 @@ class TestGausslog2pdbNoOut(unittest.TestCase):
         with capture_stdout(main, test_input) as output:
             self.assertTrue("optional arguments" in output)
 
+    def testFewerPDBAtoms(self):
+        test_input = ["-c", FEWER_PDB_ATOMS_INI]
+        main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("has more atoms" in output)
+
+    def testMorePDBAtoms(self):
+        test_input = ["-c", MORE_PDB_ATOMS_INI]
+        if logger.isEnabledFor(logging.DEBUG):
+            main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("pdb template has" in output)
+
+    def testCombIniNoOutName(self):
+        test_input = ["-c", COMB_NO_OUT_NAME_INI]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("specify the output" in output)
+
 
 class TestGausslog2pdb(unittest.TestCase):
     # These test/demonstrate different options
@@ -141,10 +164,12 @@ class TestGausslog2pdb(unittest.TestCase):
     def testCombIni(self):
         test_input = ["-c", COMB_INI]
         try:
+            silent_remove(TEMP_DIR, dir_with_files=True)
             main(test_input)
             self.assertFalse(diff_lines(PDB12_OUT, GOOD_PDB12_LAST_OUT))
         finally:
             silent_remove(PDB12_OUT, disable=DISABLE_REMOVE)
+            silent_remove(TEMP_DIR, dir_with_files=True)
             pass
 
     def testComb2Ini(self):

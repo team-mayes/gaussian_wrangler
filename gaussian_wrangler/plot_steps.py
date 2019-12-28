@@ -124,8 +124,7 @@ def plot_delta_g(fname, g_temp, data_list, convert_flag, fig_width, fig_height, 
              x_label='reaction coordinate', y_label=y_label.format(g_temp),
              y1_label=y_labels[0], y2_label=y_labels[1], y3_label=y_labels[2], y4_label=y_labels[3],
              y5_label=y_labels[4], y2_array=y_axis[1], y3_array=y_axis[2], y4_array=y_axis[3], y5_array=y_axis[4],
-             ls2='-', ls3='-', ls4='-', ls5='-',
-             fig_width=fig_width, fig_height=fig_height,
+             ls2='-', ls3='-', ls4='-', ls5='-', fig_width=fig_width, fig_height=fig_height,
              # y_lima=y_min, y_limb=y_max,
              hide_x=True,
              )
@@ -144,10 +143,11 @@ def main(argv=None):
             row_list = list(filter(None, row_list))
 
         if args.output_fname:
-            plot_fname = create_out_fname(args.output_fname, ext='.png')
+            plot_fname = create_out_fname(args.output_fname, base_dir=args.out_dir, ext='.png')
         else:
             plot_fname = create_out_fname(args.list, base_dir=args.out_dir, ext='.png')
         plot_delta_g(plot_fname, args.temp, row_list, args.conv, args.fig_width, args.fig_height, args.y_axis_label)
+        print("Wrote file: {}".format(plot_fname))
 
     except IOError as e:
         warning("Problems reading file:", e)

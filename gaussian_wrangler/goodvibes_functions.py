@@ -36,14 +36,15 @@ def print_check_fails(check_attribute, file, attribute, option2=False):
     # Function for printing unique checks
     unique_attr = {}
     for i, attr in enumerate(check_attribute):
-        if option2 is not False: attr = (attr, option2[i])
+        if option2:
+            attr = (attr, option2[i])
         if attr not in unique_attr:
             unique_attr[attr] = [file[i]]
         else:
             unique_attr[attr].append(file[i])
     warning("Different {} found: ".format(attribute))
     for attr in unique_attr:
-        if option2 is not False:
+        if option2:
             if float(attr[0]) < 0:
                 atr_str = '       {} {}:'.format(attr[0], attr[1])
             else:
@@ -52,7 +53,7 @@ def print_check_fails(check_attribute, file, attribute, option2=False):
             atr_str = '        -{}: '.format(attr)
         for filename in unique_attr[attr]:
             rel_path = os.path.relpath(filename)
-            if filename is unique_attr[attr][-1]:
+            if filename == unique_attr[attr][-1]:
                 warning('{} {}'.format(atr_str, rel_path))
             else:
                 warning('{} {}, '.format(atr_str, rel_path))
@@ -66,7 +67,7 @@ def create_plot(options, thermo_data):
     for key in thermo_data:
         if not hasattr(thermo_data[key], "qh_gibbs_free_energy"):
             raise InvalidDataError("\nWarning! Could not find thermodynamic data for " + key + "\n")
-        if not hasattr(thermo_data[key], "sp_energy") and options.spc is not False:
+        if not hasattr(thermo_data[key], "sp_energy") and options.spc:
             raise InvalidDataError("\nWarning! Could not find thermodynamic data for " + key + "\n")
     graph_data = GetPES(options.graph, thermo_data, options.temperature, options.gconf, options.qh)
     graph_reaction_profile(graph_data, options)
@@ -184,14 +185,14 @@ def graph_reaction_profile(graph_data, options):
     fig, ax = plt.subplots()
     for i, d_path in enumerate(graph_data.path):
         for j in range(len(data[d_path]) - 1):
-            if colors is not None:
+            if colors is None:
+                color = 'k'
+                colors = ['k']
+            else:
                 if len(colors) > 1:
                     color = colors[i]
                 else:
                     color = colors[0]
-            else:
-                color = 'k'
-                colors = ['k']
             if j == 0:
                 path_patch = m_patches.PathPatch(g_path([(j, data[d_path][j]), (j + 0.5, data[d_path][j]),
                                                          (j + 0.5, data[d_path][j + 1]), (j + 1, data[d_path][j + 1])],
@@ -227,9 +228,9 @@ def graph_reaction_profile(graph_data, options):
 
     # Annotate points with energy level
     if label_point:
-        for i, d_path in enumerate(graph_data.path):
+        for d_path in graph_data.path:
             for i, point in enumerate(data[d_path]):
-                if dec is 1:
+                if dec == 1:
                     ax.annotate("{:.1f}".format(point), (i, point - fig.get_figheight() * fig.dpi * 0.025),
                                 horizontalalignment='center')
                 else:
@@ -238,10 +239,11 @@ def graph_reaction_profile(graph_data, options):
     if ylim is not None:
         ax.set_ylim(float(ylim[0]), float(ylim[1]))
     if show_title:
-        if title is not None:
-            ax.set_title(title)
-        else:
+        if title is None:
             ax.set_title("Reaction Profile")
+        else:
+            ax.set_title(title)
+
     ax.set_ylabel(r"$G_{rel}$ (kcal / mol)")
     plt.minorticks_on()
     ax.tick_params(axis='x', which='minor', bottom=False)
@@ -257,25 +259,25 @@ def graph_reaction_profile(graph_data, options):
         new_ax_text = []
         ax_label.append(d_path)
         for j, e_abs in enumerate(graph_data.e_abs[i]):
-            if i is 0:
+            if i == 0:
                 xaxis_text.append(graph_data.species[i][j])
             else:
                 new_ax_text.append(graph_data.species[i][j])
         new_ax_text_list.append(new_ax_text)
     # Label rxn steps
     if label_xaxis:
-        if colors is not None:
-            plt.xticks(range(len(xaxis_text)), xaxis_text, color=colors[0])
-        else:
+        if colors is None:
             plt.xticks(range(len(xaxis_text)), xaxis_text, color='k')
-        locs, labels = plt.xticks()
+        else:
+            plt.xticks(range(len(xaxis_text)), xaxis_text, color=colors[0])
+        locations, labels = plt.xticks()
         new_ax = []
         for i in range(len(ax_label)):
             if i > 0:
                 y = ax.twiny()
                 new_ax.append(y)
         for i in range(len(new_ax)):
-            new_ax[i].set_xticks(locs)
+            new_ax[i].set_xticks(locations)
             new_ax[i].set_xlim(ax.get_xlim())
             if len(colors) > 1:
                 new_ax[i].tick_params(axis='x', colors=colors[i + 1])
@@ -292,7 +294,7 @@ def graph_reaction_profile(graph_data, options):
         ax.xaxis.set_ticklabels([])
     if legend:
         plt.legend()
-    if dpi is not False:
+    if dpi:
         plt.savefig('Rxn_profile_' + options.graph.split('.')[0] + '.png', dpi=dpi)
     plt.show()
 
@@ -303,7 +305,7 @@ class GetPES:
         # Default values
         self.dec, self.units, self.boltz = 2, 'kcal/mol', False
 
-        g_corr = None  # Make IDE happy
+        g_corr, qg_corr = None, None  # Make IDE happy
 
         with open(file) as f:
             data = f.readlines()
@@ -395,12 +397,14 @@ class GetPES:
                             pass
 
         for i in range(len(files)):
-            if len(files[i]) is 1:
+            if len(files[i]) == 1:
                 files[i] = files[i][0]
         species = dict(zip(names, files))
         self.path, self.species = [], []
-        self.spc_abs, self.e_abs, self.zpe_abs, self.h_abs, self.qh_abs, self.s_abs, self.qs_abs, self.g_abs, self.qhg_abs, self.cosmo_qhg_abs = [], [], [], [], [], [], [], [], [], []
-        self.spc_zero, self.e_zero, self.zpe_zero, self.h_zero, self.qh_zero, self.ts_zero, self.qhts_zero, self.g_zero, self.qhg_zero, self.cosmo_qhg_zero = [], [], [], [], [], [], [], [], [], []
+        self.spc_abs, self.e_abs, self.zpe_abs, self.h_abs, self.qh_abs, self.s_abs, self.qs_abs, self.g_abs, \
+            self.qhg_abs, self.cosmo_qhg_abs = [], [], [], [], [], [], [], [], [], []
+        self.spc_zero, self.e_zero, self.zpe_zero, self.h_zero, self.qh_zero, self.ts_zero, self.qhts_zero, \
+            self.g_zero, self.qhg_zero, self.cosmo_qhg_zero = [], [], [], [], [], [], [], [], [], []
         self.g_qhgvals, self.g_species_qhgzero, self.g_rel_val = [], [], []
         # Loop over .yaml file, grab energies, populate arrays and compute Boltzmann factors
         with open(file) as f:
@@ -475,13 +479,12 @@ class GetPES:
                                                 g_rel = thermo_data[conformer].qh_gibbs_free_energy - g_min
                                             boltz_fac = np.exp(-g_rel * AU_TO_J / GAS_CONSTANT / temperature)
                                             boltz_prob = boltz_fac / boltz_sum
-                                            if hasattr(thermo_data[conformer], "sp_energy") and \
-                                                    thermo_data[conformer].sp_energy is not '!':
-                                                spc_zero += thermo_data[conformer].sp_energy * boltz_prob
-                                            if hasattr(thermo_data[conformer], "sp_energy") and \
-                                                    thermo_data[conformer].sp_energy is '!':
-                                                raise InvalidDataError("Not all files contain a SPC value, relative "
-                                                                       "values will not be calculated.")
+                                            if hasattr(thermo_data[conformer], "sp_energy"):
+                                                if thermo_data[conformer].sp_energy == '!':
+                                                    raise InvalidDataError("Not all files contain a SPC value, relative "
+                                                                           "values will not be calculated.")
+                                                else:
+                                                    spc_zero += thermo_data[conformer].sp_energy * boltz_prob
                                             e_zero += thermo_data[conformer].scf_energy * boltz_prob
                                             zpe_zero += thermo_data[conformer].zpe * boltz_prob
                                             if gconf:  # Default calculate gconf correction for conformers
@@ -530,7 +533,7 @@ class GetPES:
                                     conformers = True
                             if conformers and single_structure:
                                 mix = True
-                            if gconf and min_conf is not False:
+                            if gconf and min_conf:
                                 if mix:
                                     h_mix = h_tot + h_zero
                                     s_mix = s_tot + s_zero
@@ -593,9 +596,9 @@ class GetPES:
                                     # Create values to populate
                                     point_structures = point.replace(' ', '').split('+')
                                     e_abs, spc_abs, zpe_abs, h_abs, qh_abs, s_abs, g_abs, qs_abs, qhg_abs, \
-                                    cosmo_qhg_abs = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+                                        cosmo_qhg_abs = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
                                     qh_conf, qh_tot, qs_conf, qs_tot, h_conf, h_tot, s_conf, s_tot, g_corr, \
-                                    qg_corr = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+                                        qg_corr = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
                                     min_conf = False
                                     rel_val = 0.0
                                     self.g_qhgvals[n].append([])
@@ -650,14 +653,13 @@ class GetPES:
                                                         g_rel = thermo_data[conformer].qh_gibbs_free_energy - g_min
                                                     boltz_fac = np.exp(-g_rel * AU_TO_J / GAS_CONSTANT / temperature)
                                                     boltz_prob = boltz_fac / boltz_sum
-                                                    if hasattr(thermo_data[conformer], "sp_energy") and \
-                                                            thermo_data[conformer].sp_energy is not '!':
-                                                        spc_abs += thermo_data[conformer].sp_energy * boltz_prob
-                                                    if hasattr(thermo_data[conformer], "sp_energy") and \
-                                                            thermo_data[conformer].sp_energy is '!':
-                                                        raise InvalidDataError("\n   Not all files contain a SPC value,"
-                                                                               " relative values will not be "
-                                                                               "calculated.\n")
+                                                    if hasattr(thermo_data[conformer], "sp_energy"):
+                                                        if thermo_data[conformer].sp_energy == '!':
+                                                            raise InvalidDataError("\n   Not all files contain a SPC "
+                                                                                   "value; relative values will not "
+                                                                                   " be calculated.\n")
+                                                        else:
+                                                            spc_abs += thermo_data[conformer].sp_energy * boltz_prob
                                                     e_abs += thermo_data[conformer].scf_energy * boltz_prob
                                                     zpe_abs += thermo_data[conformer].zpe * boltz_prob
                                                     if cosmo:
@@ -710,9 +712,9 @@ class GetPES:
                                             self.g_species_qhgzero[n][i].append(zero_conf)  # Raw data for graphing
                                     except KeyError:
                                         base_name = os.path.relpath(file)
-                                        warning(f"Structure {structure} has not been defined correctly "
-                                                f"in {base_name}\n")
-                                        raise InvalidDataError(f"   Please edit {base_name} and try again\n")
+                                        warning("Structure {} has not been defined correctly "
+                                                "in {}\n".format(structure, base_name))
+                                        raise InvalidDataError("   Please edit {} and try again\n".format(base_name))
                                     self.species[n].append(point)
                                     self.e_abs[n].append(e_abs)
                                     self.spc_abs[n].append(spc_abs)
@@ -726,7 +728,7 @@ class GetPES:
                                             conformers = True
                                     if conformers and single_structure:
                                         mix = True
-                                    if gconf and min_conf is not False:
+                                    if gconf and min_conf:
                                         if mix:
                                             h_mix = h_tot + h_abs
                                             s_mix = s_tot + s_abs
@@ -768,7 +770,7 @@ class GetPES:
                             pass
 
 
-def pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, stars, zero_vals):
+def pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, delim_row, zero_vals):
     for j, e_abs in enumerate(pes.e_abs[i]):
         if options.qh:
             species = [pes.spc_abs[i][j], pes.e_abs[i][j], pes.zpe_abs[i][j], pes.h_abs[i][j],
@@ -786,51 +788,54 @@ def pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, stars, zero
         else:
             formatted_list = [EHPART_TO_KCAL_MOL * x for x in relative]  # Defaults to kcal/mol
         print("\no  ")
-        if options.spc is False:
-            formatted_list = formatted_list[1:]
+        if options.spc:
             if options.qh and options.cosmo:
                 if pes.dec == 1:
-                    print('{:<39} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
-                          '{:13.1f} {:13.1f}'.format(pes.species[i][j], *formatted_list))
-                if pes.dec == 2:
-                    print('{:<39} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} '
-                          '{:13.2f} {:13.2f}'.format(pes.species[i][j], *formatted_list))
-            elif options.qh or options.cosmo:
-                if pes.dec == 1:
-                    print('{:<39} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
-                          '{:13.1f}'.format(pes.species[i][j], *formatted_list))
-                if pes.dec == 2:
-                    print('{:<39} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} '
-                          '{:13.2f}'.format(pes.species[i][j], *formatted_list))
-            else:
-                if pes.dec == 1:
-                    print('{:<39} {:13.1f} {:10.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
-                          '{:13.1f}'.format(pes.species[i][j], *formatted_list))
-                if pes.dec == 2:
-                    print('{:<39} {:13.2f} {:10.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} '
-                          '{:13.2f}'.format(pes.species[i][j], *formatted_list))
-        else:
-            if options.qh and options.cosmo:
-                if pes.dec == 1:
-                    print('{:<39} {:13.1f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} '
+                    print('{:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} '
                           '{:13.1f} {:13.1f} {:13.1f}'.format(pes.species[i][j], *formatted_list))
                 if pes.dec == 2:
-                    print('{:<39} {:13.1f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} '
+                    print('{:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} '
                           '{:13.2f} {:13.2f} {:13.2f}'.format(pes.species[i][j], *formatted_list))
             elif options.qh or options.cosmo:
                 if pes.dec == 1:
-                    print('{:<39} {:13.1f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} '
+                    print('{:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} '
                           '{:13.1f} {:13.1f}'.format(pes.species[i][j], *formatted_list))
                 if pes.dec == 2:
-                    print('{:<39} {:13.1f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} '
+                    print('{:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} '
                           '{:13.2f} {:13.2f}'.format(pes.species[i][j], *formatted_list))
             else:
                 if pes.dec == 1:
-                    print('{:<39} {:13.1f} {:13.1f} {:10.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
+                    print('{:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
                           '{:13.1f}'.format(pes.species[i][j], *formatted_list))
                 if pes.dec == 2:
                     print('{:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} '
                           '{:13.2f}'.format(pes.species[i][j], *formatted_list))
+
+
+        else:
+            formatted_list = formatted_list[1:]
+            if options.qh and options.cosmo:
+                if pes.dec == 1:
+                    print('{:<39} {:13.2f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
+                          '{:13.1f} {:13.1f}'.format(pes.species[i][j], *formatted_list))
+                if pes.dec == 2:
+                    print('{:<39} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} '
+                          '{:13.2f} {:13.2f}'.format(pes.species[i][j], *formatted_list))
+            elif options.qh or options.cosmo:
+                if pes.dec == 1:
+                    print('{:<39} {:13.2f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
+                          '{:13.1f}'.format(pes.species[i][j], *formatted_list))
+                if pes.dec == 2:
+                    print('{:<39} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} '
+                          '{:13.2f}'.format(pes.species[i][j], *formatted_list))
+            else:
+                if pes.dec == 1:
+                    print('{:<39} {:13.2f} {:10.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} '
+                          '{:13.1f}'.format(pes.species[i][j], *formatted_list))
+                if pes.dec == 2:
+                    print('{:<39} {:13.2f} {:10.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} '
+                          '{:13.2f}'.format(pes.species[i][j], *formatted_list))
+
         if pes.boltz:
             boltz = [np.exp(-relative[1] * AU_TO_J / GAS_CONSTANT / options.temperature) / e_sum,
                      np.exp(-relative[3] * AU_TO_J / GAS_CONSTANT / options.temperature) / h_sum,
@@ -842,16 +847,17 @@ def pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, stars, zero
         formatted_list = [round(formatted_list[x], 6) for x in range(len(formatted_list))]
     if pes.boltz == 'ee' and len(sels) == 2:
         ee = [sels[0][x] - sels[1][x] for x in range(len(sels[0]))]
-        if options.spc is False:
-            print("\n" + stars + "\n   " + '{:<39} {:13.1f}%{:24.1f}%{:35.1f}%{:13.1f}%'
-                  .format('ee (%)', *ee))
-        else:
-            print("\n" + stars + "\n   " + '{:<39} {:27.1f} {:24.1f} {:35.1f} {:13.1f} '.
+        if options.spc:
+            print("\n" + delim_row + "\n   " + '{:<39} {:27.2f} {:24.1f} {:35.1f} {:13.1f} '.
                   format('ee (%)', *ee))
-    print("\n" + stars + "\n")
+        else:
+            print("\n" + delim_row + "\n   " + '{:<39} {:13.2f}%{:24.1f}%{:35.1f}%{:13.1f}%'
+                  .format('ee (%)', *ee))
+
+    print("\n" + delim_row + "\n")
 
 
-def output_rel_e_data(options, stars, thermo_data):
+def output_rel_e_data(options, delim_row, thermo_data):
     # Making IDe happy
     e_sum, g_sum, h_sum, qhg_sum, sels = None, None, None, None, None
 
@@ -885,9 +891,9 @@ def output_rel_e_data(options, stars, thermo_data):
                 qhg_sum += np.exp(-relative[8] * AU_TO_J / GAS_CONSTANT / options.temperature)
                 cosmo_qhg_sum += np.exp(-relative[9] * AU_TO_J / GAS_CONSTANT / options.temperature)
 
-        print_select_pes_output(options, path, pes, stars)
+        print_select_pes_output(options, path, pes, delim_row)
 
-        pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, stars, zero_vals)
+        pes_options(e_sum, g_sum, h_sum, i, options, pes, qhg_sum, sels, delim_row, zero_vals)
 
 
 def get_species(i, j, options, pes):
@@ -903,23 +909,8 @@ def get_species(i, j, options, pes):
     return species
 
 
-def print_select_pes_output(options, path, pes, stars):
-    if options.spc is False:
-        print("\n   " + '{:<40}'.format("RXN: " + path + " (" + pes.units + ") ", ))
-        if options.qh and options.cosmo:
-            print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13} {:>13}'.
-                  format(" DE", "DZPE", "DH", "qh-DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)",
-                         'COSMO-qh-G(T)'))
-        elif options.qh:
-            print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13}'.
-                  format(" DE", "DZPE", "DH", "qh-DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)"))
-        elif options.cosmo:
-            print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13}'.
-                  format(" DE", "DZPE", "DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)", 'COSMO-qh-G(T)'))
-        else:
-            print('{:>13} {:>10} {:>13} {:>10} {:>10} {:>13} {:>13}'.
-                  format(" DE", "DZPE", "DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)"))
-    else:
+def print_select_pes_output(options, path, pes, delim_row):
+    if options.spc:
         print("\n   " + '{:<40}'.format("RXN: " + path + " (" + pes.units + ") ", ))
         if options.qh and options.cosmo:
             print('{:>13} {:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>14} {:>14} {:>14}'.
@@ -937,10 +928,26 @@ def print_select_pes_output(options, path, pes, stars):
             print('{:>13} {:>13} {:>10} {:>13} {:>10} {:>10} {:>14} {:>14}'.
                   format(" DE_SPC", "DE", "DZPE", "DH_SPC", "T.DS", "T.qh-DS", "DG(T)_SPC",
                          "qh-DG(T)_SPC"))
-    print("\n" + stars)
+    else:
+        print("\n   " + '{:<40}'.format("RXN: " + path + " (" + pes.units + ") ", ))
+        if options.qh and options.cosmo:
+            print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13} {:>13}'.
+                  format(" DE", "DZPE", "DH", "qh-DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)",
+                         'COSMO-qh-G(T)'))
+        elif options.qh:
+            print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13}'.
+                  format(" DE", "DZPE", "DH", "qh-DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)"))
+        elif options.cosmo:
+            print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13}'.
+                  format(" DE", "DZPE", "DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)", 'COSMO-qh-G(T)'))
+        else:
+            print('{:>13} {:>10} {:>13} {:>10} {:>10} {:>13} {:>13}'.
+                  format(" DE", "DZPE", "DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)"))
+    print("\n" + delim_row)
+
 
 def calc_enantio_excess(clustering, clusters, dup_list, files, options, thermo_data):
-    select_stars = "   " + '*' * 109
+    delim_row = "   " + '-' * 109
     boltz_facts, weighted_free_energy, boltz_sum = get_boltz(files, thermo_data, clustering, clusters,
                                                              options.temperature, dup_list)
     ee, er, ratio, dd_free_energy, failed, preference = get_selectivity(options.ee, files, boltz_facts,
@@ -950,10 +957,10 @@ def calc_enantio_excess(clustering, clusters, dup_list, files, options, thermo_d
         print("\n   " + '{:<39} {:>13} {:>13} {:>13} {:>13} {:>13}'.format("Selectivity", "Excess (%)",
                                                                            "Ratio (%)", "Ratio", "Major Iso",
                                                                            "ddG"))
-        print("\n" + select_stars)
+        print("\n" + delim_row)
         print('\no {:<40} {:13.2f} {:>13} {:>13} {:>13} {:13.2f}'.format('', ee, er, ratio, preference,
                                                                          dd_free_energy))
-        print("\n" + select_stars + "\n")
+        print("\n" + delim_row + "\n")
 
 
 def get_boltz(files, thermo_data, clustering, clusters, temperature, dup_list):
@@ -1009,7 +1016,7 @@ def get_selectivity(pattern, files, boltz_facs, boltz_sum, temperature, dup_list
     a_files.extend(glob(pattern[0]))
     b_files.extend(glob(pattern[1]))
 
-    if len(a_files) is 0 or len(b_files) is 0:
+    if len(a_files) == 0 or len(b_files) == 0:
         warning("\n   Filenames have not been formatted correctly for determining selectivity,\n   Make sure the "
                 "filename contains either {} or {}".format(a_item, b_item))
         raise InvalidDataError("   Please edit either your filenames or selectivity pattern argument and try again\n")
@@ -1065,10 +1072,10 @@ def get_selectivity(pattern, files, boltz_facs, boltz_sum, temperature, dup_list
     return ee, r, ratio, dd_free_energy, failed, pref
 
 
-def output_pes_temp_interval(options, stars, interval, interval_bbe_data, interval_thermo_data, file_list):
+def output_pes_temp_interval(options, delim_row, interval, interval_bbe_data, interval_thermo_data, file_list):
     e_sum, h_sum, g_sum, qhg_sum, sels = None, None, None, None, None  # make IDE happy
     # Interval applied to PES
-    stars = stars + '*' * 22
+    delim_row = delim_row + '-' * 22
     for i in range(len(interval)):
         bbe_vals = []
         for j in range(len(interval_bbe_data)):
@@ -1077,11 +1084,12 @@ def output_pes_temp_interval(options, stars, interval, interval_bbe_data, interv
     j = 0
     for i in interval:
         temp = float(i)
-        if options.cosmo_int is False:
-            pes = GetPES(options.pes, interval_thermo_data[j], temp, options.gconf, options.qh)
-        else:
+        if options.cosmo_int:
             pes = GetPES(options.pes, interval_thermo_data[j], temp, options.gconf, options.qh,
                          cosmo=True)
+        else:
+            pes = GetPES(options.pes, interval_thermo_data[j], temp, options.gconf, options.qh)
+
         for k, path in enumerate(pes.path):
             if options.qh:
                 zero_vals = [pes.spc_zero[k][0], pes.e_zero[k][0], pes.zpe_zero[k][0], pes.h_zero[k][0],
@@ -1110,25 +1118,7 @@ def output_pes_temp_interval(options, stars, interval, interval_bbe_data, interv
                     h_sum += np.exp(-relative[3] * AU_TO_J / GAS_CONSTANT / temp)
                     g_sum += np.exp(-relative[7] * AU_TO_J / GAS_CONSTANT / temp)
                     qhg_sum += np.exp(-relative[8] * AU_TO_J / GAS_CONSTANT / temp)
-            if options.spc is False:
-                print("\n   " + '{:<40}'.format("RXN: " + path + " (" + pes.units + ")  at T: " +
-                                                str(temp)))
-                if options.qh and options.cosmo_int:
-                    print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13} '
-                          '{:>13}'.format(" DE", "DZPE", "DH", "qh-DH", "T.DS", "T.qh-DS", "DG(T)",
-                                          "qh-DG(T)", 'COSMO-qh-G(T)'))
-                elif options.qh:
-                    print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} '
-                          '{:>13}'.format(" DE", "DZPE", "DH", "qh-DH", "T.DS", "T.qh-DS", "DG(T)",
-                                          "qh-DG(T)"))
-                elif options.cosmo_int:
-                    print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} '
-                          '{:>13}'.format(" DE", "DZPE", "DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)",
-                                          'COSMO-qh-G(T)'))
-                else:
-                    print('{:>13} {:>10} {:>13} {:>10} {:>10} {:>13} '
-                          '{:>13}'.format(" DE", "DZPE", "DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)"))
-            else:
+            if options.spc:
                 print("\n   " + '{:<40}'.format("RXN: " + path + " (" + pes.units + ")  at T: " +
                                                 str(temp)))
                 if options.qh and options.cosmo_int:
@@ -1147,7 +1137,24 @@ def output_pes_temp_interval(options, stars, interval, interval_bbe_data, interv
                     print('{:>13} {:>13} {:>10} {:>13} {:>10} {:>10} {:>14} '
                           '{:>14}'.format(" DE_SPC", "DE", "DZPE", "DH_SPC", "T.DS", "T.qh-DS",
                                           "DG(T)_SPC", "qh-DG(T)_SPC"))
-            print(stars)
+            else:
+                print("\n   " + '{:<40}'.format("RXN: " + path + " (" + pes.units + ")  at T: " + str(temp)))
+                if options.qh and options.cosmo_int:
+                    print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} {:>13} '
+                          '{:>13}'.format(" DE", "DZPE", "DH", "qh-DH", "T.DS", "T.qh-DS", "DG(T)",
+                                          "qh-DG(T)", 'COSMO-qh-G(T)'))
+                elif options.qh:
+                    print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} '
+                          '{:>13}'.format(" DE", "DZPE", "DH", "qh-DH", "T.DS", "T.qh-DS", "DG(T)",
+                                          "qh-DG(T)"))
+                elif options.cosmo_int:
+                    print('{:>13} {:>10} {:>13} {:>13} {:>10} {:>10} {:>13} '
+                          '{:>13}'.format(" DE", "DZPE", "DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)",
+                                          'COSMO-qh-G(T)'))
+                else:
+                    print('{:>13} {:>10} {:>13} {:>10} {:>10} {:>13} '
+                          '{:>13}'.format(" DE", "DZPE", "DH", "T.DS", "T.qh-DS", "DG(T)", "qh-DG(T)"))
+            print(delim_row)
 
             for l, e_abs in enumerate(pes.e_abs[k]):
                 if options.qh:
@@ -1165,9 +1172,36 @@ def output_pes_temp_interval(options, stars, interval, interval_bbe_data, interv
                     formatted_list = [AU_TO_J / 1000.0 * x for x in relative]
                 else:
                     formatted_list = [EHPART_TO_KCAL_MOL * x for x in relative]  # Defaults to kcal/mol
-                if options.spc is False:
+
+                if options.spc:
+                    if options.qh and options.cosmo_int:
+                        if pes.dec == 1:
+                            print('o  {:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} '
+                                  '{:10.1f} {:13.1f} {:13.1f} {:13.1f}'.format(pes.species[k][l],
+                                                                               *formatted_list))
+                        if pes.dec == 2:
+                            print('o  {:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} '
+                                  '{:10.2f} {:13.2f} {:13.2f} {:13.2f}'.format(pes.species[k][l],
+                                                                               *formatted_list))
+                    elif options.qh or options.cosmo_int:
+                        if pes.dec == 1:
+                            print('o  {:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} '
+                                  '{:10.1f} {:13.1f} {:13.1f}'.format(pes.species[k][l],
+                                                                      *formatted_list))
+                        if pes.dec == 2:
+                            print('o  {:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} '
+                                  '{:10.2f} {:13.2f} {:13.2f}'.format(pes.species[k][l],
+                                                                      *formatted_list))
+                    else:
+                        if pes.dec == 1:
+                            print('o  {:<39} {:13.2f} {:13.1f} {:10.1f} {:13.1f} {:10.1f} {:10.1f} '
+                                  '{:13.1f} {:13.1f}'.format(pes.species[k][l], *formatted_list))
+                        if pes.dec == 2:
+                            print('o  {:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:10.2f} {:10.2f} '
+                                  '{:13.2f} {:13.2f}'.format(pes.species[k][l], *formatted_list))
+                else:
                     formatted_list = formatted_list[1:]
-                    format_1 = 'o  {:<39} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} ' \
+                    format_1 = 'o  {:<39} {:13.2f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} {:10.1f} {:13.1f} ' \
                                '{:13.1f} {:13.1f}'
                     format_2 = 'o  {:<39} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} {:10.2f} {:13.2f} ' \
                                '{:13.2f} {:13.2f}'
@@ -1186,32 +1220,7 @@ def output_pes_temp_interval(options, stars, interval, interval_bbe_data, interv
                             print(format_1.format(pes.species[k][l], *formatted_list))
                         if pes.dec == 2:
                             print(format_2.format(pes.species[k][l], *formatted_list))
-                else:
-                    if options.qh and options.cosmo_int:
-                        if pes.dec == 1:
-                            print('o  {:<39} {:13.1f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} '
-                                  '{:10.1f} {:13.1f} {:13.1f} {:13.1f}'.format(pes.species[k][l],
-                                                                               *formatted_list))
-                        if pes.dec == 2:
-                            print('o  {:<39} {:13.1f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} '
-                                  '{:10.2f} {:13.2f} {:13.2f} {:13.2f}'.format(pes.species[k][l],
-                                                                               *formatted_list))
-                    elif options.qh or options.cosmo_int:
-                        if pes.dec == 1:
-                            print('o  {:<39} {:13.1f} {:13.1f} {:10.1f} {:13.1f} {:13.1f} {:10.1f} '
-                                  '{:10.1f} {:13.1f} {:13.1f}'.format(pes.species[k][l],
-                                                                      *formatted_list))
-                        if pes.dec == 2:
-                            print('o  {:<39} {:13.1f} {:13.2f} {:10.2f} {:13.2f} {:13.2f} {:10.2f} '
-                                  '{:10.2f} {:13.2f} {:13.2f}'.format(pes.species[k][l],
-                                                                      *formatted_list))
-                    else:
-                        if pes.dec == 1:
-                            print('o  {:<39} {:13.1f} {:13.1f} {:10.1f} {:13.1f} {:10.1f} {:10.1f} '
-                                  '{:13.1f} {:13.1f}'.format(pes.species[k][l], *formatted_list))
-                        if pes.dec == 2:
-                            print('o  {:<39} {:13.2f} {:13.2f} {:10.2f} {:13.2f} {:10.2f} {:10.2f} '
-                                  '{:13.2f} {:13.2f}'.format(pes.species[k][l], *formatted_list))
+
                 if pes.boltz:
                     boltz = [np.exp(-relative[1] * AU_TO_J / GAS_CONSTANT / options.temperature) / e_sum,
                              np.exp(-relative[3] * AU_TO_J / GAS_CONSTANT / options.temperature) / h_sum,
@@ -1224,11 +1233,12 @@ def output_pes_temp_interval(options, stars, interval, interval_bbe_data, interv
                 formatted_list = [round(formatted_list[x], 6) for x in range(len(formatted_list))]
             if pes.boltz == 'ee' and len(sels) == 2:
                 ee = [sels[0][x] - sels[1][x] for x in range(len(sels[0]))]
-                if options.spc is False:
-                    print(stars + '\n   {:<39} {:13.1f} {:24.1f} {:35.1f} {:13.1f}'.format('ee (%)', *ee))
+                if options.spc:
+                    print(delim_row + '\n   {:<39} {:27.2f} {:24.1f} {:35.1f} {:13.1f}'.format('ee (%)', *ee))
                 else:
-                    print(stars + '\n   {:<39} {:27.1f} {:24.1f} {:35.1f} {:13.1f}'.format('ee (%)', *ee))
-            print(stars)
+                    print(delim_row + '\n   {:<39} {:13.2f} {:24.1f} {:35.1f} {:13.1f}'.format('ee (%)', *ee))
+
+            print(delim_row)
         j += 1
 
 
@@ -1245,13 +1255,13 @@ def output_cosmos_rs_interval(files, options, s_m, l_o_t):
 
     # Attempt to automatically obtain frequency scale factor,
     # Application of freq scale factors requires all outputs to be same level of theory
-    if options.freq_scale_factor is not False:
+    if options.freq_scale_factor:
         if 'ONIOM' not in l_o_t[0]:
-            print("\nUser-defined vibrational scale factor " + str(options.freq_scale_factor) + " for " +
-                  l_o_t[0] + " level of theory")
+            print("\nUser-defined vibrational scale factor of {} for {} level of theory".
+                  format(options.freq_scale_factor, l_o_t[0]))
         else:
-            print("\nUser-defined vibrational scale factor " + str(options.freq_scale_factor) +
-                  " for QM region of " + l_o_t[0])
+            print("\nUser-defined vibrational scale factor for QM region is {}".
+                  format(options.freq_scale_factor, l_o_t[0]))
     else:
         # Look for vibrational scaling factor automatically
         if all_same(l_o_t):
@@ -1273,13 +1283,18 @@ def output_cosmos_rs_interval(files, options, s_m, l_o_t):
             filtered_calcs_l_o_t.append(levels_l_o_t)
             print_check_fails(filtered_calcs_l_o_t[1], filtered_calcs_l_o_t[0], "levels of theory")
 
-    # Exit program if a comparison of Boltzmann factors is requested and level of theory is not uniform across all
-    # files
-    if not all_same(l_o_t) and (options.boltz is not False or options.ee is not False):
+    if options.zpe_scale_factor:
+        print("    For calculating the ZPE, a scale factor of {} will be used.\n".format(options.zpe_scale_factor))
+    else:
+        options.zpe_scale_factor = options.freq_scale_factor
+        print("    The same scaling factor will be used to calculate the ZPE.\n")
+
+    # Exit program if a comparison of Boltzmann factors is requested and level of theory is not uniform across all files
+    if not all_same(l_o_t) and (not options.boltz or not options.ee):
         raise InvalidDataError("When comparing files with Boltzmann factors (with bolts, ee, dr "
                                "options), the level of theory used should be the same for all files.\n ")
     # Exit program if molecular mechanics scaling factor is given and all files are not ONIOM calculations
-    if options.mm_freq_scale_factor is not False:
+    if options.mm_freq_scale_factor:
         if all_same(l_o_t) and 'ONIOM' in l_o_t[0]:
             print("\n   User-defined vibrational scale factor " +
                   str(options.mm_freq_scale_factor) + " for MM region of " + l_o_t[0])
@@ -1288,7 +1303,7 @@ def output_cosmos_rs_interval(files, options, s_m, l_o_t):
             raise InvalidDataError("\n   Option --vmm is only for use in ONIOM calculation output files.\n    "
                                    "For help use option '-h'\n")
 
-    if options.freq_scale_factor is False:
+    if not options.freq_scale_factor:
         options.freq_scale_factor = 1.0  # If no scaling factor is found use 1.0
         if all_same(l_o_t):
             print("\n   Using vibrational scale factor {} for {} level of "
@@ -1318,7 +1333,7 @@ def output_cosmos_rs_interval(files, options, s_m, l_o_t):
         args = options.cosmo_int.split(',')
         c_file = args[0]
         c_interval = args[1:]
-        print('\n\n   Reading COSMO-RS file: ' + c_file + ' over a T range of ' + c_interval[0] + '-' +
+        print('\n   Reading COSMO-RS file: ' + c_file + ' over a T range of ' + c_interval[0] + '-' +
               c_interval[1] + ' K.')
 
         t_interval, gsolv_dicts = cosmo_rs_out(c_file, files, interval=c_interval)
@@ -1335,9 +1350,11 @@ def output_cosmos_rs_interval(files, options, s_m, l_o_t):
         options.S_freq_cutoff = options.freq_cutoff
         options.h_freq_cutoff = options.freq_cutoff
 
-        # Summary of the quasi-harmonic treatment; print out the relevant reference
-        print("\nEntropic quasi-harmonic treatment: frequency cut-off value of " + str(
-            options.S_freq_cutoff) + " wavenumbers will be applied.")
+    # Summary of the quasi-harmonic treatment; print out the relevant reference
+    print("Entropic quasi-harmonic treatment: frequency cut-off value of {} wavenumbers will be "
+          "applied.".format(options.S_freq_cutoff))
+    # Only print reference if actually cutting off wavenumbers
+    if options.S_freq_cutoff > 0.0:
         if options.qs == "grimme":
             print("    qs = Grimme: Using a mixture of RRHO and Free-rotor vibrational entropies.")
             qs_ref = GRIMME_REF
@@ -1348,36 +1365,39 @@ def output_cosmos_rs_interval(files, options, s_m, l_o_t):
             raise InvalidDataError("\n   FATAL ERROR: Unknown quasi-harmonic model " + options.qs +
                                    " specified (qs must = grimme or truhlar).")
         print("    REF: " + qs_ref + '\n')
+    else:
+        # adding one blank line...
+        print("")
 
-        # Check if qh-H correction should be applied
-        if options.qh:
-            print("Enthalpy quasi-harmonic treatment: frequency cut-off value of " + str(
-                options.h_freq_cutoff) + " wavenumbers will be applied.")
-            print("    qh = Head-Gordon: Using an RRHO treatment with an approximation term for vibrational energy.")
-            print("    REF: {}\n".format(HEAD_GORDON_REF))
+    # Check if qh-H correction should be applied
+    if options.qh:
+        print("Enthalpy quasi-harmonic treatment: frequency cut-off value of " + str(
+            options.h_freq_cutoff) + " wavenumbers will be applied.")
+        print("    qh = Head-Gordon: Using an RRHO treatment with an approximation term for vibrational energy.")
+        print("    REF: {}\n".format(HEAD_GORDON_REF))
 
-        # Check if D3 corrections should be applied
-        if options.D3:
-            print("D3-Dispersion energy with zero-damping will be calculated and included in the energy and "
-                  "enthalpy terms.\n    REF: {}\n".format(D3_REF))
-        if options.D3BJ:
-            print("D3-Dispersion energy with Becke-Johnson damping will be calculated and added to the "
-                  "energy terms.\n    REF: {}\n".format(D3BJ_REF))
-        if options.ATM:
-            print("The repulsive Axilrod-Teller-Muto 3-body term will be included in the dispersion "
-                  "correction.\n    REF: {}\n".format(ATM_REF))
+    # Check if D3 corrections should be applied
+    if options.D3:
+        print("D3-Dispersion energy with zero-damping will be calculated and included in the energy and "
+              "enthalpy terms.\n    REF: {}\n".format(D3_REF))
+    if options.D3BJ:
+        print("D3-Dispersion energy with Becke-Johnson damping will be calculated and added to the "
+              "energy terms.\n    REF: {}\n".format(D3BJ_REF))
+    if options.ATM:
+        print("The repulsive Axilrod-Teller-Muto 3-body term will be included in the dispersion "
+              "correction.\n    REF: {}\n".format(ATM_REF))
 
-        # Check if entropy symmetry correction should be applied
-        if options.ssymm:
-            print("Ssymm requested. Symmetry contribution to entropy to be calculated using S. Patchkovskii's \n"
-                  "    open source software 'Brute Force Symmetry Analyzer' available under GNU General Public "
-                  'License.\n   REF: (C) 1996, 2003 S. Patchkovskii, Serguei.Patchkovskii@sympatico.ca\n'
-                  '    Atomic radii used to calculate internal symmetry based on Cambridge Structural Database '
-                  'covalent radii.\n   REF: {}\n'.format(CSD_REF))
+    # Check if entropy symmetry correction should be applied
+    if options.ssymm:
+        print("Ssymm requested. Symmetry contribution to entropy to be calculated using S. Patchkovskii's \n"
+              "    open source software 'Brute Force Symmetry Analyzer' available under GNU General Public "
+              'License.\n   REF: (C) 1996, 2003 S. Patchkovskii, Serguei.Patchkovskii@sympatico.ca\n'
+              '    Atomic radii used to calculate internal symmetry based on Cambridge Structural Database '
+              'covalent radii.\n   REF: {}\n'.format(CSD_REF))
 
-        # Whether linked single-point energies are to be used
-        if options.spc:
-            print("    Link job: combining final single point energy with thermal corrections.\n")
+    # Whether linked single-point energies are to be used
+    if options.spc:
+        print("    Link job: combining final single point energy with thermal corrections.\n")
 
     return cosmo_solv, gsolv_dicts, t_interval
 
@@ -1403,7 +1423,8 @@ def cosmo_rs_out(dat_file, names, interval=False):
                 if line.find('(' + name.split('.')[0] + ')') > -1 and line.find('Compound') > -1:
                     if data[i - 5].find('Temperature') > -1:
                         temp = data[i - 5].split()[2]
-                    if float(temp) > float(interval[0]) and float(temp) < float(interval[1]):
+                    temp = float(temp)
+                    if temp > float(interval[0]) and temp < float(interval[1]):
                         if float(temp) not in t_interval:
                             t_interval.append(float(temp))
                         if data[i + 10].find('Gibbs') > -1:
@@ -1412,9 +1433,9 @@ def cosmo_rs_out(dat_file, names, interval=False):
 
                             found = True
             if found:
-                if old_temp is 0:
+                if old_temp == 0:
                     old_temp = temp
-                if temp is not old_temp:
+                if temp != old_temp:
                     gsolv_dicts.append(gsolv)  # Store dict at one temp
                     gsolv = {}  # Clear gsolv
                     gsolv.update(gsolv_temp)  # Grab the first one for the new temp

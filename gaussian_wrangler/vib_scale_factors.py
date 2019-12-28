@@ -5,6 +5,7 @@ Comments and/or additions are welcome (send e-mail to: robert.paton@chem.ox.ac.u
 vib_scale_factors.py
 Written by:  Rob Paton and Guilian Luchini
 Last modified:  2019
+Further modified by Heather Mayes, Dec 2019
 
 Frequency scaling factors, taken from version 4 of The Truhlar group database
 (https://t1.chem.umn.edu/freqscale/index.html
@@ -33,17 +34,18 @@ import os
 import sys
 import numpy as np
 from common_wrangler.common import (InvalidDataError, SPEED_OF_LIGHT,
-                                    # GAS_CONSTANT, KB, H, AVOGADRO_CONST, AMU_to_KG, AU_TO_J,
+                                    GAS_CONSTANT, KB, H, AVOGADRO_CONST, AMU_TO_KG, AU_TO_J,
                                     )
 
 
-GAS_CONSTANT = 8.3144621  # J / K / mol
-KB = 1.3806488e-23  # J / K, BOLTZMANN_CONSTANT
-H = 6.62606957e-34  # J * s, PLANCK_CONSTANT
-AVOGADRO_CONST = 6.0221415e23  # 1 / mol, AVOGADRO_CONSTANT
-AMU_to_KG = 1.66053886E-27  # UNIT CONVERSION
-ATM_TO_KPA = 101.325
-AU_TO_J = 4.184 * 627.509541 * 1000.0  # UNIT CONVERSION, J_TO_AU
+# Below are values originally used; updated per NIST
+# GAS_CONSTANT = 8.3144621  # J / K / mol
+# KB = 1.3806488e-23  # J / K, BOLTZMANN_CONSTANT
+# H = 6.62606957e-34  # J * s, PLANCK_CONSTANT
+# AVOGADRO_CONST = 6.0221415e23  # 1 / mol, AVOGADRO_CONSTANT
+# AMU_to_KG = 1.66053886E-27  # UNIT CONVERSION
+# ATM_TO_KPA = 101.325
+# AU_TO_J = 4.184 * 627.509541 * 1000.0  # UNIT CONVERSION, J_TO_AU
 
 
 Str_char = "U%d"
@@ -313,8 +315,8 @@ def element_id(mass_num, num=False):
 class CalcBBE:
     # The function to compute the "black box" entropy and enthalpy values
     # along with all other thermochemical quantities
-    def __init__(self, file, qs, qh, s_freq_cutoff, h_freq_cutoff, temperature, conc, freq_scale_factor, solv, spc,
-                 invert, d3_term, ssymm=False, cosmo=None, mm_freq_scale_factor=False):
+    def __init__(self, file, qs, qh, s_freq_cutoff, h_freq_cutoff, temperature, conc, freq_scale_factor,
+                 zpe_scale_factor, solv, spc, invert, d3_term, ssymm=False, cosmo=None, mm_freq_scale_factor=False):
 
         h_damp, u_vib_qrrho, qh_u_vib = None, None, None   # make IDE happy
 
@@ -323,11 +325,11 @@ class CalcBBE:
             self.cpu, inverted_freqs = 0.0, [], [], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], 0, 0, 0, 0, 1, [0, 0, 0, 0, 0], []
         s_vib_rrqho = []  # make IDE happy
         linear_warning = False
-        if mm_freq_scale_factor is False:
-            fract_model_sys = False
-        else:
+        if mm_freq_scale_factor:
             fract_model_sys = []
             freq_scale_factor = [freq_scale_factor, mm_freq_scale_factor]
+        else:
+            fract_model_sys = False
         self.xyz = GetOutData(file)
         self.job_type = job_type(file)
         # Parse some useful information from the file
@@ -373,7 +375,7 @@ class CalcBBE:
                 if link == freq_loc:
                     frequency_wn = []
                     im_frequency_wn = []
-                    if mm_freq_scale_factor is not False:
+                    if mm_freq_scale_factor:
                         fract_model_sys = []
             # If spc specified will take last Energy from file, otherwise will break after freq calc
             if link > freq_loc:
@@ -381,13 +383,13 @@ class CalcBBE:
             # Iterate over output: look out for low frequencies
             if g_line.startswith('Frequencies -- '):
                 new_line = None  # make IDE happy
-                if mm_freq_scale_factor is not False:
+                if mm_freq_scale_factor:
                     new_line = g_output[i + 3]
                 for j in range(2, 5):
                     try:
                         x = float(g_line.split()[j])
                         # If given MM freq scale factor fill the fract_model_sys array:
-                        if mm_freq_scale_factor is not False:
+                        if mm_freq_scale_factor:
                             y = float(new_line.strip().split()[j]) / 100.0
                             y = float('{:.6f}'.format(y))
                         else:
@@ -399,7 +401,7 @@ class CalcBBE:
                                 fract_model_sys.append(y)
                         # Check if we want to make any low lying imaginary frequencies positive
                         elif x < -1 * im_freq_cutoff:
-                            if invert is not False:
+                            if invert:
                                 if x > float(invert):
                                     frequency_wn.append(x * -1.)
                                     inverted_freqs.append(x)
@@ -431,7 +433,7 @@ class CalcBBE:
             elif 'Multiplicity' in g_line:
                 try:
                     self.mult = int(g_line.split('=')[-1].strip().split()[0])
-                except:
+                except IndexError:  # not really sure what error might happen, or why the below would fix it
                     self.mult = int(g_line.split()[-1])
             # Grab molecular mass
             elif g_line.startswith('Molecular mass:'):
@@ -476,7 +478,7 @@ class CalcBBE:
         self.inverted_freqs = inverted_freqs
         # Skip the calculation if unable to parse the frequencies or zpe from the output file
         if hasattr(self, "zero_point_corr") and rot_temp:
-            cutoffs = [s_freq_cutoff for freq in frequency_wn]
+            cutoffs = [s_freq_cutoff] * len(frequency_wn)
 
             # Translational and electronic contributions to the energy and entropy do not depend on frequencies
             u_trans = calc_translational_energy(temperature)
@@ -485,7 +487,7 @@ class CalcBBE:
 
             # Rotational and Vibrational contributions to the energy entropy
             if len(frequency_wn) > 0:
-                zpe = calc_zeropoint_energy(frequency_wn, freq_scale_factor, fract_model_sys)
+                zpe = calc_zeropoint_energy(frequency_wn, zpe_scale_factor, fract_model_sys)
                 u_rot = calc_rotational_energy(self.zero_point_corr, temperature, linear_mol)
                 u_vib = calc_vibrational_energy(frequency_wn, temperature, freq_scale_factor, fract_model_sys)
                 s_rot = calc_rotational_entropy(self.zero_point_corr, linear_mol, sym_no, rot_temp, temperature)
@@ -532,10 +534,10 @@ class CalcBBE:
 
             # The D3 term is added to the energy term here. If not requested then this term is zero
             # It is added to the SPC energy if defined (instead of the SCF energy)
-            if spc is False:
-                self.scf_energy += d3_term
-            else:
+            if spc:
                 self.sp_energy += d3_term
+            else:
+                self.scf_energy += d3_term
 
             # Add terms (converted to au) to get Free energy - perform separately
             # for harmonic and quasi-harmonic values out of interest
@@ -544,7 +546,7 @@ class CalcBBE:
             if qh:
                 self.qh_enthalpy = self.scf_energy + (u_trans + u_rot + qh_u_vib + GAS_CONSTANT * temperature) / AU_TO_J
             # Single point correction replaces energy from optimization with single point value
-            if spc is not False:
+            if spc:
                 try:
                     self.enthalpy = self.enthalpy - self.scf_energy + self.sp_energy
                 except TypeError:
@@ -611,6 +613,7 @@ class CalcBBE:
 
 # Read molecule data from a compchem output file
 # Currently supports Gaussian and ORCA output types
+#
 class GetOutData:
     def __init__(self, file):
         with open(file) as f:
@@ -625,11 +628,12 @@ class GetOutData:
                 program = "Orca"
                 break
 
+        # noinspection PyShadowingNames
         def get_freqs(self, outlines, n_atoms, f_format):
             self.FREQS = []
-            self.REDMASS = []
-            self.FORCECONST = []
-            self.NORMALMODE = []
+            self.REDUCED_MASS = []
+            self.FORCE_CONST = []
+            self.NORMAL_MODE = []
             freqs_so_far = 0
             if f_format == "Gaussian":
                 for i in range(0, len(outlines)):
@@ -637,25 +641,26 @@ class GetOutData:
                         n_freqs = len(outlines[i].split())
                         for j in range(2, n_freqs):
                             self.FREQS.append(float(outlines[i].split()[j]))
-                            self.NORMALMODE.append([])
+                            self.NORMAL_MODE.append([])
                         for j in range(3, n_freqs + 1):
-                            self.REDMASS.append(float(outlines[i + 1].split()[j]))
+                            self.REDUCED_MASS.append(float(outlines[i + 1].split()[j]))
                         for j in range(3, n_freqs + 1):
-                            self.FORCECONST.append(float(outlines[i + 2].split()[j]))
+                            self.FORCE_CONST.append(float(outlines[i + 2].split()[j]))
 
                         for j in range(0, n_atoms):
                             for k in range(0, n_freqs - 2):
-                                self.NORMALMODE[(freqs_so_far + k)].append(
+                                self.NORMAL_MODE[(freqs_so_far + k)].append(
                                     [float(outlines[i + 5 + j].split()[3 * k + 2]),
                                      float(outlines[i + 5 + j].split()[3 * k + 3]),
                                      float(outlines[i + 5 + j].split()[3 * k + 4])])
                         freqs_so_far = freqs_so_far + n_freqs - 2
 
+        # noinspection PyShadowingNames
         def getatom_types(self, outlines, program_name):
             if program_name == "Gaussian":
                 for i, p_line in enumerate(outlines):
                     if "Input orientation" in p_line or "Standard orientation" in p_line:
-                        self.atom_nums, self.atom_types, self.cartesians, self.atomictypes, carts = [], [], [], [], \
+                        self.atom_nums, self.atom_types, self.cartesians, self.atomic_types, carts = [], [], [], [], \
                                                                                                     outlines[i + 5:]
                         for j, c_line in enumerate(carts):
                             if "-------" in c_line:
@@ -663,7 +668,7 @@ class GetOutData:
                             split_line = c_line.split()
                             self.atom_nums.append(int(split_line[1]))
                             self.atom_types.append(element_id(int(split_line[1])))
-                            self.atomictypes.append(int(split_line[2]))
+                            self.atomic_types.append(int(split_line[2]))
                             if len(split_line) > 5:
                                 self.cartesians.append([float(split_line[3]), float(split_line[4]),
                                                         float(split_line[5])])
@@ -671,13 +676,13 @@ class GetOutData:
                                 self.cartesians.append([float(split_line[2]), float(split_line[3]),
                                                         float(split_line[4])])
             if program_name == "Orca":
-                for i, o_line in enumerate(outlines):
-                    if "*" in o_line and ">" in o_line and "xyz" in o_line:
+                for i, r_line in enumerate(outlines):
+                    if "*" in r_line and ">" in r_line and "xyz" in r_line:
                         self.atom_nums, self.atom_types, self.cartesians, carts = [], [], [], outlines[i + 1:]
                         for j, c_line in enumerate(carts):
                             if ">" in c_line and "*" in c_line:
                                 break
-                            split_line = o_line.split()
+                            split_line = r_line.split()
                             if len(split_line) > 5:
                                 self.cartesians.append([float(split_line[3]), float(split_line[4]),
                                                         float(split_line[5])])
@@ -691,10 +696,9 @@ class GetOutData:
 
         getatom_types(self, out_data, program)
         n_atoms = len(self.atom_types)
-        try:
-            get_freqs(self, out_data, n_atoms, program)
-        except:
-            pass
+
+        # noinspection PyTypeChecker
+        get_freqs(self, out_data, n_atoms, program)
 
     # Obtain molecule connectivity to be used for internal symmetry determination
     def get_connectivity(self):
@@ -711,17 +715,18 @@ class GetOutData:
                 if distance < cutoff:
                     atom_row.append(j)
             connectivity.append(atom_row)
+            # noinspection PyAttributeOutsideInit
             self.connectivity = connectivity
 
 
-# Rigid rotor harmonic oscillator (RRHO) entropy evaluation - this is the default treatment
 def calc_rrho_entropy(frequency_wn, temperature, freq_scale_factor, fract_model_sys):
     """
+    Rigid rotor harmonic oscillator (RRHO) entropy evaluation - this is the default treatment
     Entropic contributions (J/(mol*K)) according to a rigid-rotor
     harmonic-oscillator description for a list of vibrational modes
     Sv = RSum(hv/(kT(e^(hv/kT)-1) - ln(1-e^(-hv/kT)))
     """
-    if fract_model_sys is not False:
+    if fract_model_sys:
         freq_scale_factor = [freq_scale_factor[0] * fract_model_sys[i] + freq_scale_factor[1] *
                              (1.0 - fract_model_sys[i]) for i in range(len(fract_model_sys))]
         factor = [(H * frequency_wn[i] * SPEED_OF_LIGHT * freq_scale_factor[i]) /
@@ -737,7 +742,6 @@ def calc_rrho_entropy(frequency_wn, temperature, freq_scale_factor, fract_model_
 def job_type(file):
     # Read output for the level of theory and basis set used
     job = ''
-    job_data = []
     with open(file) as f:
         job_data = f.readlines()
     for line in job_data:
@@ -756,7 +760,7 @@ def parse_data(file):
     # Read Gaussian output and obtain single point energy, program type,
     # program version, solvation_model, charge, empirical_dispersion, multiplicity
     spe, program = 'none', 'none'
-    version_program, solvation_model, keyword_line, a = '', '', '', 0
+    version_program, solvation_model, keyword_line = '', '', ''
     charge, multiplicity = None, None
 
     if os.path.exists(os.path.splitext(file)[0] + '.log'):
@@ -811,18 +815,17 @@ def parse_data(file):
 
     # Solvation model and empirical dispersion detection
     empirical_dispersion = None
+    sorted_solvation_model = None
+    display_solvation_model = None
     if 'Gaussian' in version_program.strip():
         for i, line in enumerate(data):
-            if '#' in line.strip() and a == 0:
-                for j, line in enumerate(data[i:i + 10]):
+            if '#' in line.strip():
+                for j, d_line in enumerate(data[i:i + 10]):
                     if '--' in line.strip():
-                        a = a + 1
-                        break
-                    if a != 0:
                         break
                     else:
-                        for k in range(len(line.strip().split("\n"))):
-                            keyword_line += line.strip().split("\n")[k]
+                        for k in range(len(d_line.strip().split("\n"))):
+                            keyword_line += d_line.strip().split("\n")[k]
         keyword_line = keyword_line.lower()
         if 'scrf' not in keyword_line.strip():
             solvation_model = "gas phase"
@@ -860,25 +863,7 @@ def parse_data(file):
             empirical_dispersion = "No empirical dispersion detected"
         elif keyword_line.strip().find('empiricaldispersion') > -1:
             start_emp_disp = keyword_line.strip().find('empiricaldispersion') + 19
-            if '(' in keyword_line[start_emp_disp:start_emp_disp + 4]:
-                start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find('(') + 1
-                end_emp_disp = keyword_line.find(")", start_emp_disp)
-                empirical_dispersion = 'empiricaldispersion=(' + ','.join(
-                    sorted(keyword_line[start_emp_disp:end_emp_disp].lower().split(','))) + ')'
-            else:
-                if ' = ' in keyword_line[start_emp_disp:start_emp_disp + 4]:
-                    start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find(' = ') + 3
-                elif ' =' in keyword_line[start_emp_disp:start_emp_disp + 4]:
-                    start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find(' =') + 2
-                elif '=' in keyword_line[start_emp_disp:start_emp_disp + 4]:
-                    start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find('=') + 1
-                end_emp_disp = keyword_line.find(" ", start_emp_disp)
-                if end_emp_disp == -1:
-                    empirical_dispersion = "empiricaldispersion=(" + ','.join(
-                        sorted(keyword_line[start_emp_disp:].lower().split(','))) + ')'
-                else:
-                    empirical_dispersion = "empiricaldispersion=(" + ','.join(
-                        sorted(keyword_line[start_emp_disp:end_emp_disp].lower().split(','))) + ')'
+            empirical_dispersion = get_emp_dispersion(keyword_line, start_emp_disp)
         elif keyword_line.strip().find('emp=') > -1 or keyword_line.strip().find(
                 'emp =') > -1 or keyword_line.strip().find('emp(') > -1:
             # Check for temp keyword
@@ -909,25 +894,7 @@ def parse_data(file):
                 start_emp_disp += 3
             if (temp and emp_e) or (not temp and keyword_line.strip().find('emp=') > -1) or (
                     not temp and keyword_line.strip().find('emp =')):
-                if '(' in keyword_line[start_emp_disp:start_emp_disp + 4]:
-                    start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find('(') + 1
-                    end_emp_disp = keyword_line.find(")", start_emp_disp)
-                    empirical_dispersion = 'empiricaldispersion=(' + ','.join(
-                        sorted(keyword_line[start_emp_disp:end_emp_disp].lower().split(','))) + ')'
-                else:
-                    if ' = ' in keyword_line[start_emp_disp:start_emp_disp + 4]:
-                        start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find(' = ') + 3
-                    elif ' =' in keyword_line[start_emp_disp:start_emp_disp + 4]:
-                        start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find(' =') + 2
-                    elif '=' in keyword_line[start_emp_disp:start_emp_disp + 4]:
-                        start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find('=') + 1
-                    end_emp_disp = keyword_line.find(" ", start_emp_disp)
-                    if end_emp_disp == -1:
-                        empirical_dispersion = "empiricaldispersion=(" + ','.join(
-                            sorted(keyword_line[start_emp_disp:].lower().split(','))) + ')'
-                    else:
-                        empirical_dispersion = "empiricaldispersion=(" + ','.join(
-                            sorted(keyword_line[start_emp_disp:end_emp_disp].lower().split(','))) + ')'
+                empirical_dispersion = get_emp_dispersion(keyword_line, start_emp_disp)
             elif (temp and emp_p) or (not temp and keyword_line.strip().find('emp(') > -1):
                 start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find('(') + 1
                 end_emp_disp = keyword_line.find(")", start_emp_disp)
@@ -948,15 +915,37 @@ def parse_data(file):
         empirical_dispersion1 = 'No empirical dispersion detected'
         empirical_dispersion2 = ''
         empirical_dispersion3 = ''
-        for i, line in enumerate(data):
-            if keyword_line.strip().find('DFT DISPERSION CORRECTION') > -1:
-                empirical_dispersion1 = ''
-            if keyword_line.strip().find('DFTD3') > -1:
-                empirical_dispersion2 = "D3"
-            if keyword_line.strip().find('USING zero damping') > -1:
-                empirical_dispersion3 = ' with zero damping'
+        if keyword_line.strip().find('DFT DISPERSION CORRECTION') > -1:
+            empirical_dispersion1 = ''
+        if keyword_line.strip().find('DFTD3') > -1:
+            empirical_dispersion2 = "D3"
+        if keyword_line.strip().find('USING zero damping') > -1:
+            empirical_dispersion3 = ' with zero damping'
         empirical_dispersion = empirical_dispersion1 + empirical_dispersion2 + empirical_dispersion3
     return spe, program, version_program, solvation_model, file, charge, empirical_dispersion, multiplicity
+
+
+def get_emp_dispersion(keyword_line, start_emp_disp):
+    if '(' in keyword_line[start_emp_disp:start_emp_disp + 4]:
+        start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find('(') + 1
+        end_emp_disp = keyword_line.find(")", start_emp_disp)
+        empirical_dispersion = 'empiricaldispersion=(' + ','.join(
+            sorted(keyword_line[start_emp_disp:end_emp_disp].lower().split(','))) + ')'
+    else:
+        if ' = ' in keyword_line[start_emp_disp:start_emp_disp + 4]:
+            start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find(' = ') + 3
+        elif ' =' in keyword_line[start_emp_disp:start_emp_disp + 4]:
+            start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find(' =') + 2
+        elif '=' in keyword_line[start_emp_disp:start_emp_disp + 4]:
+            start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find('=') + 1
+        end_emp_disp = keyword_line.find(" ", start_emp_disp)
+        if end_emp_disp == -1:
+            empirical_dispersion = "empiricaldispersion=(" + ','.join(
+                sorted(keyword_line[start_emp_disp:].lower().split(','))) + ')'
+        else:
+            empirical_dispersion = "empiricaldispersion=(" + ','.join(
+                sorted(keyword_line[start_emp_disp:end_emp_disp].lower().split(','))) + ')'
+    return empirical_dispersion
 
 
 def sp_cpu(file):
@@ -982,8 +971,6 @@ def sp_cpu(file):
 
     for line in sp_data:
         if program == "Gaussian":
-            if line.strip().startswith('SCF Done:'):
-                spe = float(line.strip().split()[4])
             if line.strip().find("Job cpu time") > -1:
                 days = int(line.split()[3])
                 hours = int(line.split()[5])
@@ -992,8 +979,6 @@ def sp_cpu(file):
                 msecs = int(float(line.split()[9]) * 1000.0)
                 cpu = [days, hours, mins, secs, msecs]
         if program == "Orca":
-            if line.strip().startswith('FINAL SINGLE POINT ENERGY'):
-                spe = float(line.strip().split()[4])
             if line.strip().find("TOTAL RUN TIME") > -1:
                 days = int(line.split()[3])
                 hours = int(line.split()[5])
@@ -1002,6 +987,7 @@ def sp_cpu(file):
                 msecs = float(line.split()[11])
                 cpu = [days, hours, mins, secs, msecs]
     return cpu
+
 
 def calc_translational_energy(temperature):
     """
@@ -1033,19 +1019,19 @@ def calc_rotational_energy(zpe, temperature, linear):
     return energy
 
 
-def calc_zeropoint_energy(frequency_wn, freq_scale_factor, fract_model_sys):
+def calc_zeropoint_energy(frequency_wn, scale_factor, fract_model_sys):
     """
     # Vibrational Zero point energy evaluation
     # Depends on frequencies and scaling factor: default = 1.0
     Calculates the vibrational ZPE (J/mol)
     E_ZPE = Sum(0.5 hv/k)
     """
-    if fract_model_sys is not False:
-        freq_scale_factor = [freq_scale_factor[0] * fract_model_sys[i] + freq_scale_factor[1] *
-                             (1.0 - fract_model_sys[i]) for i in range(len(fract_model_sys))]
-        factor = [(H * frequency_wn[i] * SPEED_OF_LIGHT * freq_scale_factor[i]) / KB for i in range(len(frequency_wn))]
+    if fract_model_sys:
+        scale_factor = [scale_factor[0] * fract_model_sys[i] + scale_factor[1] *
+                        (1.0 - fract_model_sys[i]) for i in range(len(fract_model_sys))]
+        factor = [(H * frequency_wn[i] * SPEED_OF_LIGHT * scale_factor[i]) / KB for i in range(len(frequency_wn))]
     else:
-        factor = [(H * freq * SPEED_OF_LIGHT * freq_scale_factor) / KB for freq in frequency_wn]
+        factor = [(H * freq * SPEED_OF_LIGHT * scale_factor) / KB for freq in frequency_wn]
     energy = [0.5 * entry * GAS_CONSTANT for entry in factor]
     return sum(energy)
 
@@ -1058,7 +1044,7 @@ def calc_translational_entropy(molecular_mass, conc, temperature, solv):
     Needs the molecular mass. Convert mass in amu to kg; conc in mol/l to number per m^3
     s_trans = R(Ln(2 pi mkT/h^2)^3/2(1/C)) + 1 + 3/2)
     """
-    e_lambda = ((2.0 * np.pi * molecular_mass * AMU_to_KG * KB * temperature) ** 0.5) / H
+    e_lambda = ((2.0 * np.pi * molecular_mass * AMU_TO_KG * KB * temperature) ** 0.5) / H
     freespace = get_free_space(solv)
     n_dens = conc * 1000 * AVOGADRO_CONST / (freespace / 1000.0)
     entropy = GAS_CONSTANT * (2.5 + np.log(e_lambda ** 3 / n_dens))
@@ -1082,9 +1068,9 @@ def calc_vibrational_energy(frequency_wn, temperature, freq_scale_factor, fract_
     # Depends on frequencies, temperature and scaling factor: default = 1.0
     Calculates the vibrational energy contribution (J/mol).
     Includes ZPE (0K) and thermal contributions
-    Evib = R * Sum(0.5 hv/k + (hv/k)/(e^(hv/KT)-1))
+    E_vib = R * Sum(0.5 hv/k + (hv/k)/(e^(hv/KT)-1))
     """
-    if fract_model_sys is not False:
+    if fract_model_sys:
         freq_scale_factor = [
             freq_scale_factor[0] * fract_model_sys[i] + freq_scale_factor[1] * (1.0 - fract_model_sys[i])
             for i in range(len(fract_model_sys))]
@@ -1156,7 +1142,7 @@ def calc_free_rot_entropy(frequency_wn, temperature, freq_scale_factor, fract_mo
     """
     # This is the average moment of inertia used by Grimme
     bav = 1.00e-44
-    if fract_model_sys is not False:
+    if fract_model_sys:
         freq_scale_factor = [freq_scale_factor[0] * fract_model_sys[i] + freq_scale_factor[1] *
                              (1.0 - fract_model_sys[i]) for i in range(len(fract_model_sys))]
         mu = [H / (8 * np.pi ** 2 * frequency_wn[i] * SPEED_OF_LIGHT * freq_scale_factor[i]) for i in
@@ -1185,7 +1171,7 @@ def get_free_space(solv):
     Calculates the free space in a litre of bulk solvent, based on
     Shakhnovich and Whitesides (J. Org. Chem. 1998, 63, 3821-3830)
     """
-    # todo: add more solvents
+    # todo: add more solvents???
     solvent_list = ["none", "H2O", "toluene", "DMF", "AcOH", "chloroform"]
     molarity = [1.0, 55.6, 9.4, 12.9, 17.4, 12.5]  # mol/l
     molecular_vol = [1.0, 27.944, 149.070, 77.442, 86.10, 97.0]  # Angstrom^3
@@ -1197,8 +1183,8 @@ def get_free_space(solv):
     solv_molarity = molarity[n_solv]
     solv_volume = molecular_vol[n_solv]
     if n_solv > 0:
-        v_free = 8 * ((1E27 / (solv_molarity * AVOGADRO_CONST)) ** 0.333333 - solv_volume ** 0.333333) ** 3
-        freespace = v_free * solv_molarity * AVOGADRO_CONST * 1E-24
+        v_free = 8 * ((1e27 / (solv_molarity * AVOGADRO_CONST)) ** 0.333333 - solv_volume ** 0.333333) ** 3
+        freespace = v_free * solv_molarity * AVOGADRO_CONST * 1e-24
     else:
         freespace = 1000.0
     return freespace

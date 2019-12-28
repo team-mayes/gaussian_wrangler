@@ -351,7 +351,7 @@ def get_max_disk(testing_mode):
             if split_line[-1] == '/':
                 raw_avail = split_line[-3]
                 break
-    avail_list = re.split('([\d.]+)(\w+)', raw_avail)
+    avail_list = re.split(r'([\d.]+)(\w+)', raw_avail)
     max_disk_num = 0.9 * float(avail_list[1])
     max_disk_unit = avail_list[2]
     max_disk = "{:.2f}{}".format(max_disk_num, max_disk_unit)
@@ -616,8 +616,11 @@ def main(argv=None):
         if args.list_of_jobs:
             with open(args.job_name) as f:
                 for line in f:
-                    input_job_file = os.path.splitext(line.strip())[0] + cfg[GAUSS_IN_EXT]
-                    base_name = get_fname_root(line.strip())
+                    s_line = line.strip()
+                    if len(s_line) == 0:
+                        continue
+                    input_job_file = os.path.splitext(s_line)[0] + cfg[GAUSS_IN_EXT]
+                    base_name = get_fname_root(s_line)
                     tpl_dict = {JOB_NAME: base_name, INPUT_FILE: input_job_file}
                     for thread_index, thread in enumerate(cfg[JOB_LIST]):
                         setup_and_submit(cfg, thread, tpl_dict, args.testing, args.ignore_chk_warning)

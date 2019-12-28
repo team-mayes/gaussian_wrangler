@@ -90,7 +90,8 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
         main_proc[CUT_PAIR_LIST].append(atom_pair)
 
     if main_proc[GAUSSCOM_FILE] and main_proc[GAUSSLOG_FILE]:
-        raise InvalidDataError("Both a '{}' and a '{}' are specified. Choose only one file to read and fragment.")
+        raise InvalidDataError("Both an '{}' and an '{}' are specified. Choose only one file to read and fragment.".
+                               format(GAUSSCOM_FILE, GAUSSLOG_FILE))
 
     if main_proc[OUT_BASE_DIR]:
         if not os.path.exists(main_proc[OUT_BASE_DIR]):
@@ -113,7 +114,7 @@ def parse_cmdline(argv):
 
     # initialize the parser object:
     parser = argparse.ArgumentParser(description='Creates cp files from Gaussian input files, given a list of atom '
-                                                 'numbers where to cut (list format: atom1, atom2; atom3, atom4.')
+                                                 'numbers where to cut (list format: atom1, atom2; atom3, atom4).')
     parser.add_argument("-c", "--config", help="The location of the configuration file in ini format. "
                                                "The default file name is {}, located in the "
                                                "base directory where the program as run.".format(DEF_CFG_FILE),

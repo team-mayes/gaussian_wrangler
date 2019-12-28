@@ -1,3 +1,3 @@
 "file1","file2","file3","file4","file5","A (1/s if uni)","Ea (kcal/mol)","ΔG temp (K)","ΔG‡ (kcal/mol)","ΔG_rxn (kcal/mol)","qh_A (1/s if uni)","qh_Ea (kcal/mol)","qh_ΔG‡ (kcal/mol)","qh_ΔG_rxn (kcal/mol)"
-"","","","tpaegh1ats_ts_ircr_opt.log","tpaegh1ats_ts.log",212702863163.76147,30.58290541796468,300.0,32.59974452271126,nan,1373702795572.8076,31.146103628737244,32.036241017864086,nan
-"","","tpaegh1ats_ts_ircr_opt_noeg.log","ethygly2_tzvp.log","tpaegh1ats_ts.log",2721595.1439839886,27.36052048558571,300.0,36.0253187243361,nan,64287.23324636538,26.256256687590632,37.18244618864264,nan
+"","","","tpaegh1ats_ts_ircr_opt.log","tpaegh1ats_ts.log",212482623244.6203,30.58198336233386,300.0,32.599117013276555,nan,1373388136011.6455,31.14584004667377,32.036241017864086,nan
+"","","tpaegh1ats_ts_ircr_opt_noeg.log","ethygly2_tzvp.log","tpaegh1ats_ts.log",2720776.819250676,27.360306817079426,300.0,36.0253187243361,nan,64287.254141312646,26.256256687590625,37.18244618864264,nan

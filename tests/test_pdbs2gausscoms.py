@@ -70,6 +70,12 @@ class TestPdbs2GausscomsNoOut(unittest.TestCase):
         with capture_stderr(main, test_input) as output:
             self.assertTrue("pe_linear.pdb" in output)
 
+    def testMissingPdb(self):
+        test_input = ["-t", "tests/test_data/pdbs2gausscoms/gau.tpl"]
+        # main(test_input)
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("No pdb files found to process" in output)
+
 
 class TestPdbs2Gausscoms(unittest.TestCase):
     # These test/demonstrate different options

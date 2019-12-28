@@ -153,13 +153,19 @@ def process_gausscom_file(cfg, gausscom_file, pdb_tpl_content):
 
             elif section == SEC_ATOMS:
                 if len(line) == 0:
-                    continue
+                    # Since the tail will come only from the template, nothing more is needed after reading atoms
+                    break
                 split_line = line.split()
 
                 atom_type = split_line[0]
                 # if working from a template, check atom type
                 if cfg[PDB_TPL_FILE]:
-                    pdb_atom_type = pdb_data_section[atom_id][8].split(' ')[-1]
+                    try:
+                        pdb_atom_type = pdb_data_section[atom_id][8].split(' ')[-1]
+                    except IndexError:
+                        raise InvalidDataError('Gausscom file: {}\n   has more atoms than the expected {} atoms in '
+                                               'the template file: {}'.
+                                               format(gausscom_file, pdb_tpl_content[NUM_ATOMS], cfg[PDB_TPL_FILE]))
                     if atom_type != pdb_atom_type:
                         warning("Atom types do not match for atom number {}; pdb atom type is {} while gausscom type "
                                 "is {}".format(atom_id, pdb_atom_type, atom_type))
@@ -170,18 +176,12 @@ def process_gausscom_file(cfg, gausscom_file, pdb_tpl_content):
                                                  '  1.00  0.00          {:>2}'.format(atom_type)]
                 pdb_data_section[atom_id][5:8] = map(float, split_line[1:4])
                 atom_id += 1
-                # Check after increment because the counter started at 0
-                if cfg[PDB_TPL_FILE]:
-                    if atom_id == pdb_tpl_content[NUM_ATOMS]:
-                        # Since the tail will come only from the template, nothing more is needed.
-                        break
 
-    # Now that finished reading the file, first make sure didn't  exit before reaching the desired number of atoms
+    # Now that finished reading the file, first make sure didn't exit before reaching the desired number of atoms
     if cfg[PDB_TPL_FILE]:
         if atom_id != pdb_tpl_content[NUM_ATOMS]:
-            raise InvalidDataError('In gausscom file: {}\n'
-                                   '  found {} atoms, but pdb expects {} atoms'.format(gausscom_file, atom_id,
-                                                                                       pdb_tpl_content[NUM_ATOMS]))
+            raise InvalidDataError('In gausscom file: {}\n  found {} atoms, while the pdb template has {} atoms'.
+                                   format(gausscom_file, atom_id, pdb_tpl_content[NUM_ATOMS]))
     f_name = create_out_fname(gausscom_file, ext='.pdb', base_dir=cfg[OUT_BASE_DIR])
     list_to_file(pdb_tpl_content[SEC_HEAD] + pdb_data_section + pdb_tpl_content[SEC_TAIL],
                  f_name, list_format=PDB_FORMAT)
