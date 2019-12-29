@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Gaussian input/output tools
+Scripts to set up Gaussian input files and analyze Gaussian output files
 """
 from setuptools import setup
 import versioneer
