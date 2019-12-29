@@ -19,7 +19,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'Find low energy conformers using RDKit'
+project = 'Scripts to set up Gaussian input files and analyze Gaussian output files.'
 copyright = "2019, Heather B Mayes"
 author = 'Heather B Mayes'
 
@@ -152,9 +152,8 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'gaussian_wrangler', 'gaussian_wrangler Documentation',
-     author, 'gaussian_wrangler', 'Find low energy conformers using RDKit',
+     author, 'gaussian_wrangler', 'Scripts to set up Gaussian input files and analyze Gaussian output files',
      'Miscellaneous'),
 ]
-
 
 # -- Extension configuration -------------------------------------------------
