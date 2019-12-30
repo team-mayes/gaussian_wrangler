@@ -17,7 +17,8 @@ from pathlib import Path
 from collections import defaultdict
 from common_wrangler.common import (InvalidDataError, warning, RG, KB, H, EHPART_TO_KCAL_MOL,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                                    write_csv, create_out_fname, make_fig, parse_stoich, capture_stdout, list_to_file)
+                                    write_csv, create_out_fname, make_fig, parse_stoich, capture_stdout, list_to_file,
+                                    round_sig_figs)
 
 __author__ = 'hmayes'
 
@@ -52,15 +53,17 @@ FILE5 = 'file5'
 A = 'A (1/s if uni)'
 EA = 'Ea (kcal/mol)'
 DELTA_G_TEMP = '\u0394G temp (K)'
+RATE_COEFF_AT_G_TEMP = 'Rate coefficient (k) at \u0394G temp (1/s if unimolecular)'
 DELTA_G_TS = '\u0394G\u2021 (kcal/mol)'
 DELTA_G_RXN = '\u0394G_rxn (kcal/mol)'
 QH_A = 'qh_A (1/s if uni)'
 QH_EA = 'qh_Ea (kcal/mol)'
+QH_RATE_COEFF_AT_G_TEMP = 'qh_Rate coefficient (k) at \u0394G temp (1/s if unimolecular)'
 QH_DELTA_G_TS = 'qh_\u0394G\u2021 (kcal/mol)'
 QH_DELTA_G_RXN = 'qh_\u0394G_rxn (kcal/mol)'
 
-OUTPUT_HEADERS = [FILE1, FILE2, FILE3, FILE4, FILE5, A, EA, DELTA_G_TEMP, DELTA_G_TS, DELTA_G_RXN,
-                  QH_A, QH_EA, QH_DELTA_G_TS, QH_DELTA_G_RXN]
+OUTPUT_HEADERS = [FILE1, FILE2, FILE3, FILE4, FILE5, A, EA, DELTA_G_TEMP, RATE_COEFF_AT_G_TEMP, DELTA_G_TS, DELTA_G_RXN,
+                  QH_A, QH_EA, QH_RATE_COEFF_AT_G_TEMP, QH_DELTA_G_TS, QH_DELTA_G_RXN]
 
 
 class HartreeWrapper:
@@ -488,7 +491,7 @@ def get_kt(temps, delta_gibbs_ts):
     :return: kt: np array of rate coefficients at each temp
     """
     # rate coefficient from Eyring equation
-    return KB / H * temps * np.exp(-delta_gibbs_ts / RG / temps)  # [1/s]
+    return KB / H * temps * np.exp(-delta_gibbs_ts / RG / temps)  # [1/s] if unimolecular
 
 
 def fit_arrhenius(temps, kt):
@@ -505,11 +508,11 @@ def fit_arrhenius(temps, kt):
     intercept = fit[1]
     a = np.exp(intercept)  # [1/s]
     ea = -slope * RG  # [kcal/mol]
-    return a, ea
+    return round_sig_figs(a), round_sig_figs(ea)
 
 
-def print_results(a, ea, qh_a, qh_ea, g_temp, g_ts, g_rxn, qh_g_ts, qh_g_rxn, file_set, out_fname, print_mode,
-                  print_message=False):
+def print_results(a, ea, qh_a, qh_ea, g_temp, k_temp, g_ts, g_rxn, qh_k_temp, qh_g_ts, qh_g_rxn, file_set, out_fname,
+                  print_mode, print_message=False):
     file_names = []
     for index in range(-5, 0):
         try:
@@ -517,28 +520,26 @@ def print_results(a, ea, qh_a, qh_ea, g_temp, g_ts, g_rxn, qh_g_ts, qh_g_rxn, fi
         except IndexError:
             file_names.append('')
     output_dict = {FILE1: file_names[0], FILE2: file_names[1], FILE3: file_names[2], FILE4: file_names[3],
-                   FILE5: file_names[4],
-                   A: a, EA: ea, QH_A: qh_a, QH_EA: qh_ea, DELTA_G_TEMP: g_temp, DELTA_G_TS: g_ts,
-                   DELTA_G_RXN: g_rxn, QH_DELTA_G_TS: qh_g_ts, QH_DELTA_G_RXN: qh_g_rxn}
+                   FILE5: file_names[4], A: a, EA: ea, QH_A: qh_a, QH_EA: qh_ea, DELTA_G_TEMP: g_temp,
+                   RATE_COEFF_AT_G_TEMP: k_temp, DELTA_G_TS: g_ts, DELTA_G_RXN: g_rxn,
+                   QH_RATE_COEFF_AT_G_TEMP: qh_k_temp, QH_DELTA_G_TS: qh_g_ts, QH_DELTA_G_RXN: qh_g_rxn}
     write_csv([output_dict], out_fname, OUTPUT_HEADERS, extrasaction="ignore", mode=print_mode,
               print_message=print_message)
 
 
-def get_delta_at_temp(temp, temps, delta_ts, delta_rxn):
+def get_temp_index(temp, temps):
     """
-    Grab delta's of given lists at given temp
+    Find temperature index to use for returning single values of quantities from arrays
     :param temp: float, temp in K to calculate delta values
-    :param temps: list of floats, temps for which we have G values
-    :param  delta_ts: np_array, delta Gibbs free energies between react(s) and TS (kcal/mol) at temps
-    :param delta_rxn: np_array, delta Gibbs free energies between react(s) and prod(s) (kcal/mol) at temps
-    :return: delta_g_ts, delta_g_rxn at requested temp (default to first temp)
+    :param temps: list of floats, temps for which we have calculated reaction rates, delta G's, etc.
+    :return: temp_index: integer, array location of temp to use to return specific values from arrays
     """
     if temp:
         temp_index = (np.abs(temps - float(temp))).argmin()
     else:
         temp_index = 0
 
-    return temps[temp_index], delta_ts[temp_index], delta_rxn[temp_index]
+    return temp_index
 
 
 def plot_delta(fname, temp, delta_ts_list, delta_rxn_list, labels, var='G'):
@@ -591,21 +592,29 @@ def process_file_set(file_set, options, print_message, print_mode, results_dict,
         qh_delta_h_ts, qh_delta_h_rxn = 0, 0  # Just to make IDE happy...
     delta_gibbs_ts, delta_gibbs_rxn = get_deltas(temps, gt, ts_index)
     qh_delta_gibbs_ts, qh_delta_gibbs_rxn = get_deltas(temps, qh_gt, ts_index)
+    temp_index = get_temp_index(options.temp, temps)
     if REACT_PROD_SEP in file_set:
-        a, ea, qh_a, qh_ea = '', '', '', ''
+        kt, qh_kt, a, ea, qh_a, qh_ea, k_temp, qh_k_temp = '', '', '', '', '', '', '', ''
     else:
         kt = get_kt(temps, delta_gibbs_ts)
         qh_kt = get_kt(temps, qh_delta_gibbs_ts)
         a, ea = fit_arrhenius(temps, kt)
         qh_a, qh_ea = fit_arrhenius(temps, qh_kt)
-    g_temp, g_ts, g_rxn = get_delta_at_temp(options.temp, temps, delta_gibbs_ts, delta_gibbs_rxn)
-    g_temp, qh_g_ts, qh_g_rxn = get_delta_at_temp(options.temp, temps, qh_delta_gibbs_ts, qh_delta_gibbs_rxn)
-    g_temp, h_ts, h_rxn = get_delta_at_temp(options.temp, temps, delta_h_ts, delta_h_rxn)
+        k_temp = round_sig_figs(kt[temp_index])
+        qh_k_temp = round_sig_figs(qh_kt[temp_index])
+    g_temp = temps[temp_index]
+    g_ts = round_sig_figs(delta_gibbs_ts[temp_index])
+    g_rxn = round_sig_figs(delta_gibbs_rxn[temp_index])
+    qh_g_ts = round_sig_figs(qh_delta_gibbs_ts[temp_index])
+    qh_g_rxn = round_sig_figs(qh_delta_gibbs_rxn[temp_index])
+    h_ts = round_sig_figs(delta_h_ts[temp_index])
+    h_rxn = round_sig_figs(delta_h_rxn[temp_index])
     if options.quasiharmonic:
-        g_temp, qh_h_ts, qh_h_rxn = get_delta_at_temp(options.temp, temps, qh_delta_h_ts, qh_delta_h_rxn)
+        qh_h_ts = round_sig_figs(qh_delta_h_ts[temp_index])
+        qh_h_rxn = round_sig_figs(qh_delta_h_rxn[temp_index])
     else:
-        qh_h_ts, qh_h_rxn = 0, 0  # To make IDE happy
-    print_results(a, ea, qh_a, qh_ea, g_temp, g_ts, g_rxn, qh_g_ts, qh_g_rxn,
+        qh_h_ts, qh_h_rxn = 0, 0  # So don't use an undefined variable below
+    print_results(a, ea, qh_a, qh_ea, g_temp, k_temp, g_ts, g_rxn, qh_k_temp, qh_g_ts, qh_g_rxn,
                   file_set, options.output_fname, print_mode, print_message=print_message)
     if options.plot:
         g_ts_list.append(g_ts)
@@ -668,6 +677,7 @@ def main(argv=None):
             tog_fname = None
         results_dict = get_gauss_results(options, unique_fnames)
         for file_set in row_list:
+            # the called method returns values needed for plotting
             g_temp, g_ts_list, g_rxn_list, h_ts_list, h_rxn_list, qh_g_ts_list, qh_g_rxn_list, qh_h_ts_list, \
                 qh_h_rxn_list = process_file_set(file_set, options, print_message, print_mode, results_dict, tog_fname,
                                                  g_ts_list, g_rxn_list, h_ts_list, h_rxn_list, qh_g_ts_list,

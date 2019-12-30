@@ -1,3 +1,3 @@
-"file1","file2","file3","file4","file5","A (1/s if uni)","Ea (kcal/mol)","ΔG temp (K)","ΔG‡ (kcal/mol)","ΔG_rxn (kcal/mol)","qh_A (1/s if uni)","qh_Ea (kcal/mol)","qh_ΔG‡ (kcal/mol)","qh_ΔG_rxn (kcal/mol)"
-"","","","tpaegh1ats_ts_ircr_opt.log","tpaegh1ats_ts.log",209620980523.45078,30.61567836906456,300.0,32.640532638295554,nan,1366331515522.1582,31.178729191286166,32.07200905773789,nan
-"","","tpaegh1ats_ts_ircr_opt_noeg.log","ethygly2_tzvp.log","tpaegh1ats_ts.log",2902785.2112409733,27.392451471929643,300.0,36.01841612008866,nan,67328.8255003425,26.28743697766832,37.18558373604901,nan
+"file1","file2","file3","file4","file5","A (1/s if uni)","Ea (kcal/mol)","ΔG temp (K)","Rate coefficient (k) at ΔG temp (1/s if unimolecular)","ΔG‡ (kcal/mol)","ΔG_rxn (kcal/mol)","qh_A (1/s if uni)","qh_Ea (kcal/mol)","qh_Rate coefficient (k) at ΔG temp (1/s if unimolecular)","qh_ΔG‡ (kcal/mol)","qh_ΔG_rxn (kcal/mol)"
+"","","","tpaegh1ats_ts_ircr_opt.log","tpaegh1ats_ts.log",209621000000.0,30.6157,300.0,1.00445e-11,32.6405,nan,1366330000000.0,31.1787,2.60835e-11,32.072,nan
+"","","tpaegh1ats_ts_ircr_opt_noeg.log","ethygly2_tzvp.log","tpaegh1ats_ts.log",2902790.0,27.3925,300.0,3.46375e-14,36.0184,nan,67328.8,26.2874,4.88332e-15,37.1856,nan

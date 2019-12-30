@@ -1,2 +1,2 @@
-"file1","file2","file3","file4","file5","A (1/s if uni)","Ea (kcal/mol)","ΔG temp (K)","ΔG‡ (kcal/mol)","ΔG_rxn (kcal/mol)","qh_A (1/s if uni)","qh_Ea (kcal/mol)","qh_ΔG‡ (kcal/mol)","qh_ΔG_rxn (kcal/mol)"
-"","","tieg5ipatse_ts_noeg_reactb.log","ethygly2_tzvp.log","tieg5ipatse_ts.log",5281.33113161576,33.39480935191699,300.0,45.790621110703796,nan,5281.33113161576,33.39480935191699,45.790621110703796,nan
+"file1","file2","file3","file4","file5","A (1/s if uni)","Ea (kcal/mol)","ΔG temp (K)","Rate coefficient (k) at ΔG temp (1/s if unimolecular)","ΔG‡ (kcal/mol)","ΔG_rxn (kcal/mol)","qh_A (1/s if uni)","qh_Ea (kcal/mol)","qh_Rate coefficient (k) at ΔG temp (1/s if unimolecular)","qh_ΔG‡ (kcal/mol)","qh_ΔG_rxn (kcal/mol)"
+"","","tieg5ipatse_ts_noeg_reactb.log","ethygly2_tzvp.log","tieg5ipatse_ts.log",5281.33,33.3948,300.0,2.60548e-21,45.7906,nan,5281.33,33.3948,2.60548e-21,45.7906,nan

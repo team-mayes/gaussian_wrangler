@@ -1,2 +1,2 @@
-"file1","file2","file3","file4","file5","A (1/s if uni)","Ea (kcal/mol)","ΔG temp (K)","ΔG‡ (kcal/mol)","ΔG_rxn (kcal/mol)","qh_A (1/s if uni)","qh_Ea (kcal/mol)","qh_ΔG‡ (kcal/mol)","qh_ΔG_rxn (kcal/mol)"
-"","pdc2_eghtsct_ircf_opt.log","pdc2_eghtsct.log","pdc2_eghtsct_prodc.log","water.log",35413816490087.22,20.74459283717861,500.0,19.53185979137197,-23.52658508287277,17383160990448.545,20.535393981937382,20.026964763877913,-22.936098670819774
+"file1","file2","file3","file4","file5","A (1/s if uni)","Ea (kcal/mol)","ΔG temp (K)","Rate coefficient (k) at ΔG temp (1/s if unimolecular)","ΔG‡ (kcal/mol)","ΔG_rxn (kcal/mol)","qh_A (1/s if uni)","qh_Ea (kcal/mol)","qh_Rate coefficient (k) at ΔG temp (1/s if unimolecular)","qh_ΔG‡ (kcal/mol)","qh_ΔG_rxn (kcal/mol)"
+"","pdc2_eghtsct_ircf_opt.log","pdc2_eghtsct.log","pdc2_eghtsct_prodc.log","water.log",35413800000000.0,20.7446,500.0,29846.6,19.5319,-23.5266,17383200000000.0,20.5354,18127.8,20.027,-22.9361

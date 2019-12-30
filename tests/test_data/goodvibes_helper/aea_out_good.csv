@@ -1,3 +1,3 @@
-"file1","file2","file3","file4","file5","A (1/s if uni)","Ea (kcal/mol)","ΔG temp (K)","ΔG‡ (kcal/mol)","ΔG_rxn (kcal/mol)","qh_A (1/s if uni)","qh_Ea (kcal/mol)","qh_ΔG‡ (kcal/mol)","qh_ΔG_rxn (kcal/mol)"
-"","","","pdc2_eghtsct_ircf_opt.log","pdc2_eghtsct.log",35408983054250.336,20.744252479680803,300.0,19.70567991468124,nan,22362634741271.11,20.534857510511717,19.77533346589189,nan
-"","","","tpainter_tsc_ts_ircr_opt.log","tpainter_tsc_ts.log",44332721935.755936,31.86539024388307,300.0,34.82112804974895,nan,280245350805.36926,32.5412480715509,34.38061640120577,nan
+"file1","file2","file3","file4","file5","A (1/s if uni)","Ea (kcal/mol)","ΔG temp (K)","Rate coefficient (k) at ΔG temp (1/s if unimolecular)","ΔG‡ (kcal/mol)","ΔG_rxn (kcal/mol)","qh_A (1/s if uni)","qh_Ea (kcal/mol)","qh_Rate coefficient (k) at ΔG temp (1/s if unimolecular)","qh_ΔG‡ (kcal/mol)","qh_ΔG_rxn (kcal/mol)"
+"","","","pdc2_eghtsct_ircf_opt.log","pdc2_eghtsct.log",35409000000000.0,20.7443,300.0,0.0269816,19.7057,nan,22362600000000.0,20.5349,0.0240045,19.7753,nan
+"","","","tpainter_tsc_ts_ircr_opt.log","tpainter_tsc_ts.log",44332700000.0,31.8654,300.0,2.58426e-13,34.8211,nan,280245000000.0,32.5412,5.41323e-13,34.3806,nan
