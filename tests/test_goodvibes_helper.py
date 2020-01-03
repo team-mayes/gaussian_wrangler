@@ -54,6 +54,7 @@ TEST_LOG = os.path.join(SUB_DATA_DIR, 'tpaegh1ats_ts.log')
 PROD_LIST = os.path.join(SUB_DATA_DIR, 'list_prod.txt')
 PROD_OUT = os.path.join(SUB_DATA_DIR, 'aea_prod.csv')
 GOOD_PROD_OUT = os.path.join(SUB_DATA_DIR, 'aea_prod_good.csv')
+GOOD_CO_PROD_OUT = os.path.join(SUB_DATA_DIR, 'aea_prod_w_co_good.csv')
 
 PROD_NO_TS_LIST = os.path.join(SUB_DATA_DIR, 'list_prod_no_ts.txt')
 GOOD_PROD_NO_TS_OUT = os.path.join(SUB_DATA_DIR, 'aea_prod_no_ts_good.csv')
@@ -66,6 +67,8 @@ PLOT4 = os.path.join(SUB_DATA_DIR, 'aea_out_h_qh.png')
 
 MISSING_PROD_LIST = os.path.join(SUB_DATA_DIR, 'list_missing_one_prod.txt')
 MULT_TS_LIST = os.path.join(SUB_DATA_DIR, 'list_mult_ts.txt')
+
+LIST_W_CO = os.path.join(SUB_DATA_DIR, 'list_with_1_freq.txt')
 
 
 class TestGoodVibesHelperNoOut(unittest.TestCase):
@@ -229,8 +232,19 @@ class TestGoodVibesHelper(unittest.TestCase):
             silent_remove(AEA_PROD_VIBES_OUT, disable=DISABLE_REMOVE)
             pass
 
+    def testMoleculeWithOneFreq(self):
+        test_input = ["-l", LIST_W_CO, "-d", SUB_DATA_DIR, "-o", "aea_prod.csv", "-t",
+                      "-ti", "688.15,888.15,25", "--temp", "788.15", "-f", "0", "-v", "1.0"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(PROD_OUT, GOOD_CO_PROD_OUT))
+        finally:
+            silent_remove(PROD_OUT, disable=DISABLE_REMOVE)
+            silent_remove(AEA_PROD_VIBES_OUT, disable=DISABLE_REMOVE)
+            pass
+
     def testReactProd(self):
-        # check handles it when not all atoms in are in all molecules
+        # check handles it when not all atom types in are in all molecules
         # also checks saving GoodVibes output together
         test_input = ["-l", PROD_NO_TS_LIST, "-d", SUB_DATA_DIR, "-o", "aea_prod.csv",
                       "-ti", "300.15,600.15,25", "--temp", "500.15", "-t", "-f", "100"]

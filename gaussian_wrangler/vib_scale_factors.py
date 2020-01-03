@@ -33,20 +33,19 @@ R: The scale factor was obtained via the Reduced Scale Factor Optimization Model
 import os
 import sys
 import numpy as np
-from common_wrangler.common import (InvalidDataError, SPEED_OF_LIGHT,
-                                    GAS_CONSTANT, KB, H, AVOGADRO_CONST, AMU_TO_KG, AU_TO_J,
+from common_wrangler.common import (InvalidDataError,
+                                    SPEED_OF_LIGHT, GAS_CONSTANT, KB, H, AVOGADRO_CONST, AMU_TO_KG, AU_TO_J,
                                     )
 
-
-# Below are values originally used; updated per NIST
-# GAS_CONSTANT = 8.3144621  # J / K / mol
-# KB = 1.3806488e-23  # J / K, BOLTZMANN_CONSTANT
-# H = 6.62606957e-34  # J * s, PLANCK_CONSTANT
-# AVOGADRO_CONST = 6.0221415e23  # 1 / mol, AVOGADRO_CONSTANT
-# AMU_to_KG = 1.66053886E-27  # UNIT CONVERSION
-# ATM_TO_KPA = 101.325
-# AU_TO_J = 4.184 * 627.509541 * 1000.0  # UNIT CONVERSION, J_TO_AU
-
+# # To make the output exactly match Gaussian's, use the values below instead importing them from common_wrangler.common
+# SPEED_OF_LIGHT = 2.99792458e10  # cm / s (same as in common)
+# GAS_CONSTANT = 8.31441  # J / K / mol; in common, GAS_CONSTANT = 8.314462618 (in Goodvibes: 8.3144621)
+# KB = 1.380662e-23  # Boltzmann's constant in J/K; in common, the value is 1.380649e-23 (in Goodvibes: 1.3806488e-23)
+# H = 6.626176e-34  # Planck's constant in J/s; in common, the value is 6.62607015e-34 (in Goodvibes: 6.62606957e-34)
+# AVOGADRO_CONST = 6.0221415e23  # 1 / mol; in common, the value is 6.02214076e23 (Goodvibes == Gaussian)
+# AMU_TO_KG = 1.66053886E-27  # UNIT CONVERSION per GoodVibes; 1.66053906660e-27 in common
+# EHPART_TO_KCAL_MOL = 627.5095  # kcal/mol/(Eh/part); in common, the value is 627.5094709  (in Goodvibes: 627.509541)
+# AU_TO_J = 4.184 * EHPART_TO_KCAL_MOL * 1000.0  # This value changes based on which EHPART_TO_KCAL_MOL is used
 
 Str_char = "U%d"
 

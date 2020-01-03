@@ -1,0 +1,2 @@
+"file1","file2","file3","file4","file5","A (1/s if uni)","Ea (kcal/mol)","ΔG temp (K)","Rate coefficient (k) at ΔG temp (1/s if unimolecular)","ΔG‡ (kcal/mol)","ΔG_rxn (kcal/mol)","qh_A (1/s if uni)","qh_Ea (kcal/mol)","qh_Rate coefficient (k) at ΔG temp (1/s if unimolecular)","qh_ΔG‡ (kcal/mol)","qh_ΔG_rxn (kcal/mol)"
+"lmethyllactate_tsa_ts_ircr_opt.log","lmethyllactate_tsd_ts.log","hcoch3_gas.log","methanol_gas.log","co_gas.log",316431000000000.0,58.7107,788.15,0.0161777,54.0825,-29.0192,316431000000000.0,58.7107,0.0161777,54.0825,-29.0192

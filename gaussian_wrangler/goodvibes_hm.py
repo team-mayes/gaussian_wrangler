@@ -41,15 +41,12 @@ from gaussian_wrangler.vib_scale_factors import (GetOutData, CalcBBE)
 from gaussian_wrangler.goodvibes_functions import (ALPHABET, output_pes_temp_interval, create_plot, output_rel_e_data,
                                                    calc_enantio_excess, get_boltz, output_cosmos_rs_interval, all_same,
                                                    print_check_fails)
-from common_wrangler.common import (InvalidDataError, warning, GAS_CONSTANT, ATM_TO_KPA, AU_TO_J,
+from common_wrangler.common import (InvalidDataError, warning,
+                                    GAS_CONSTANT, ATM_TO_KPA, AU_TO_J,
                                     GOOD_RET, INPUT_ERROR, INVALID_DATA, file_rows_to_list)
 
-# VERSION NUMBER
-__version__ = "3.0.1.hmayes"
 
-SUPPORTED_EXTENSIONS = {'.out', '.log'}
-
-# Below are the values originally used by
+# # Below are the values originally used by GoodVibes; very close to current output
 # GAS_CONSTANT = 8.3144621  # J / K / mol
 # KB = 1.3806488e-23  # J / K, BOLTZMANN_CONSTANT
 # H = 6.62606957e-34  # J * s, PLANCK_CONSTANT
@@ -57,6 +54,19 @@ SUPPORTED_EXTENSIONS = {'.out', '.log'}
 # AMU_to_KG = 1.66053886E-27  # UNIT CONVERSION
 # ATM_TO_KPA = 101.325
 # AU_TO_J = 4.184 * 627.509541 * 1000.0  # UNIT CONVERSION, J_TO_AU
+
+# # To make the output exactly match Gaussian's, use the values below instead importing them from common_wrangler.common
+# GAS_CONSTANT = 8.31441  # J / K / mol; in common, GAS_CONSTANT = 8.314462618
+# ATM_TO_KPA = 101.325  # 1 atm in kPa (no change)
+# EHPART_TO_KCAL_MOL = 627.5095  # kcal/mol/(Eh/part); in common, the value is 627.5094709
+# AU_TO_J = 4.184 * EHPART_TO_KCAL_MOL * 1000.0  # This value changes based on which EHPART_TO_KCAL_MOL is used
+
+
+# VERSION NUMBER
+__version__ = "3.0.1.hmayes"
+
+SUPPORTED_EXTENSIONS = {'.out', '.log'}
+
 
 GOODVIBES_REF = ("Luchini, G.; Alegre-Requena J. V.; Guan, Y.; Funes-Ardoiz, I.; Paton, R. S. (2019)."
                  "\n         http://doi.org/10.5281/zenodo.595246")
@@ -868,7 +878,8 @@ def main(argv=None):
             options.invert = -1 * options.invert
 
         # Initialize the total CPU time
-        total_cpu_time, add_days = datetime(100, 1, 1, 00, 00, 00, 00), 0
+        total_cpu_time = datetime(100, 1, 1, 00, 00, 00, 00)
+        add_days = 0
         if len(args) > 1:
             for elem in args:
                 if elem == 'clust:':
@@ -1047,7 +1058,10 @@ def main(argv=None):
         # Standard mode: tabulate thermochemistry output from file(s) at a single temperature and concentration
         interval = None
         dup_list = []
-        if not options.temperature_interval:
+        # Running a variable temperature analysis of the enthalpy, entropy and the free energy
+        if options.temperature_interval:
+            variable_temp_analysis(options, delimiter_row, files, t_interval, interval_bbe_data, gas_phase)
+        else:
             if options.spc:
                 print("\n")
                 if options.qh:
@@ -1231,10 +1245,6 @@ def main(argv=None):
                                         weight=100 * boltz_facts['cluster-' + ALPHABET[n].upper()] / boltz_sum))
                                     print("\n   " + dashes)
             print(delimiter_row)
-
-        # Running a variable temperature analysis of the enthalpy, entropy and the free energy
-        elif options.temperature_interval:
-            variable_temp_analysis(options, delimiter_row, files, t_interval, interval_bbe_data, gas_phase)
 
         # Print CPU usage if requested
         if options.cputime:

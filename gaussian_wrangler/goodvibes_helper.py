@@ -22,8 +22,8 @@ from common_wrangler.common import (InvalidDataError, warning, RG, KB, H, EHPART
 
 __author__ = 'hmayes'
 
-# Constants #
 
+# Constants #
 
 # Config keys
 DEF_OUT_FILE_NAME = 'aea_out.csv'
@@ -278,12 +278,8 @@ def check_gausslog_fileset(file_set, good_vibes_check, results_dict):
         gauss_result = results_dict[base_name][HARTREE_OUT]
         freq_vals = results_dict[base_name][FREQS]
         stoich = results_dict[base_name][STOICH]
-        # exclude any filesets that have an invalid number of total or imaginary frequencies
-        if len(freq_vals) < 2:
-            warning("Too few frequencies ({} vs. {}.  Skipping file set: {}".
-                    format(freq_vals.size(), len(freq_vals), file_set))
-            continue
 
+        # exit effort if there files with more than one imaginary frequency
         if freq_vals[0] < 0 and freq_vals[1] < 0:
             raise InvalidDataError("The first two frequencies are both imaginary in file: {}".format(fname))
         # First see if it is the TS
@@ -614,6 +610,7 @@ def process_file_set(file_set, options, print_message, print_mode, results_dict,
         qh_h_rxn = round_sig_figs(qh_delta_h_rxn[temp_index])
     else:
         qh_h_ts, qh_h_rxn = 0, 0  # So don't use an undefined variable below
+
     print_results(a, ea, qh_a, qh_ea, g_temp, k_temp, g_ts, g_rxn, qh_k_temp, qh_g_ts, qh_g_rxn,
                   file_set, options.output_fname, print_mode, print_message=print_message)
     if options.plot:
