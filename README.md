@@ -23,8 +23,7 @@ paths in your `.bashrc` and/or `.bash_profile` (e.g. `export PATH="$PATH:$HOME/.
 If you prefer to build the package yourself:
 
 + Clone this package
-+ Check that you have python \geq 3.0 installed, a `$HOME/.local/bin` directory, and that this directory in your `$PATH` (see above)
-+ If desired, run the test on your platform with `python setup.py test` (within `gaussian_wrangler`)
++ If desired, run the test on your platform with `pytest` (within the `gaussian_wrangler` main directory)
 + Build the tarball via `python setup.py sdist`
 + Install the resulting tarball with `pip install dist/gaussian*tar.gz`
 
