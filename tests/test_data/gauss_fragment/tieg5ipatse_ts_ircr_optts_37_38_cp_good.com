@@ -4,7 +4,7 @@ cp calculation from fragment pair [37, 38] and tests/test_data/gauss_fragment/ti
 
 0 1   0 1   0 1
 O(Fragment=2)       1.925781    0.874766   -0.031304
-Ti(Fragment=2)       0.571273   -0.369644    1.077273
+Ti(Fragment=2)      0.571273   -0.369644    1.077273
 O(Fragment=1)       0.299612   -1.445353   -3.050893
 O(Fragment=2)       1.998411   -1.650490    1.169531
 O(Fragment=2)      -0.390406    1.170925    1.238856

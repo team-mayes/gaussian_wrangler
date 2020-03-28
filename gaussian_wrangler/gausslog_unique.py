@@ -154,8 +154,7 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
             print('{},{:.4f},{:.6f},{}'.format(winner, converg, energy, enthalpy))
         if log_info[winner][CONVERG_ERR]:
             warn_files_str += '\n    {:}:  {:.4f}'.format(winner, converg, energy, enthalpy)
-    if len(warn_files_str) > 0:
-        warning("Check convergence of file(s):" + warn_files_str)
+    return warn_files_str
 
 
 def main(argv=None):
@@ -195,7 +194,9 @@ def main(argv=None):
 
         # process data from files
         list_of_conf_lists = compare_gausslog_info(log_info, args.tol)
-        print_results(log_info, list_of_conf_lists, args.enthalpy, args.energy)
+        warn_files_str = print_results(log_info, list_of_conf_lists, args.enthalpy, args.energy)
+        if len(warn_files_str) > 0:
+            warning("Check convergence of file(s):" + warn_files_str)
 
     except IOError as e:
         warning("Problems reading file:", e)

@@ -167,3 +167,4 @@ tests/test_data/goodvibes_helper/aea_prod_vibes.dat
 /tests/test_data/gausscom2com/pet_mono_901.com
 /tests/test_data/check_gauss/temp_dir/a579.com
 /out/
+temp*
