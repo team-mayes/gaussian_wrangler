@@ -113,7 +113,7 @@ def compare_gausslog_info(log_info, dih_tol):
     return conf_groups
 
 
-def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy):
+def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy, print_winners=True):
     winners = []
     warn_files_str = ''
     for conf_list in list_of_conf_lists:
@@ -145,15 +145,17 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
         sort_key = 0
     winners.sort(key=lambda tup: tup[sort_key])
 
-    # now print results
-    print(','.join(['File', CONVERG, ENERGY, ENTHALPY]))
+    # now gather results
+    winner_str = ','.join(['File', CONVERG, ENERGY, ENTHALPY]) + '\n'
     for winner, converg, energy, enthalpy in winners:
         try:
-            print('{},{:.4f},{:.6f},{:.6f}'.format(winner, converg, energy, enthalpy))
+            winner_str += '{},{:.4f},{:.6f},{:.6f}\n'.format(winner, converg, energy, enthalpy)
         except TypeError:
-            print('{},{:.4f},{:.6f},{}'.format(winner, converg, energy, enthalpy))
+            winner_str += '{},{:.4f},{:.6f},{}\n'.format(winner, converg, energy, enthalpy)
         if log_info[winner][CONVERG_ERR]:
             warn_files_str += '\n    {:}:  {:.4f}'.format(winner, converg, energy, enthalpy)
+    if print_winners:
+        print(winner_str)
     return warn_files_str
 
 

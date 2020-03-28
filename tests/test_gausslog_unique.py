@@ -71,7 +71,7 @@ class TestGausslogUnique(unittest.TestCase):
     # These test/demonstrate different options
     def testStandard(self):
         test_input = ["-l", LOG_LIST]
-        good_output = ''.join([HEADER, ALPHA_FIRST, ENERGY_FIRST])
+        good_output = ''.join([HEADER, ALPHA_FIRST, ENERGY_FIRST]) + '\n'
         with capture_stdout(main, test_input) as output:
             self.assertTrue(output == good_output)
         with capture_stderr(main, test_input) as output:
@@ -80,7 +80,7 @@ class TestGausslogUnique(unittest.TestCase):
     # These test/demonstrate different options
     def testSortByEnergy(self):
         test_input = ["-l", LOG_LIST, "-e"]
-        good_output = ''.join([HEADER, ENERGY_FIRST, ALPHA_FIRST])
+        good_output = ''.join([HEADER, ENERGY_FIRST, ALPHA_FIRST]) + '\n'
         with capture_stdout(main, test_input) as output:
             self.assertTrue(output == good_output)
         with capture_stderr(main, test_input) as output:
@@ -88,7 +88,7 @@ class TestGausslogUnique(unittest.TestCase):
 
     def testSortByEnthalpy(self):
         test_input = ["-l", LOG_LIST, '-n']
-        good_output = ''.join([HEADER, ALPHA_FIRST, ENERGY_FIRST])
+        good_output = ''.join([HEADER, ALPHA_FIRST, ENERGY_FIRST]) + '\n'
         with capture_stdout(main, test_input) as output:
             self.assertTrue(output == good_output)
         with capture_stderr(main, test_input) as output:
@@ -97,7 +97,7 @@ class TestGausslogUnique(unittest.TestCase):
     def testNoFreq(self):
         # also tests that it can skip a blank line
         test_input = ["-l", LIST_NO_FREQ, "-n"]
-        good_output = ''.join([HEADER, ENERGY_FIRST, MISSING_FREQ])
+        good_output = ''.join([HEADER, ENERGY_FIRST, MISSING_FREQ]) + '\n'
         main(test_input)
         with capture_stdout(main, test_input) as output:
             self.assertTrue(output == good_output)
@@ -108,7 +108,7 @@ class TestGausslogUnique(unittest.TestCase):
         pet_843 = 'pet_mono_843_tzvp.log,1.4694,-917.071861,-916.796704\n'
         pet_1 = 'pet_mono_1_tzvp.log,0.8478,-917.069491,-916.794649\n'
         test_input = ["-l", TWO_MOL_LIST, "-n"]
-        good_output = ''.join([HEADER, pet_843, pet_1, ALPHA_FIRST, ENERGY_FIRST])
+        good_output = ''.join([HEADER, pet_843, pet_1, ALPHA_FIRST, ENERGY_FIRST]) + '\n'
         # main(test_input)
         with capture_stdout(main, test_input) as output:
             print(output)
@@ -122,7 +122,7 @@ class TestGausslogUnique(unittest.TestCase):
         good_result = 'lme2acetoxprpnt_ts4_ircf_opt.log,2.0767,-535.576027,-535.401005\n' \
                       'lme2acetoxprpnt_ts4_b_ts_ircf_opt.log,8.2747,-535.575022,-535.399906\n'
         test_input = ["-l", TWO_MORE_MOL_LIST, "-n"]
-        good_output = ''.join([HEADER, good_result])
+        good_output = ''.join([HEADER, good_result]) + '\n'
         # main(test_input)
         with capture_stdout(main, test_input) as output:
             self.assertTrue(output == good_output)
@@ -134,7 +134,7 @@ class TestGausslogUnique(unittest.TestCase):
         # I was surprised that these weren't listed as the same; turns out, the difference in dihedral angle
         #  was almost, but not quite, 360; now, if within tolerance of 360 degrees, it will subtract 360, catching
         #  these similar conformations
-        good_result = 'me2pheoxprpnt_30.log,0.0139,-613.945900,-613.726343\n'
+        good_result = 'me2pheoxprpnt_30.log,0.0139,-613.945900,-613.726343\n\n'
         good_output = ''.join([HEADER, good_result])
         test_input = ["-l", SIMILAR_LIST, "-n"]
         with capture_stdout(main, test_input) as output:
@@ -145,7 +145,7 @@ class TestGausslogUnique(unittest.TestCase):
     def testCalcAllOutput(self):
         # make sure program sees the enthalpy when "CalcAll" is run instead of frequency
         good_result = 'hexyl_acrylate_239.log,1.1100,-503.005111,-502.751977\n' \
-                      'hexyl_acrylate_419.log,0.0706,-503.004423,-502.751021\n'
+                      'hexyl_acrylate_419.log,0.0706,-503.004423,-502.751021\n\n'
         good_output = ''.join([HEADER, good_result])
         test_input = ["-l", CALCALL_LIST, "-n"]
         # main(test_input)
