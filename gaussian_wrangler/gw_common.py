@@ -4,10 +4,11 @@
 Common methods for this project.
 """
 import re
+import os
 import collections
 import numpy as np
 from common_wrangler.common import (InvalidDataError, SEC_HEAD, SEC_ATOMS, SEC_TAIL, BASE_NAME, get_fname_root,
-                                    ATOM_TYPE, ATOM_COORDS, DIHES, ATOM_NUM_DICT)
+                                    ATOM_TYPE, ATOM_COORDS, DIHES, ATOM_NUM_DICT, warning)
 
 
 GAU_HEADER_PAT = re.compile(r"#.*")
@@ -122,7 +123,7 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
 
                 elif section == SEC_TAIL:
                     # there is not always a dih section in every step
-                    while not (GAU_DIH_PAT.match(line) or GAU_COORD_PAT.match(line)):
+                    while not (GAU_DIH_PAT.match(line) or GAU_COORD_PAT.match(line) or GAU_STOICH_PAT.match(line)):
                         line = next(d).strip()
                     # sometimes this will execute
                     if find_dih and GAU_DIH_PAT.match(line):
@@ -243,6 +244,16 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                     section = SEC_TAIL
                     atom_id = 1
         except StopIteration:
-            return gausslog_content
+            # want to continue to error checking
+            pass
+
+    # Sometimes we want data that is not in the output file. Put placeholders.
+    if find_dih and DIHES not in gausslog_content:
+        warning("Requested dihedral data not found for file:", os.path.basename(gausslog_file))
+        gausslog_content[DIHES] = None
+    if (find_converg or find_step_converg) and CONVERG_ERR not in gausslog_content:
+        warning("Requested convergence data not found for file:", os.path.basename(gausslog_file))
+        gausslog_content[CONVERG] = np.nan
+        gausslog_content[CONVERG_ERR] = None
 
     return gausslog_content

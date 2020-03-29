@@ -228,10 +228,7 @@ def check_convergence(check_file_list, step_converg, last_step, best_conv, all_s
         else:
             # this is the printing for final termination step only (not step_converg)
             fname = log_content[headers[0]]
-            try:
-                print("{:36} {:11.4f} {:}".format(fname, log_content[headers[1]], log_content[headers[2]]))
-            except KeyError:
-                print("{:36} {:>11} {:}".format(fname, "not found", "n/a"))
+            print("{:36} {:11.4f} {:}".format(fname, log_content[headers[1]], log_content[headers[2]]))
 
 
 def main(argv=None):

@@ -88,7 +88,10 @@ def compare_gausslog_info(log_info, dih_tol):
         else:
             add_to_current_group = True  # not really necessary, but IDE won't complain this way
             for conf_list in conf_groups:
-                if log_info[fname][STOICH] != log_info[conf_list[0]][STOICH]:
+                if log_info[conf_list[0]][DIHES] is None:
+                    add_to_current_group = False
+                    continue
+                if (log_info[fname][STOICH] != log_info[conf_list[0]][STOICH]) or DIHES not in log_info[fname]:
                     add_to_current_group = False
                     continue
                 add_to_current_group = True

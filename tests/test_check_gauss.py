@@ -279,14 +279,14 @@ class TestCheckGauss(unittest.TestCase):
         temp_files_list = make_fill_sub_dir()
         test_input = ["-ds", SUB_DATA_DIR, "-z"]
         good_out = 'File                                 Convergence Convergence_Error\n' \
-                   'empty.log                              not found n/a\n' \
+                   'empty.log                                    nan None\n' \
                    'me2propprpnt_7.log                      111.4981 True\n' \
-                   'pet_mono_671_tzvp.log                  not found n/a\n' \
-                   'pet_mono_674_tzvp.log                  not found n/a\n' \
-                   'pet_mono_819_tzvp.log                  not found n/a\n' \
-                   'pet_mono_872_tzvp.log                  not found n/a\n' \
+                   'pet_mono_671_tzvp.log                        nan None\n' \
+                   'pet_mono_674_tzvp.log                        nan None\n' \
+                   'pet_mono_819_tzvp.log                        nan None\n' \
+                   'pet_mono_872_tzvp.log                        nan None\n' \
                    'a579.log                                  0.1175 False\n' \
-                   'ipvc_11_10_cp.log                      not found n/a\n'
+                   'ipvc_11_10_cp.log                            nan None\n'
         try:
             # main(test_input)
             with capture_stdout(main, test_input) as output:

@@ -1,7 +1,8 @@
 import unittest
 import os
-from gaussian_wrangler.gausslog_unique import main
-from common_wrangler.common import capture_stdout, capture_stderr
+from common_wrangler.common import capture_stdout, capture_stderr, DIHES
+from gaussian_wrangler.gausslog_unique import main, compare_gausslog_info, print_results
+from gaussian_wrangler.gw_common import process_gausslog_file, CONVERG_ERR
 import logging
 
 # logging.basicConfig(level=logging.DEBUG)
@@ -153,3 +154,37 @@ class TestGausslogUnique(unittest.TestCase):
             self.assertTrue(output == good_output)
         with capture_stderr(main, test_input) as output:
             self.assertTrue('' == output)
+
+
+class TestGausslogUniqueFunctions(unittest.TestCase):
+    def testOneFileMissingDihedralInfo(self):
+        # testing for some specific problem encountered: when there is a freq only job (no opt) there is no
+        #     dihedral info (which caused trouble when tried to compare it) and also prevented finding the
+        #     convergence. Thus, checking that this specific error is resolved with the expected warning.
+        current_file_list = ["tieg5ipatse_ts_ircf_opt_noeg.log", "tieg5ipatse_ts_noeg_reacta.log",
+                             "tieg5ipatse_ts_noeg_reactc.log"]
+        full_info_dict = {}
+        check_list = []
+        gausslog_loc = os.path.join(SUB_DATA_DIR, current_file_list[0])
+        with capture_stderr(process_gausslog_file, gausslog_loc, find_dih=True, find_converg=True) as output:
+            self.assertTrue("Requested dihedral data not found for file: tieg5ipatse_ts_ircf_opt_noeg.log" in
+                            output)
+        for gausslog_fname in current_file_list:
+            if gausslog_fname == "":
+                continue
+            gausslog_loc = os.path.join(SUB_DATA_DIR, gausslog_fname)
+            gausslog_content = process_gausslog_file(gausslog_loc, find_dih=True, find_converg=True)
+            full_info_dict[gausslog_fname] = gausslog_content
+            if gausslog_content[CONVERG_ERR]:
+                check_list.append(gausslog_fname)
+        self.assertTrue(full_info_dict[current_file_list[0]][DIHES] is None)
+        self.assertTrue(full_info_dict[current_file_list[1]][DIHES] is not None)
+        self.assertTrue(full_info_dict[current_file_list[0]][CONVERG_ERR])
+        self.assertTrue(full_info_dict[current_file_list[1]][CONVERG_ERR])
+        self.assertEqual(len(check_list), 3)
+        list_of_conf_lists = compare_gausslog_info(full_info_dict, 5)
+        self.assertEqual(len(list_of_conf_lists), 3)
+        warn_files_str = print_results(full_info_dict, list_of_conf_lists, False, True,
+                                       print_winners=False)
+        warn_files_list = warn_files_str.split('\n')
+        self.assertEqual(len(warn_files_list), 4)
