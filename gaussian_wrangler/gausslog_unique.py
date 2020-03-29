@@ -91,7 +91,7 @@ def compare_gausslog_info(log_info, dih_tol):
                 if log_info[conf_list[0]][DIHES] is None:
                     add_to_current_group = False
                     continue
-                if (log_info[fname][STOICH] != log_info[conf_list[0]][STOICH]) or DIHES not in log_info[fname]:
+                if (log_info[fname][STOICH] != log_info[conf_list[0]][STOICH]) or log_info[fname][DIHES] is None:
                     add_to_current_group = False
                     continue
                 add_to_current_group = True
