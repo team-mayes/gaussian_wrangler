@@ -1,5 +1,8 @@
 import unittest
 import os
+
+from gaussian_wrangler.vib_scale_factors import CalcBBE
+
 from gaussian_wrangler.goodvibes_hm import main
 from common_wrangler.common import (capture_stdout, capture_stderr)
 import logging
@@ -351,3 +354,75 @@ class TestGoodVibesHM(unittest.TestCase):
         with capture_stdout(main, test_input) as output:
             self.assertTrue(good_output in output)
             pass
+
+
+class TestBBE(unittest.TestCase):
+    # These test/demonstrate different options
+    def testGetGibbs1(self):
+        fname = os.path.join(SUB_DATA_DIR, "pdc2_eghtsct_ircf_opt.log")
+        qs = False
+        qh = False
+        s_freq_cutoff = 0.0
+        h_freq_cutoff = 0.0
+        temperature = 788.15  # K
+        conc = 1.0  # for liquids
+        freq_scale_factor = 0.9871
+        zpe_scale_factor = 0.9754
+
+        # "-t", "788.15", "-v", "0.9871", "-z", "0.9754", "-c", "1"
+        bbe = CalcBBE(fname, qs, qh, s_freq_cutoff, h_freq_cutoff,
+                      temperature, conc, freq_scale_factor, zpe_scale_factor)
+        self.assertAlmostEqual(bbe.gibbs_free_energy, -951.1639563735089)
+
+    def testGetGibbs2(self):
+        fname = os.path.join(SUB_DATA_DIR, "pdc2_eghtsct.log")
+        # fname = os.path.join(SUB_DATA_DIR, "tpainter_tsc_ts_ircr_opt.log")
+        # fname = os.path.join(SUB_DATA_DIR, "tpainter_tsc_ts.log")
+        # file, qs, qh, s_freq_cutoff, h_freq_cutoff, temperature, conc, freq_scale_factor,
+        # zpe_scale_factor, solv='none', spc=False, invert=False,
+        # d3_energy=0.0, ssymm=False, cosmo=None, mm_freq_scale_factor=False
+        qs = False
+        qh = False
+        s_freq_cutoff = 0.0
+        h_freq_cutoff = 0.0
+        temperature = 788.15  # K
+        conc = 1.0  # for liquids
+        freq_scale_factor = 0.9871
+        zpe_scale_factor = 0.9754
+
+        # "-t", "788.15", "-v", "0.9871", "-z", "0.9754", "-c", "1"
+        bbe = CalcBBE(fname, qs, qh, s_freq_cutoff, h_freq_cutoff,
+                      temperature, conc, freq_scale_factor, zpe_scale_factor)
+        self.assertAlmostEqual(bbe.gibbs_free_energy, -951.1330173783102)
+
+    def testGetGibbs3(self):
+        fname = os.path.join(SUB_DATA_DIR, "tpainter_tsc_ts_ircr_opt.log")
+        qs = False
+        qh = False
+        s_freq_cutoff = 0.0
+        h_freq_cutoff = 0.0
+        temperature = 788.15  # K
+        conc = 1.0  # for liquids
+        freq_scale_factor = 0.9871
+        zpe_scale_factor = 0.9754
+
+        # "-t", "788.15", "-v", "0.9871", "-z", "0.9754", "-c", "1"
+        bbe = CalcBBE(fname, qs, qh, s_freq_cutoff, h_freq_cutoff,
+                      temperature, conc, freq_scale_factor, zpe_scale_factor)
+        self.assertAlmostEqual(bbe.gibbs_free_energy, -993.8401648811908)
+
+    def testGetGibbs4(self):
+        fname = os.path.join(SUB_DATA_DIR, "tpainter_tsc_ts.log")
+        qs = False
+        qh = False
+        s_freq_cutoff = 0.0
+        h_freq_cutoff = 0.0
+        temperature = 788.15  # K
+        conc = 1.0  # for liquids
+        freq_scale_factor = 0.9871
+        zpe_scale_factor = 0.9754
+
+        # "-t", "788.15", "-v", "0.9871", "-z", "0.9754", "-c", "1"
+        bbe = CalcBBE(fname, qs, qh, s_freq_cutoff, h_freq_cutoff,
+                      temperature, conc, freq_scale_factor, zpe_scale_factor)
+        self.assertAlmostEqual(bbe.gibbs_free_energy, -993.7747010616555)

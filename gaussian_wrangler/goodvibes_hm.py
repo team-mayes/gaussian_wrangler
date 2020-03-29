@@ -848,7 +848,6 @@ def main(argv=None):
 
     (options, args) = args
     files = []
-    bbe_vals = []
     clusters = []
     command = 'Requested: '
     clustering = False
@@ -984,43 +983,8 @@ def main(argv=None):
             vmm_option = False
 
         # Loop over all specified output files and compute thermochemistry
-        for file in files:
-            if options.cosmo:
-                cosmo_option = cosmo_solv[file]
-            else:
-                cosmo_option = None
-
-            # computes D3 term if requested, which is then sent to calc_bbe as a correction
-            d3_energy = 0.0
-            # The following is commented out because the called repo/code is no longer available
-            # if options.D3 or options.D3BJ:
-            #     verbose, intermolecular, pairwise, abc_term = False, False, False, False
-            #     s6, rs6, s8, bj_a1, bj_a2 = 0.0, 0.0, 0.0, 0.0, 0.0
-            #     functional = find_level_of_theory(file).split('/')[0]
-            #     if options.D3:
-            #         damp = 'zero'
-            #     elif options.D3BJ:
-            #         damp = 'bj'
-            #     if options.ATM: abc_term = True
-            #     try:
-            #         file_data = GetOutData(file)
-            #         d3_calc = dftd3.calcD3(file_data, functional, s6, rs6, s8, bj_a1, bj_a2, damp, abc_term,
-            #                                intermolecular, pairwise, verbose)
-            #         d3_energy = (d3_calc.attractive_r6_vdw + d3_calc.attractive_r8_vdw + d3_calc.repulsive_abc) / \
-            #                     EHPART_TO_KCAL_MOL
-            #     except:
-            #         print('\n   ! Dispersion Correction Failed')
-            #         d3_energy = 0.0
-            bbe = CalcBBE(file, options.qs, options.qh, options.S_freq_cutoff, options.h_freq_cutoff,
-                          options.temperature, options.conc, options.freq_scale_factor, options.zpe_scale_factor,
-                          options.freespace, options.spc, options.invert, d3_energy,
-                          cosmo=cosmo_option, ssymm=ssymm_option, mm_freq_scale_factor=vmm_option)
-
-            # Populate bbe_vals with individual bbe entries for each file
-            bbe_vals.append(bbe)
-
-        # Creates a new dictionary object thermo_data, which attaches the bbe data to each file-name
-        thermo_data = dict(zip(files, bbe_vals))  # The collected thermochemical data for all files
+        thermo_data = compute_thermochem(files, options,
+                                         cosmo_solv=cosmo_solv, ssymm_option=ssymm_option, vmm_option=vmm_option)
         interval_bbe_data, interval_thermo_data = [], []
 
         inverted_freqs, inverted_files = [], []
@@ -1270,6 +1234,47 @@ def main(argv=None):
         return INVALID_DATA
 
     return GOOD_RET  # success
+
+
+def compute_thermochem(files, options, cosmo_solv=None, ssymm_option=False, vmm_option=False):
+    bbe_vals = []
+    for file in files:
+        if options.cosmo:
+            cosmo_option = cosmo_solv[file]
+        else:
+            cosmo_option = None
+
+        # computes D3 term if requested, which is then sent to calc_bbe as a correction
+        d3_energy = 0.0
+        # The following is commented out because the called repo/code is no longer available
+        # if options.D3 or options.D3BJ:
+        #     verbose, intermolecular, pairwise, abc_term = False, False, False, False
+        #     s6, rs6, s8, bj_a1, bj_a2 = 0.0, 0.0, 0.0, 0.0, 0.0
+        #     functional = find_level_of_theory(file).split('/')[0]
+        #     if options.D3:
+        #         damp = 'zero'
+        #     elif options.D3BJ:
+        #         damp = 'bj'
+        #     if options.ATM: abc_term = True
+        #     try:
+        #         file_data = GetOutData(file)
+        #         d3_calc = dftd3.calcD3(file_data, functional, s6, rs6, s8, bj_a1, bj_a2, damp, abc_term,
+        #                                intermolecular, pairwise, verbose)
+        #         d3_energy = (d3_calc.attractive_r6_vdw + d3_calc.attractive_r8_vdw + d3_calc.repulsive_abc) / \
+        #                     EHPART_TO_KCAL_MOL
+        #     except:
+        #         print('\n   ! Dispersion Correction Failed')
+        #         d3_energy = 0.0
+        bbe = CalcBBE(file, options.qs, options.qh, options.S_freq_cutoff, options.h_freq_cutoff,
+                      options.temperature, options.conc, options.freq_scale_factor, options.zpe_scale_factor,
+                      options.freespace, options.spc, options.invert, d3_energy=d3_energy,
+                      cosmo=cosmo_option, ssymm=ssymm_option, mm_freq_scale_factor=vmm_option)
+
+        # Populate bbe_vals with individual bbe entries for each file
+        bbe_vals.append(bbe)
+    # Creates a new dictionary object thermo_data, which attaches the bbe data to each file-name
+    thermo_data = dict(zip(files, bbe_vals))  # The collected thermochemical data for all files
+    return thermo_data
 
 
 if __name__ == '__main__':

@@ -315,7 +315,8 @@ class CalcBBE:
     # The function to compute the "black box" entropy and enthalpy values
     # along with all other thermochemical quantities
     def __init__(self, file, qs, qh, s_freq_cutoff, h_freq_cutoff, temperature, conc, freq_scale_factor,
-                 zpe_scale_factor, solv, spc, invert, d3_term, ssymm=False, cosmo=None, mm_freq_scale_factor=False):
+                 zpe_scale_factor, solv='none', spc=False, invert=False,
+                 d3_energy=0.0, ssymm=False, cosmo=None, mm_freq_scale_factor=False):
 
         h_damp, u_vib_qrrho, qh_u_vib = None, None, None   # make IDE happy
 
@@ -534,9 +535,9 @@ class CalcBBE:
             # The D3 term is added to the energy term here. If not requested then this term is zero
             # It is added to the SPC energy if defined (instead of the SCF energy)
             if spc:
-                self.sp_energy += d3_term
+                self.sp_energy += d3_energy
             else:
-                self.scf_energy += d3_term
+                self.scf_energy += d3_energy
 
             # Add terms (converted to au) to get Free energy - perform separately
             # for harmonic and quasi-harmonic values out of interest
