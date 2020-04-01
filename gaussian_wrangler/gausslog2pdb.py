@@ -91,7 +91,10 @@ def parse_cmdline(argv):
                                                "specifications will override those in the configuration "
                                                "file.".format(DEF_CFG_FILE),
                         default=DEF_CFG_FILE, type=read_cfg)
-
+    parser.add_argument("-d", "--out_dir", help="The directory where the output files will be placed. This will "
+                                                "override any '{}' entry in the configuration file. The default is "
+                                                "the same directory as the log file.".format(OUT_BASE_DIR),
+                        default=None)
     parser.add_argument("-f", "--file", help="The location of a Gaussian output file. Will override any '{}' entry in "
                                              "the configuration file.".format(GAUSSLOG_FILE), default=None)
     parser.add_argument("-l", "--list", help="The location of the list of Gaussian output files. Will override any "
@@ -100,10 +103,6 @@ def parse_cmdline(argv):
     parser.add_argument("-o", "--out_fname", help="The name for the created pdb file. If none is provided, it will "
                                                   "take the basename from the provided Gaussian output file name, "
                                                   "with the '.pdb' extension.",
-                        default=None)
-    parser.add_argument("-d", "--out_dir", help="The directory where the output files will be placed. This will "
-                                                "override any '{}' entry in the configuration file. The default is "
-                                                "the same directory as the log file.".format(OUT_BASE_DIR),
                         default=None)
     parser.add_argument("-t", "--tpl", help="The location of the pdb template file. Will override any '{}'entry in the "
                                             "config file.".format(PDB_TPL_FILE),

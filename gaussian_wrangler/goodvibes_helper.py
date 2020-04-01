@@ -576,8 +576,7 @@ def plot_delta(fname, temp, delta_ts_list, delta_rxn_list, labels, var='G'):
              )
 
 
-def process_file_set(file_set, options, print_message, print_mode, results_dict, tog_fname, g_ts_list, g_rxn_list,
-                     h_ts_list, h_rxn_list, qh_g_ts_list, qh_g_rxn_list, qh_h_ts_list, qh_h_rxn_list):
+def process_file_set(file_set, options, print_mode, results_dict, tog_fname):
     solvent, ts_index = check_gausslog_fileset(file_set, options.vibes_check, results_dict)
     temps, h, qh_h, gt, qh_gt = get_thermochem(file_set, results_dict, options.save_vibes,
                                                options.out_dir, tog_fname, options.quasiharmonic, print_mode)
@@ -588,43 +587,15 @@ def process_file_set(file_set, options, print_message, print_mode, results_dict,
         qh_delta_h_ts, qh_delta_h_rxn = 0, 0  # Just to make IDE happy...
     delta_gibbs_ts, delta_gibbs_rxn = get_deltas(temps, gt, ts_index)
     qh_delta_gibbs_ts, qh_delta_gibbs_rxn = get_deltas(temps, qh_gt, ts_index)
-    temp_index = get_temp_index(options.temp, temps)
     if REACT_PROD_SEP in file_set:
-        kt, qh_kt, a, ea, qh_a, qh_ea, k_temp, qh_k_temp = '', '', '', '', '', '', '', ''
+        kt, qh_kt, a, ea, qh_a, qh_ea = '', '', '', '', '', ''
     else:
         kt = get_kt(temps, delta_gibbs_ts)
         qh_kt = get_kt(temps, qh_delta_gibbs_ts)
         a, ea = fit_arrhenius(temps, kt)
         qh_a, qh_ea = fit_arrhenius(temps, qh_kt)
-        k_temp = round_sig_figs(kt[temp_index])
-        qh_k_temp = round_sig_figs(qh_kt[temp_index])
-    g_temp = temps[temp_index]
-    g_ts = round_sig_figs(delta_gibbs_ts[temp_index])
-    g_rxn = round_sig_figs(delta_gibbs_rxn[temp_index])
-    qh_g_ts = round_sig_figs(qh_delta_gibbs_ts[temp_index])
-    qh_g_rxn = round_sig_figs(qh_delta_gibbs_rxn[temp_index])
-    h_ts = round_sig_figs(delta_h_ts[temp_index])
-    h_rxn = round_sig_figs(delta_h_rxn[temp_index])
-    if options.quasiharmonic:
-        qh_h_ts = round_sig_figs(qh_delta_h_ts[temp_index])
-        qh_h_rxn = round_sig_figs(qh_delta_h_rxn[temp_index])
-    else:
-        qh_h_ts, qh_h_rxn = 0, 0  # So don't use an undefined variable below
-
-    print_results(a, ea, qh_a, qh_ea, g_temp, k_temp, g_ts, g_rxn, qh_k_temp, qh_g_ts, qh_g_rxn,
-                  file_set, options.output_fname, print_mode, print_message=print_message)
-    if options.plot:
-        g_ts_list.append(g_ts)
-        g_rxn_list.append(g_rxn)
-        qh_g_ts_list.append(qh_g_ts)
-        qh_g_rxn_list.append(qh_g_rxn)
-        h_ts_list.append(h_ts)
-        h_rxn_list.append(h_rxn)
-        if options.quasiharmonic:
-            qh_h_ts_list.append(qh_h_ts)
-            qh_h_rxn_list.append(qh_h_rxn)
-    return g_temp, g_ts_list, g_rxn_list, h_ts_list, h_rxn_list, qh_g_ts_list, qh_g_rxn_list, qh_h_ts_list, \
-        qh_h_rxn_list
+    return (temps, a, ea, kt, delta_h_ts, delta_h_rxn, delta_gibbs_ts, delta_gibbs_rxn,
+            qh_a, qh_ea, qh_kt, qh_delta_h_ts, qh_delta_h_rxn, qh_delta_gibbs_ts, qh_delta_gibbs_rxn)
 
 
 def main(argv=None):
@@ -674,11 +645,44 @@ def main(argv=None):
             tog_fname = None
         results_dict = get_gauss_results(options, unique_fnames)
         for file_set in row_list:
-            # the called method returns values needed for plotting
-            g_temp, g_ts_list, g_rxn_list, h_ts_list, h_rxn_list, qh_g_ts_list, qh_g_rxn_list, qh_h_ts_list, \
-                qh_h_rxn_list = process_file_set(file_set, options, print_message, print_mode, results_dict, tog_fname,
-                                                 g_ts_list, g_rxn_list, h_ts_list, h_rxn_list, qh_g_ts_list,
-                                                 qh_g_rxn_list, qh_h_ts_list, qh_h_rxn_list)
+            # the called method returns values needed for printing and plotting
+            temps, a, ea, kt, delta_h_ts, delta_h_rxn, delta_gibbs_ts, delta_gibbs_rxn, qh_a, qh_ea, qh_kt, \
+                qh_delta_h_ts, qh_delta_h_rxn, qh_delta_gibbs_ts, qh_delta_gibbs_rxn = \
+                process_file_set(file_set, options, print_mode, results_dict, tog_fname)
+
+            temp_index = get_temp_index(options.temp, temps)
+            if REACT_PROD_SEP in file_set:
+                k_temp = ""
+                qh_k_temp = ""
+            else:
+                k_temp = round_sig_figs(kt[temp_index])
+                qh_k_temp = round_sig_figs(qh_kt[temp_index])
+            g_temp = temps[temp_index]
+            g_ts = round_sig_figs(delta_gibbs_ts[temp_index])
+            g_rxn = round_sig_figs(delta_gibbs_rxn[temp_index])
+            qh_g_ts = round_sig_figs(qh_delta_gibbs_ts[temp_index])
+            qh_g_rxn = round_sig_figs(qh_delta_gibbs_rxn[temp_index])
+            h_ts = round_sig_figs(delta_h_ts[temp_index])
+            h_rxn = round_sig_figs(delta_h_rxn[temp_index])
+            if options.quasiharmonic:
+                qh_h_ts = round_sig_figs(qh_delta_h_ts[temp_index])
+                qh_h_rxn = round_sig_figs(qh_delta_h_rxn[temp_index])
+            else:
+                qh_h_ts, qh_h_rxn = 0, 0  # So don't use an undefined variable below
+
+            print_results(a, ea, qh_a, qh_ea, g_temp, k_temp, g_ts, g_rxn, qh_k_temp, qh_g_ts, qh_g_rxn,
+                          file_set, options.output_fname, print_mode, print_message=print_message)
+            if options.plot:
+                g_ts_list.append(g_ts)
+                g_rxn_list.append(g_rxn)
+                qh_g_ts_list.append(qh_g_ts)
+                qh_g_rxn_list.append(qh_g_rxn)
+                h_ts_list.append(h_ts)
+                h_rxn_list.append(h_rxn)
+                if options.quasiharmonic:
+                    qh_h_ts_list.append(qh_h_ts)
+                    qh_h_rxn_list.append(qh_h_rxn)
+
             print_mode = 'a'
             print_message = False
 
