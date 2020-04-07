@@ -156,7 +156,7 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
         except TypeError:
             winner_str += '{},{:.4f},{:.6f},{}\n'.format(winner, converg, energy, enthalpy)
         if log_info[winner][CONVERG_ERR]:
-            warn_files_str += '\n    {:}:  {:.4f}'.format(winner, converg, energy, enthalpy)
+            warn_files_str += '\n    {:}:  {:.2f}'.format(winner, converg, energy, enthalpy)
     if print_winners:
         print(winner_str)
     return warn_files_str

@@ -2,7 +2,7 @@ import unittest
 import os
 from common_wrangler.common import capture_stdout, capture_stderr, DIHES
 from gaussian_wrangler.gausslog_unique import main, compare_gausslog_info, print_results
-from gaussian_wrangler.gw_common import process_gausslog_file, CONVERG_ERR
+from gaussian_wrangler.gw_common import process_gausslog_file, CONVERG_ERR, TS
 import logging
 
 # logging.basicConfig(level=logging.DEBUG)
@@ -179,6 +179,7 @@ class TestGausslogUniqueFunctions(unittest.TestCase):
                 check_list.append(gausslog_fname)
         self.assertTrue(full_info_dict[current_file_list[0]][DIHES] is None)
         self.assertTrue(full_info_dict[current_file_list[1]][DIHES] is not None)
+        self.assertFalse(full_info_dict[current_file_list[0]][TS])
         self.assertTrue(full_info_dict[current_file_list[0]][CONVERG_ERR])
         self.assertTrue(full_info_dict[current_file_list[1]][CONVERG_ERR])
         self.assertEqual(len(check_list), 3)
@@ -188,3 +189,20 @@ class TestGausslogUniqueFunctions(unittest.TestCase):
                                        print_winners=False)
         warn_files_list = warn_files_str.split('\n')
         self.assertEqual(len(warn_files_list), 4)
+
+    def testTSInfo(self):
+        goodvibes_helper_folder = os.path.join(DATA_DIR, 'goodvibes_helper')
+        file_list = ["co_gas.log", "hcoch3_gas.log", "tieg5ipatse_ts.log", "water.log", "h_gas_stable_t.log"]
+        full_info_dict = {}
+        check_list = []
+        for fname in file_list:
+            gausslog_loc = os.path.join(goodvibes_helper_folder, fname)
+            gausslog_content = process_gausslog_file(gausslog_loc, find_dih=True, find_converg=True)
+            full_info_dict[fname] = gausslog_content
+            if gausslog_content[CONVERG_ERR]:
+                check_list.append(fname)
+        for fname in file_list:
+            if fname == "tieg5ipatse_ts.log":
+                self.assertTrue(full_info_dict[fname][TS])
+            else:
+                self.assertFalse(full_info_dict[fname][TS])

@@ -21,6 +21,8 @@ GAU_CONVERG_PAT = re.compile(r"Item {15}Value {5}Threshold {2}Converged?")
 GAU_DIH_PAT = re.compile(r"! D.*")
 GAU_H_PAT = re.compile(r"Sum of electronic and thermal Enthalpies.*")
 GAU_STEP_PAT = re.compile(r"Step number.*")
+HARM_FREQ_PAT = re.compile(r"Harmonic frequencies.*")
+FREQ_PAT = re.compile(r"Frequencies.*")
 STOICH = 'Stoichiometry'
 CHARGE = 'Charge'
 MULT = 'Mult'
@@ -34,6 +36,7 @@ RMS_DISPL = 'RMS Displacement'
 CONVERG = 'Convergence'
 CONVERG_ERR = 'Convergence_Error'
 ENTHALPY = 'Enthalpy'
+TS = 'Transition_State'
 
 
 def process_gausscom_file(gausscom_file):
@@ -101,8 +104,9 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
     #    SEC_TAIL: everything including and after the blank line following SEC_ATOMS
 
     # The mode argument is optional; 'r' will be assumed if it’s omitted. (so read-only below)
+    base_name = os.path.basename(gausslog_file)
     with open(gausslog_file) as d:
-        gausslog_content = {SEC_ATOMS: {}, BASE_NAME: get_fname_root(gausslog_file), STOICH: None,
+        gausslog_content = {SEC_ATOMS: {}, BASE_NAME: base_name, STOICH: None, TS: None,
                             ENERGY: None, ENTHALPY: None, CONVERG_STEP_DICT: collections.OrderedDict()}
         section = SEC_HEAD
         atom_id = 1
@@ -163,7 +167,7 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                         line = next(d).strip()
 
                     # Sometimes there is energy & step number before hitting enthalpy, but not in CalcAll jobs
-                    while not (GAU_E_PAT.match(line) or GAU_H_PAT.match(line)):
+                    while not (GAU_E_PAT.match(line) or GAU_H_PAT.match(line) or HARM_FREQ_PAT.match(line)):
                         line = next(d).strip()
                     if GAU_E_PAT.match(line):
                         gausslog_content[ENERGY] = float(line.split('=')[1].split()[0])
@@ -179,8 +183,31 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                     # Thus, Step always after SCF Done, but sometimes thermo in the middle
                     # In CalcAll job starting from coordinates:
                     #     first step: Charge, Dih, Stoich, **Coord**, SCF, Step, Converg
-                    while not (GAU_H_PAT.match(line) or GAU_STEP_PAT.match(line)):
+                    while not (HARM_FREQ_PAT.match(line) or GAU_H_PAT.match(line) or GAU_STEP_PAT.match(line)):
                         line = next(d).strip()
+                    if HARM_FREQ_PAT.match(line):
+                        # checking to hit GAU_H_PAT because one atom jobs won't have a FREQ_PAT
+                        while not FREQ_PAT.match(line) and not GAU_H_PAT.match(line):
+                            line = next(d).strip()
+                        if FREQ_PAT.match(line):
+                            split_line = line.split()
+                            first_freq = float(split_line[2])
+                            if len(split_line) > 3:
+                                second_freq = float(split_line[3])
+                            else:
+                                second_freq = 0.
+                            if first_freq < -10.:
+                                gausslog_content[TS] = True
+                                if first_freq > -40:
+                                    warning("Low imaginary frequency for {}: {}".format(base_name, first_freq))
+                                if second_freq < -10.:
+                                    warning("At least two imaginary frequencies for {}: {:.2f}, {:.2f}"
+                                            "".format(base_name, first_freq, second_freq))
+                            else:
+                                gausslog_content[TS] = False
+                            while not GAU_H_PAT.match(line):
+                                line = next(d).strip()
+
                     if GAU_H_PAT.match(line):
                         gausslog_content[ENTHALPY] = float(line.split('=')[1].strip())
                         line = next(d).strip()

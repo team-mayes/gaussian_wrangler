@@ -35,6 +35,7 @@ GOOD_OUT = "The following files completed normally:\n" \
            "The following files may still be running:\n" \
            "    tests/test_data/check_gauss/pet_mono_671_tzvp.log\n"
 
+
 LIST_FILE = os.path.join(SUB_DATA_DIR, 'list.txt')
 CONV_239_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_239_conv_steps.csv')
 CONV_419_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_419_conv_steps.csv')
