@@ -321,8 +321,10 @@ def check_gausslog_fileset(file_set, good_vibes_check, results_dict):
                 if i > 160:
                     break
         if index == 0:
+            # make all lower case to remove chance of flagging this insignificant difference
             solvent = str(results_dict[base_name][SOLV]).lower()
             func = str(gauss_result.getFunctional()).lower()
+            # ignore differences between restricted and unrestricted versions of the functional
             if func.startswith("r") or func.startswith("u"):
                 func = func[1:]
             basis = str(gauss_result.getBasisSet()).lower()
@@ -331,6 +333,7 @@ def check_gausslog_fileset(file_set, good_vibes_check, results_dict):
             if str(gauss_result.getSolvent()).lower() != solvent:
                 raise InvalidDataError("Different solvents ({}, {}) found for file set: "
                                        "{}".format(solvent, gauss_result.getSolvent(), file_set))
+            # ignore differences between restricted and unrestricted versions of the functional
             current_func = str(gauss_result.getFunctional()).lower()
             if current_func.startswith("u") or current_func.startswith("r"):
                 current_func = current_func[1:]

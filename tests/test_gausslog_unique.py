@@ -185,8 +185,7 @@ class TestGausslogUniqueFunctions(unittest.TestCase):
         self.assertEqual(len(check_list), 3)
         list_of_conf_lists = compare_gausslog_info(full_info_dict, 5)
         self.assertEqual(len(list_of_conf_lists), 3)
-        warn_files_str = print_results(full_info_dict, list_of_conf_lists, False, True,
-                                       print_winners=False)
+        winner_str, warn_files_str = print_results(full_info_dict, list_of_conf_lists, False, True, print_winners=False)
         warn_files_list = warn_files_str.split('\n')
         self.assertEqual(len(warn_files_list), 4)
 
