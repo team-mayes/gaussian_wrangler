@@ -321,21 +321,21 @@ def check_gausslog_fileset(file_set, good_vibes_check, results_dict):
                 if i > 160:
                     break
         if index == 0:
-            solvent = results_dict[base_name][SOLV]
-            func = gauss_result.getFunctional()
-            basis = gauss_result.getBasisSet()
+            solvent = str(results_dict[base_name][SOLV])
+            func = str(gauss_result.getFunctional())
+            basis = str(gauss_result.getBasisSet())
             gauss_ver = file_gauss_ver
         else:
-            if gauss_result.getSolvent().lower() != solvent.lower():
+            if str(gauss_result.getSolvent()).lower() != solvent.lower():
                 raise InvalidDataError("Different solvents ({}, {}) found for file set: "
                                        "{}".format(solvent, gauss_result.getSolvent(), file_set))
-            if gauss_result.getFunctional().lower() != func.lower():
+            if str(gauss_result.getFunctional()).lower() != func.lower():
                 raise InvalidDataError("Different functionals ({}, {}) found for file set: "
                                        "{}".format(func, gauss_result.getFunctional(), file_set))
-            if gauss_result.getBasisSet().lower() != basis.lower():
+            if str(gauss_result.getBasisSet()).lower() != basis.lower():
                 raise InvalidDataError("Different basis sets ({}, {}) found for file set: "
                                        "{}".format(basis, gauss_result.getBasisSet(), file_set))
-            if gauss_ver.lower() != file_gauss_ver.lower():
+            if gauss_ver != file_gauss_ver:
                 warning("Different Gaussian versions ({}, {}) found for file set: {}".
                         format(gauss_ver, file_gauss_ver, file_set))
 
