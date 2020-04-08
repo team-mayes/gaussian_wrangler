@@ -326,16 +326,16 @@ def check_gausslog_fileset(file_set, good_vibes_check, results_dict):
             basis = gauss_result.getBasisSet()
             gauss_ver = file_gauss_ver
         else:
-            if gauss_result.getSolvent() != solvent:
+            if gauss_result.getSolvent().lower() != solvent.lower():
                 raise InvalidDataError("Different solvents ({}, {}) found for file set: "
                                        "{}".format(solvent, gauss_result.getSolvent(), file_set))
-            if gauss_result.getFunctional() != func:
+            if gauss_result.getFunctional().lower() != func.lower():
                 raise InvalidDataError("Different functionals ({}, {}) found for file set: "
                                        "{}".format(func, gauss_result.getFunctional(), file_set))
-            if gauss_result.getBasisSet() != basis:
+            if gauss_result.getBasisSet().lower() != basis.lower():
                 raise InvalidDataError("Different basis sets ({}, {}) found for file set: "
                                        "{}".format(basis, gauss_result.getBasisSet(), file_set))
-            if gauss_ver != file_gauss_ver:
+            if gauss_ver.lower() != file_gauss_ver.lower():
                 warning("Different Gaussian versions ({}, {}) found for file set: {}".
                         format(gauss_ver, file_gauss_ver, file_set))
 
