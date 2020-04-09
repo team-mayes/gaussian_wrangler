@@ -245,6 +245,11 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                                     converge_error = True
                                 else:
                                     raise InvalidDataError(e)
+                        # sometimes, Gaussian ignores the convergence error with the line below. Look for it.
+                        next(d)
+                        line = next(d).strip()
+                        if "Optimization completed on the basis of negligible forces." in line:
+                            converge_error = False
                         if find_step_converg:
                             # the transformations with step_num_list may not be strictly necessary, but makes IDE happy
                             #    and (likely due to casting the list) removed an error that appeared on a unix cluster

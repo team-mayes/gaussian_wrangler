@@ -2,7 +2,7 @@ import unittest
 import os
 from common_wrangler.common import capture_stdout, capture_stderr, DIHES
 from gaussian_wrangler.gausslog_unique import main, compare_gausslog_info, print_results
-from gaussian_wrangler.gw_common import process_gausslog_file, CONVERG_ERR, TS
+from gaussian_wrangler.gw_common import process_gausslog_file, CONVERG_ERR, TS, CONVERG
 import logging
 
 # logging.basicConfig(level=logging.DEBUG)
@@ -188,6 +188,15 @@ class TestGausslogUniqueFunctions(unittest.TestCase):
         winner_str, warn_files_str = print_results(full_info_dict, list_of_conf_lists, False, True, print_winners=False)
         warn_files_list = warn_files_str.split('\n')
         self.assertEqual(len(warn_files_list), 4)
+
+    def testRemoveConvErr(self):
+        # sometimes Gaussian ignore convergence error stating:
+        #     "Optimization completed on the basis of negligible forces."
+        # in those cases, let's also ignore the error and change the error flag to false
+        gausslog_loc = os.path.join(SUB_DATA_DIR, "tieg5pdc2tsc_ts_ircr_opt.log")
+        gausslog_content = process_gausslog_file(gausslog_loc, find_dih=True, find_converg=True)
+        self.assertFalse(gausslog_content[CONVERG_ERR])
+        self.assertAlmostEqual(gausslog_content[CONVERG], 1.5711111111111113)
 
     def testTSInfo(self):
         goodvibes_helper_folder = os.path.join(DATA_DIR, 'goodvibes_helper')
