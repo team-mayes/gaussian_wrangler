@@ -114,7 +114,7 @@ class TestGoodVibesHelperInputError(unittest.TestCase):
     def testMisMatchStoich(self):
         test_input = ["-l", FILE_LIST_MISMATCH_STOICH]
         try:
-            # main(test_input)
+            main(test_input)
             with capture_stderr(main, test_input) as output:
                 self.assertTrue("Check stoichiometries" in output)
         finally:

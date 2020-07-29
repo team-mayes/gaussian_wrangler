@@ -348,10 +348,12 @@ def check_gausslog_fileset(file_set, good_vibes_check, results_dict):
                         format(gauss_ver, file_gauss_ver, file_set))
 
     # Now overall checks
+    file_set_str = "\n              ".join([""] + [os.path.relpath(f) for f in file_set])
     if len(ts_stoich_dict) > 0:
         if react_stoich_dict != ts_stoich_dict:
             raise InvalidDataError("Check stoichiometries of reactant(s) and transition state for set: {}\n"
-                                   "reactants: {}, products: {}".format(file_set, react_stoich_dict, ts_stoich_dict))
+                                   "reactants: {}, products: {}".format(file_set_str, react_stoich_dict,
+                                                                        ts_stoich_dict))
         if total_react_charge != ts_charge:
             raise InvalidDataError("Check charge of reactant(s) and transition state for set: {}\n"
                                    "Found {} and {}, respectively".format(file_set, total_react_charge, ts_charge))

@@ -107,6 +107,7 @@ ENV/
 gaussian_wrangler/rdkit_attempts/
 .idea
 .idea/
+.idea/modules.xml
 .idea/workspace.xml
 tests/temp*
 update.sh
