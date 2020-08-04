@@ -49,12 +49,12 @@ If the `two_molecules` option is used, the script will assume that there are two
 provided includes
 one atom from each of the two molecules. 
 
-**gausscom2com**: This script is primarily used to combine the atoms and their coordinates from one file, with all 
+**gausscom2com**: This script combines the atomic coordinates from one file, with all 
 Gaussian input specifications from another file.
 
 **gausscom2pdb**: As you might expect, this script takes the atoms and coordinates from a Gaussian input file and 
-creates a PDB from them. If a template PDB file is provided, it will replace the coordinates in that PDB with those
-from the Gaussian input file. Otherwise, it will created a generic one. 
+creates a PDB from them. If provided a template PDB file, it will replace the coordinates in that PDB with those
+from the Gaussian input file. Otherwise, it will create a generic one. 
 
 **gausslog2com**: As you might expect, this script takes the atoms and coordinates from a Gaussian output file and 
 generates a Gaussian input file using the Gaussian input specifications from a template file. By default, the last 
@@ -80,7 +80,7 @@ calculations in the condensed phase at multiple temperatures.
 **pdbs2gausscoms**: This script combines the coordinates from a PDB file (which may have multiple PDB entries) with 
 the Gaussian input specifications from a template file to generate Gaussian input files. 
 
-**plot_steps**: This script is used to make enthalpy and/or free energy diagrams, given a list of values.
+**plot_steps**: This script makes enthalpy and/or free energy diagrams, given a list of values.
 
 **run_gauss**: This script prepares inputs and runs Gaussian jobs, or (with `-s` and `-l` options) prepares and submits
 slurm jobs to run Gaussian. It can be used to run (and/or submit) a series of Gaussian jobs.

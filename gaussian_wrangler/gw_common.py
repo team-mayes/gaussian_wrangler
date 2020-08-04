@@ -258,7 +258,8 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                             if step_num in step_num_list:
                                 step_num = int(step_num_list[-1]) + 1
                             # noinspection PyTypeChecker
-                            gausslog_content[CONVERG_STEP_DICT][step_num] = {MAX_FORCE: ind_converg[0],
+                            gausslog_content[CONVERG_STEP_DICT][step_num] = {ENERGY: gausslog_content[ENERGY],
+                                                                             MAX_FORCE: ind_converg[0],
                                                                              RMS_FORCE: ind_converg[1],
                                                                              MAX_DISPL: ind_converg[2],
                                                                              RMS_DISPL: ind_converg[3],

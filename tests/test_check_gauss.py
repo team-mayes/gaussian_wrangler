@@ -37,6 +37,8 @@ GOOD_OUT = "The following files completed normally:\n" \
 
 
 LIST_FILE = os.path.join(SUB_DATA_DIR, 'list.txt')
+CONV_239_PNG = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_239_conv_steps.png')
+CONV_419_PNG = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_419_conv_steps.png')
 CONV_239_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_239_conv_steps.csv')
 CONV_419_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_419_conv_steps.csv')
 GOOD_CONV_239_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_239_conv_steps_good.csv')
@@ -44,6 +46,7 @@ GOOD_CONV_419_OUT = os.path.join(ALT_DATA_DIR, 'hexyl_acrylate_419_conv_steps_go
 
 DIOXOLAN_OUT = os.path.join(SUB_DATA_DIR, 'dioxolan4ol_ts4_ts_conv_steps.csv')
 GOOD_DIOXOLAN_OUT = os.path.join(SUB_DATA_DIR, 'dioxolan4ol_ts4_ts_conv_steps_good.csv')
+DIOXOLAN_PNG = os.path.join(SUB_DATA_DIR, 'dioxolan4ol_ts4_ts_conv_steps.png')
 
 NOT_FROM_CHK_FILE = os.path.join(SUB_DATA_DIR, 'acyl-min_ts5.out')
 
@@ -173,23 +176,32 @@ class TestCheckGauss(unittest.TestCase):
 
     def testListEachStepConvergence(self):
         test_input = ["-l", LIST_FILE, "-s"]
+        expected_f_names = [CONV_239_OUT, CONV_239_PNG, CONV_419_OUT, CONV_419_PNG]
         try:
+            for f_name in expected_f_names:
+                silent_remove(f_name)
             main(test_input)
             self.assertFalse(diff_lines(CONV_239_OUT, GOOD_CONV_239_OUT))
             self.assertFalse(diff_lines(CONV_419_OUT, GOOD_CONV_419_OUT))
+            self.assertTrue(os.path.isfile(CONV_239_PNG))
+            self.assertTrue(os.path.isfile(CONV_419_PNG))
         finally:
-            silent_remove(CONV_239_OUT, disable=DISABLE_REMOVE)
-            silent_remove(CONV_419_OUT, disable=DISABLE_REMOVE)
+            for f_name in expected_f_names:
+                silent_remove(f_name, disable=DISABLE_REMOVE)
             pass
 
     def testOneEachStepOut(self):
         # tests searching directory with checking convergence, plus using an alternate extension
         test_input = ["-s", "-d", SUB_DATA_DIR, "-e", "ts.out"]
+        expected_f_names = [DIOXOLAN_OUT, DIOXOLAN_PNG]
         try:
+            for f_name in expected_f_names:
+                silent_remove(f_name)
             main(test_input)
             self.assertFalse(diff_lines(DIOXOLAN_OUT, GOOD_DIOXOLAN_OUT))
         finally:
-            silent_remove(DIOXOLAN_OUT, disable=DISABLE_REMOVE)
+            for f_name in expected_f_names:
+                silent_remove(f_name, disable=DISABLE_REMOVE)
             pass
 
     def testOneEachStopAtStep(self):

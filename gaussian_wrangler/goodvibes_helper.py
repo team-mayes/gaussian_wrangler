@@ -356,14 +356,15 @@ def check_gausslog_fileset(file_set, good_vibes_check, results_dict):
                                                                         ts_stoich_dict))
         if total_react_charge != ts_charge:
             raise InvalidDataError("Check charge of reactant(s) and transition state for set: {}\n"
-                                   "Found {} and {}, respectively".format(file_set, total_react_charge, ts_charge))
+                                   "Found {} and {}, respectively".format(file_set_str, total_react_charge, ts_charge))
     if len(prod_stoich_dict) > 0:
         if react_stoich_dict != prod_stoich_dict:
             raise InvalidDataError("Check stoichiometries of reactant(s) and product(s) for set: {}\n"
-                                   "reactants: {}, products: {}".format(file_set, react_stoich_dict, prod_stoich_dict))
+                                   "reactants: {}, products: {}".format(file_set_str, react_stoich_dict,
+                                                                        prod_stoich_dict))
         if total_react_charge != total_product_charge:
             raise InvalidDataError("Check charge of reactant(s) and product(s) for set: {}\nFound {} and {}, "
-                                   "respectively".format(file_set, total_react_charge, total_product_charge))
+                                   "respectively".format(file_set_str, total_react_charge, total_product_charge))
 
     mult_check = np.sum(multiplicities - multiplicities[0])
     if mult_check != 0:

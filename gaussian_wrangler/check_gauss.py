@@ -8,13 +8,14 @@ import os
 import re
 import sys
 import argparse
+import matplotlib.pyplot as plt
 from operator import itemgetter
 from configparser import MissingSectionHeaderError
 from common_wrangler.common import (InvalidDataError, warning, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                     create_out_fname, write_csv, check_for_files)
 
 from gaussian_wrangler.gw_common import (MAX_FORCE, RMS_FORCE, MAX_DISPL, RMS_DISPL, CONVERG, CONVERG_ERR,
-                                         process_gausslog_file, CONVERG_STEP_DICT)
+                                         process_gausslog_file, CONVERG_STEP_DICT, ENERGY)
 
 
 __author__ = 'hmayes'
@@ -158,6 +159,37 @@ def check_termination(args, check_file_list):
             print("    {}".format(os.path.relpath(fname)))
 
 
+def create_conv_plots(out_fname, step_list):
+    """
+    To allow easy viewing of convergence
+    :param out_fname: This is the name of the base csv file
+    :param step_list: list of dicts with data re convergence
+    :return: n/a, save file
+    """
+    png_out = create_out_fname(out_fname, prefix='', ext='.png')
+
+    png_titles = [CONVERG, ENERGY, MAX_FORCE, RMS_FORCE, MAX_DISPL, RMS_DISPL]
+    num_lists = len(png_titles)
+    png_lists = [[] for _ in range(num_lists)]
+    steps = []
+
+    for s_dict in step_list:
+        steps.append(s_dict[STEP_NUM])
+        for list_id in range(num_lists):
+            png_lists[list_id].append(s_dict[png_titles[list_id]])
+    fig, axs = plt.subplots(num_lists, figsize=(7, 11.5))
+    for list_id in range(num_lists):
+        axs[list_id].plot(steps, png_lists[list_id])
+        axs[list_id].set_title(png_titles[list_id])
+    plt.subplots_adjust(hspace=0.4)
+    plt.xlabel("Step number")
+    plt.savefig(png_out, transparent=True,
+                bbox_inches='tight',
+                )
+    plt.close()
+    print(f"Wrote file: {os.path.relpath(png_out)}")
+
+
 def check_convergence(check_file_list, step_converg, last_step, best_conv, all_steps_to_stdout):
     """
     Reads a Gaussian output file to check convergence
@@ -180,15 +212,16 @@ def check_convergence(check_file_list, step_converg, last_step, best_conv, all_s
         if step_converg:
             # all_steps_to_stdout doesn't need an out_fname, but doesn't hurt either
             if last_step:
-                out_loc = sys.stdout
+                out_fname = sys.stdout
             else:
-                out_loc = create_out_fname(fname, prefix='', suffix='_conv_steps', ext='.csv')
+                out_fname = create_out_fname(fname, prefix='', suffix='_conv_steps', ext='.csv')
 
             # create list of dicts for each step, for all step_converg options
             step_list = []
             for step_num in log_content[CONVERG_STEP_DICT].keys():
                 # not sure necessary to make this new dict, but it is fast enough and clearer for next steps
                 step_list.append({F_NAME: log_content[F_NAME], STEP_NUM: step_num,
+                                  ENERGY: log_content[CONVERG_STEP_DICT][step_num][ENERGY],
                                   MAX_FORCE: log_content[CONVERG_STEP_DICT][step_num][MAX_FORCE],
                                   RMS_FORCE: log_content[CONVERG_STEP_DICT][step_num][RMS_FORCE],
                                   MAX_DISPL: log_content[CONVERG_STEP_DICT][step_num][MAX_DISPL],
@@ -224,7 +257,9 @@ def check_convergence(check_file_list, step_converg, last_step, best_conv, all_s
                     print("    {:7} {:10.3f}".format(step_dict[STEP_NUM], step_dict[CONVERG]))
             else:
                 # save all steps, not sorted by convergence
-                write_csv(step_list, out_loc, headers, extrasaction="ignore", round_digits=6)
+                write_csv(step_list, out_fname, headers, extrasaction="ignore", round_digits=6)
+                # also make plots of step versus convergence
+                create_conv_plots(out_fname, step_list)
         else:
             # this is the printing for final termination step only (not step_converg)
             fname = log_content[headers[0]]
