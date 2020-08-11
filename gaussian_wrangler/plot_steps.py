@@ -10,6 +10,7 @@ import numpy as np
 from common_wrangler.common import (InvalidDataError, warning,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                     create_out_fname, make_fig, EHPART_TO_KCAL_MOL, DEF_FIG_HEIGHT, DEF_FIG_WIDTH)
+from gaussian_wrangler import __version__
 
 
 __author__ = 'hmayes'
@@ -131,6 +132,8 @@ def plot_delta_g(fname, g_temp, data_list, convert_flag, fig_width, fig_height, 
 
 
 def main(argv=None):
+    print(f"Running GaussianWrangler script plot_steps version {__version__}")
+
     # Read input
     args, ret = parse_cmdline(argv)
     if ret != GOOD_RET or args is None:

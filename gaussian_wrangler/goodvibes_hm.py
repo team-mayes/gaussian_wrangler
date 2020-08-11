@@ -44,7 +44,7 @@ from gaussian_wrangler.goodvibes_functions import (ALPHABET, output_pes_temp_int
 from common_wrangler.common import (InvalidDataError, warning,
                                     GAS_CONSTANT, ATM_TO_KPA, AU_TO_J,
                                     GOOD_RET, INPUT_ERROR, INVALID_DATA, file_rows_to_list)
-
+from gaussian_wrangler import __version__
 
 # # Below are the values originally used by GoodVibes; very close to current output
 # GAS_CONSTANT = 8.3144621  # J / K / mol

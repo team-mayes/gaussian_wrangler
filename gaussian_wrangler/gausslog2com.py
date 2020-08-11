@@ -11,7 +11,7 @@ from common_wrangler.common import (InvalidDataError, warning, create_out_fname,
                                     NUM_ATOMS, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, BASE_NAME, SEC_HEAD,
                                     SEC_ATOMS, SEC_TAIL, check_for_files)
 from gaussian_wrangler.gw_common import (GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT, GAU_CHARGE_PAT)
-
+from gaussian_wrangler import __version__
 
 __author__ = 'hmayes'
 
@@ -256,7 +256,7 @@ def process_gausscom_tpl(com_tpl_file, check_for_charge_mult):
 
 
 def main(argv=None):
-    # Read input
+    print(f"Running GaussianWrangler script gausslog2com version {__version__}")
     args, ret = parse_cmdline(argv)
     if ret != GOOD_RET or args is None:
         return ret

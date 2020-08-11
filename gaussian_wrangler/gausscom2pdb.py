@@ -13,7 +13,7 @@ from common_wrangler.common import (InvalidDataError, warning, process_cfg, crea
                                     process_pdb_file, PDB_FORMAT, NUM_ATOMS, MAIN_SEC,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA)
 from gaussian_wrangler.gw_common import GAU_HEADER_PAT
-
+from gaussian_wrangler import __version__
 
 __author__ = 'hmayes'
 
@@ -188,7 +188,7 @@ def process_gausscom_file(cfg, gausscom_file, pdb_tpl_content):
 
 
 def main(argv=None):
-    # Read input
+    print(f"Running GaussianWrangler script gausscom2pdb version {__version__}")
     args, ret = parse_cmdline(argv)
     if ret != GOOD_RET or args is None:
         return ret

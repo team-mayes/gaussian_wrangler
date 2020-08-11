@@ -19,6 +19,7 @@ from common_wrangler.common import (InvalidDataError, warning, RG, KB, H, EHPART
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                     write_csv, create_out_fname, make_fig, parse_stoich, capture_stdout, list_to_file,
                                     round_sig_figs)
+from gaussian_wrangler import __version__
 
 __author__ = 'hmayes'
 
@@ -610,6 +611,7 @@ def process_file_set(file_set, options, print_mode, results_dict, tog_fname):
 
 
 def main(argv=None):
+    print(f"Running GaussianWrangler script goodvibes_helper version {__version__}")
     # Read input
     args, ret = parse_cmdline(argv)
     if ret != GOOD_RET or args is None:

@@ -12,7 +12,7 @@ from common_wrangler.common import (InvalidDataError, warning, process_cfg, crea
                                     process_pdb_file, MAIN_SEC, SEC_HEAD, SEC_ATOMS, SEC_TAIL, PDB_FORMAT, NUM_ATOMS,
                                     ATOM_NUM_DICT, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, silent_remove)
 from gaussian_wrangler.gw_common import (GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT)
-
+from gaussian_wrangler import __version__
 
 __author__ = 'hmayes'
 
@@ -288,6 +288,8 @@ def check_input(args, cfg):
 
 
 def main(argv=None):
+    print(f"Running GaussianWrangler script gausslog2pdb version {__version__}")
+
     # Read input
     args, ret = parse_cmdline(argv)
     if ret != GOOD_RET or args is None:

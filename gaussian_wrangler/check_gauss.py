@@ -268,7 +268,6 @@ def check_convergence(check_file_list, step_converg, last_step, best_conv, all_s
 
 
 def main(argv=None):
-    # Read input
     print(f"Running GaussianWrangler script check_gauss version {__version__}")
 
     args, ret = parse_cmdline(argv)
