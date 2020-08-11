@@ -285,7 +285,7 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
         warning("Requested dihedral data not found for file:", os.path.basename(gausslog_file))
         gausslog_content[DIHES] = None
     if (find_converg or find_step_converg) and CONVERG_ERR not in gausslog_content:
-        warning("Requested convergence data not found for file:", os.path.basename(gausslog_file))
+        warning("Did not find final convergence report for file:", os.path.basename(gausslog_file))
         gausslog_content[CONVERG] = np.nan
         gausslog_content[CONVERG_ERR] = None
 
