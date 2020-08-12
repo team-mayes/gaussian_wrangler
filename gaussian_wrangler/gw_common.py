@@ -281,7 +281,7 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
             pass
 
     # Sometimes we want data that is not in the output file. Put placeholders.
-    if find_dih and DIHES not in gausslog_content:
+    if find_dih and DIHES not in gausslog_content and len(gausslog_content[SEC_ATOMS]) > 3:
         warning("Requested dihedral data not found for file:", os.path.basename(gausslog_file))
         gausslog_content[DIHES] = None
     if (find_converg or find_step_converg) and CONVERG_ERR not in gausslog_content:
