@@ -469,6 +469,7 @@ class CalcBBE:
                         rot_temp = [float(g_line.split()[4]), float(g_line.split()[5])]
             if "Job cpu time" in g_line:
                 split_line = g_line.split()
+                # noinspection PyUnresolvedReferences
                 days = int(split_line[3]) + self.cpu[0]
                 hours = int(split_line[5]) + self.cpu[1]
                 mins = int(split_line[7]) + self.cpu[2]
@@ -616,6 +617,7 @@ class CalcBBE:
 #
 class GetOutData:
     def __init__(self, file):
+        self.atom_types = None
         with open(file) as f:
             out_data = f.readlines()
         program = 'none'
@@ -695,6 +697,7 @@ class GetOutData:
                                 self.atom_nums.append(element_id(split_line[1], num=True))
 
         getatom_types(self, out_data, program)
+        # noinspection PyTypeChecker
         n_atoms = len(self.atom_types)
 
         # noinspection PyTypeChecker
@@ -726,6 +729,13 @@ def calc_rrho_entropy(frequency_wn, temperature, freq_scale_factor, fract_model_
     harmonic-oscillator description for a list of vibrational modes
     Sv = RSum(hv/(kT(e^(hv/kT)-1) - ln(1-e^(-hv/kT)))
     """
+    factor = get_factors(fract_model_sys, freq_scale_factor, frequency_wn, temperature)
+    entropy = [entry * GAS_CONSTANT / (np.exp(entry) - 1) - GAS_CONSTANT * np.log(1 - np.exp(-entry))
+               for entry in factor]
+    return entropy
+
+
+def get_factors(fract_model_sys, freq_scale_factor, frequency_wn, temperature=1.0):
     if fract_model_sys:
         freq_scale_factor = [freq_scale_factor[0] * fract_model_sys[i] + freq_scale_factor[1] *
                              (1.0 - fract_model_sys[i]) for i in range(len(fract_model_sys))]
@@ -734,9 +744,7 @@ def calc_rrho_entropy(frequency_wn, temperature, freq_scale_factor, fract_model_
     else:
         factor = [(H * freq * SPEED_OF_LIGHT * freq_scale_factor) / (KB * temperature)
                   for freq in frequency_wn]
-    entropy = [entry * GAS_CONSTANT / (np.exp(entry) - 1) - GAS_CONSTANT * np.log(1 - np.exp(-entry))
-               for entry in factor]
-    return entropy
+    return factor
 
 
 def job_type(file):
@@ -756,23 +764,32 @@ def job_type(file):
     return job
 
 
+def read_file_contents(f_name):
+    """
+    Checks that the file is either '.out' or '.log', and reads the contents if so
+    :param f_name: str, the file name
+    :return: f_contents, str, contents of the file
+    """
+    if os.path.exists(os.path.splitext(f_name)[0] + '.log') or os.path.exists(os.path.splitext(f_name)[0] + '.out'):
+        with open(f_name) as f:
+            f_contents = f.readlines()
+    elif os.path.exists(f_name):
+        raise ValueError(f"Expected file name to end in '.out' or '.out' for file: {f_name}")
+    else:
+        raise ValueError("File {} does not exist".format(f_name))
+    return f_contents
+
+
+# noinspection DuplicatedCode
 def parse_data(file):
     # Read Gaussian output and obtain single point energy, program type,
     # program version, solvation_model, charge, empirical_dispersion, multiplicity
     spe, program = 'none', 'none'
     version_program, solvation_model, keyword_line = '', '', ''
     charge, multiplicity = None, None
+    file_contents = read_file_contents(file)
 
-    if os.path.exists(os.path.splitext(file)[0] + '.log'):
-        with open(os.path.splitext(file)[0] + '.log') as f:
-            data = f.readlines()
-    elif os.path.exists(os.path.splitext(file)[0] + '.out'):
-        with open(os.path.splitext(file)[0] + '.out') as f:
-            data = f.readlines()
-    else:
-        raise ValueError("File {} does not exist".format(file))
-
-    for line in data:
+    for line in file_contents:
         if "Gaussian" in line:
             program = "Gaussian"
             break
@@ -780,7 +797,7 @@ def parse_data(file):
             program = "Orca"
             break
     repeated_link1 = 0
-    for line in data:
+    for line in file_contents:
         if program == "Gaussian":
             if line.strip().startswith('SCF Done:'):
                 spe = float(line.strip().split()[4])
@@ -818,9 +835,9 @@ def parse_data(file):
     sorted_solvation_model = None
     display_solvation_model = None
     if 'Gaussian' in version_program.strip():
-        for i, line in enumerate(data):
+        for i, line in enumerate(file_contents):
             if '#' in line.strip():
-                for j, d_line in enumerate(data[i:i + 10]):
+                for j, d_line in enumerate(file_contents[i:i + 10]):
                     if '--' in line.strip():
                         break
                     else:
@@ -904,7 +921,7 @@ def parse_data(file):
         keyword_line_1 = "gas phase"
         keyword_line_2 = ''
         keyword_line_3 = ''
-        for i, line in enumerate(data):
+        for i, line in enumerate(file_contents):
             if 'CPCM SOLVATION MODEL' in line.strip():
                 keyword_line_1 = "CPCM,"
             if 'SMD CDS free energy correction energy' in line.strip():
@@ -925,6 +942,7 @@ def parse_data(file):
     return spe, program, version_program, solvation_model, file, charge, empirical_dispersion, multiplicity
 
 
+# noinspection DuplicatedCode
 def get_emp_dispersion(keyword_line, start_emp_disp):
     if '(' in keyword_line[start_emp_disp:start_emp_disp + 4]:
         start_emp_disp += keyword_line[start_emp_disp:start_emp_disp + 4].find('(') + 1
@@ -948,20 +966,12 @@ def get_emp_dispersion(keyword_line, start_emp_disp):
     return empirical_dispersion
 
 
-def sp_cpu(file):
+def sp_cpu(f_name):
     # Read single-point output for cpu time
-    spe, program, sp_data, cpu = None, None, [], None
+    spe, program, cpu = None, None, None
+    file_contents = read_file_contents(f_name)
 
-    if os.path.exists(os.path.splitext(file)[0] + '.log'):
-        with open(os.path.splitext(file)[0] + '.log') as f:
-            sp_data = f.readlines()
-    elif os.path.exists(os.path.splitext(file)[0] + '.out'):
-        with open(os.path.splitext(file)[0] + '.out') as f:
-            sp_data = f.readlines()
-    else:
-        raise ValueError("File {} does not exist".format(file))
-
-    for line in sp_data:
+    for line in file_contents:
         if line.find("Gaussian") > -1:
             program = "Gaussian"
             break
@@ -969,7 +979,7 @@ def sp_cpu(file):
             program = "Orca"
             break
 
-    for line in sp_data:
+    for line in file_contents:
         if program == "Gaussian":
             if line.strip().find("Job cpu time") > -1:
                 days = int(line.split()[3])
@@ -1026,12 +1036,7 @@ def calc_zeropoint_energy(frequency_wn, scale_factor, fract_model_sys):
     Calculates the vibrational ZPE (J/mol)
     E_ZPE = Sum(0.5 hv/k)
     """
-    if fract_model_sys:
-        scale_factor = [scale_factor[0] * fract_model_sys[i] + scale_factor[1] *
-                        (1.0 - fract_model_sys[i]) for i in range(len(fract_model_sys))]
-        factor = [(H * frequency_wn[i] * SPEED_OF_LIGHT * scale_factor[i]) / KB for i in range(len(frequency_wn))]
-    else:
-        factor = [(H * freq * SPEED_OF_LIGHT * scale_factor) / KB for freq in frequency_wn]
+    factor = get_factors(fract_model_sys, scale_factor, frequency_wn)
     energy = [0.5 * entry * GAS_CONSTANT for entry in factor]
     return sum(energy)
 
@@ -1070,14 +1075,7 @@ def calc_vibrational_energy(frequency_wn, temperature, freq_scale_factor, fract_
     Includes ZPE (0K) and thermal contributions
     E_vib = R * Sum(0.5 hv/k + (hv/k)/(e^(hv/KT)-1))
     """
-    if fract_model_sys:
-        freq_scale_factor = [
-            freq_scale_factor[0] * fract_model_sys[i] + freq_scale_factor[1] * (1.0 - fract_model_sys[i])
-            for i in range(len(fract_model_sys))]
-        factor = [(H * frequency_wn[i] * SPEED_OF_LIGHT * freq_scale_factor[i]) / (KB * temperature)
-                  for i in range(len(frequency_wn))]
-    else:
-        factor = [(H * freq * SPEED_OF_LIGHT * freq_scale_factor) / (KB * temperature) for freq in frequency_wn]
+    factor = get_factors(fract_model_sys, freq_scale_factor, frequency_wn, temperature)
     # Error occurs if T is too low when performing np.exp
     for entry in factor:
         if entry > np.log(sys.float_info.max):

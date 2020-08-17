@@ -16,7 +16,7 @@ from common_wrangler.common import (list_to_file, InvalidDataError, create_out_f
                                     PDB_ELE_LAST_CHAR, PDB_ATOM_NUM_LAST_CHAR, PDB_ATOM_TYPE_LAST_CHAR,
                                     MAIN_SEC, SEC_HEAD, SEC_TAIL)
 from gaussian_wrangler.gw_common import (process_gausscom_file)
-
+from gaussian_wrangler import __version__
 
 __author__ = 'hmayes'
 
@@ -185,6 +185,8 @@ def process_pdb_file(cfg, gau_tpl_content, pdb_file):
 
 
 def main(argv=None):
+    print(f"Running GaussianWrangler script pdbs2gausscoms version {__version__}")
+
     # Read input
     args, ret = parse_cmdline(argv)
     if ret != GOOD_RET or args is None:

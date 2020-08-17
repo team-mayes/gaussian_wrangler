@@ -74,7 +74,7 @@ class TestGausslogUnique(unittest.TestCase):
         test_input = ["-l", LOG_LIST]
         good_output = ''.join([HEADER, ALPHA_FIRST, ENERGY_FIRST]) + '\n'
         with capture_stdout(main, test_input) as output:
-            self.assertTrue(output == good_output)
+            self.assertTrue(good_output in output)
         with capture_stderr(main, test_input) as output:
             self.assertTrue('Check convergence' in output)
 
@@ -83,7 +83,7 @@ class TestGausslogUnique(unittest.TestCase):
         test_input = ["-l", LOG_LIST, "-e"]
         good_output = ''.join([HEADER, ENERGY_FIRST, ALPHA_FIRST]) + '\n'
         with capture_stdout(main, test_input) as output:
-            self.assertTrue(output == good_output)
+            self.assertTrue(good_output in output)
         with capture_stderr(main, test_input) as output:
             self.assertTrue('Check convergence' in output)
 
@@ -91,7 +91,7 @@ class TestGausslogUnique(unittest.TestCase):
         test_input = ["-l", LOG_LIST, '-n']
         good_output = ''.join([HEADER, ALPHA_FIRST, ENERGY_FIRST]) + '\n'
         with capture_stdout(main, test_input) as output:
-            self.assertTrue(output == good_output)
+            self.assertTrue(good_output in output)
         with capture_stderr(main, test_input) as output:
             self.assertTrue('Check convergence' in output)
 
@@ -101,7 +101,7 @@ class TestGausslogUnique(unittest.TestCase):
         good_output = ''.join([HEADER, ENERGY_FIRST, MISSING_FREQ]) + '\n'
         main(test_input)
         with capture_stdout(main, test_input) as output:
-            self.assertTrue(output == good_output)
+            self.assertTrue(good_output in output)
         with capture_stderr(main, test_input) as output:
             self.assertFalse('Check convergence' in output)
 
@@ -112,8 +112,7 @@ class TestGausslogUnique(unittest.TestCase):
         good_output = ''.join([HEADER, pet_843, pet_1, ALPHA_FIRST, ENERGY_FIRST]) + '\n'
         # main(test_input)
         with capture_stdout(main, test_input) as output:
-            print(output)
-            self.assertTrue(output == good_output)
+            self.assertTrue(good_output in output)
         with capture_stderr(main, test_input) as output:
             self.assertTrue('lme2acetoxprpnt_ts3_ircf_opt.log' in output)
 
@@ -126,7 +125,7 @@ class TestGausslogUnique(unittest.TestCase):
         good_output = ''.join([HEADER, good_result]) + '\n'
         # main(test_input)
         with capture_stdout(main, test_input) as output:
-            self.assertTrue(output == good_output)
+            self.assertTrue(good_output in output)
         with capture_stderr(main, test_input) as output:
             self.assertTrue('lme2acetoxprpnt_ts4_ircf_opt.log' in output)
             self.assertTrue('lme2acetoxprpnt_ts4_b_ts_ircf_opt.log' in output)
@@ -139,7 +138,7 @@ class TestGausslogUnique(unittest.TestCase):
         good_output = ''.join([HEADER, good_result])
         test_input = ["-l", SIMILAR_LIST, "-n"]
         with capture_stdout(main, test_input) as output:
-            self.assertTrue(output == good_output)
+            self.assertTrue(good_output in output)
         with capture_stderr(main, test_input) as output:
             self.assertTrue('' == output)
 
@@ -151,7 +150,7 @@ class TestGausslogUnique(unittest.TestCase):
         test_input = ["-l", CALCALL_LIST, "-n"]
         # main(test_input)
         with capture_stdout(main, test_input) as output:
-            self.assertTrue(output == good_output)
+            self.assertTrue(good_output in output)
         with capture_stderr(main, test_input) as output:
             self.assertTrue('' == output)
 
