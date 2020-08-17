@@ -10,7 +10,7 @@ import argparse
 from common_wrangler.common import (InvalidDataError, warning, create_out_fname, list_to_file, ATOM_NUM_DICT,
                                     NUM_ATOMS, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, BASE_NAME, SEC_HEAD,
                                     SEC_ATOMS, SEC_TAIL, check_for_files)
-from gaussian_wrangler.gw_common import (GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT, GAU_CHARGE_PAT)
+from gaussian_wrangler.gw_common import (GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT, GAU_CHARGE_PAT, GAU_STEP_PAT)
 from gaussian_wrangler import __version__
 
 __author__ = 'hmayes'
@@ -58,6 +58,10 @@ def parse_cmdline(argv):
     parser.add_argument("-o", "--output_fname", help="The name of the output file to be created. The default is the "
                                                      "output file name with the template base name added to it, and the"
                                                      " '.com' extension.", default=None)
+    parser.add_argument("-s", "--step_num", help="The step number in the output file optimization from which to take "
+                                                 "the coordinates (instead of last or lowest energy conformation).",
+                        default=None)
+
     args = None
     try:
         args = parser.parse_args(argv)
@@ -71,21 +75,28 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def process_gausslog_files(gausslog_files, com_tpl_content, charge_from_log_flag, find_low_energy, base_dir, out_fname):
+def process_gausslog_files(gausslog_files, com_tpl_content, charge_from_log_flag, find_low_energy, step_num,
+                           base_dir, out_fname):
     for gausslog_file in gausslog_files:
-        process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, find_low_energy,
+        process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, find_low_energy, step_num,
                               base_dir, out_fname)
 
 
-def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, find_low_energy, base_dir, out_fname):
+def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, find_low_energy, step_num,
+                          base_dir, out_fname):
     with open(gausslog_file) as d:
         rel_path_fname = os.path.relpath(gausslog_file)
         # The header may be more than 5 lines long--counting from end makes sure the comment goes in the correct line
         if find_low_energy:
             com_tpl_content[SEC_HEAD][-3] = "Low energy conformation from file {}".format(rel_path_fname)
+        elif step_num:
+            step_num = int(step_num)
+            com_tpl_content[SEC_HEAD][-3] = "Conformation from step number {} in file {}".format(step_num,
+                                                                                                 rel_path_fname)
         else:
             com_tpl_content[SEC_HEAD][-3] = "Last conformation from file {}".format(rel_path_fname)
         lowest_energy_found = 0.0
+        current_step_num = None
         final_atoms_section = []
         atom_type_list = []
         section = SEC_HEAD
@@ -119,6 +130,12 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
                                 com_tpl_content[SEC_HEAD][-1] = '   '.join(charge_mult)
                                 find_charge = False
                         continue
+                if step_num and GAU_STEP_PAT.match(line):
+                    split_line = line.split()
+                    current_step_num = int(split_line[2])
+                    if current_step_num == step_num:
+                        break
+
                 if GAU_COORD_PAT.match(line):
                     atoms_section = []
                     next(d)
@@ -188,7 +205,8 @@ def process_gausslog_file(gausslog_file, com_tpl_content, charge_from_log_flag, 
                     atom_id = 0
 
     if len(final_atoms_section) == 0:
-        raise InvalidDataError("Check that the following log file has coordinates to use: {}".format(gausslog_file))
+        raise InvalidDataError("Check that the following log file has coordinates to use and/or specified step "
+                               "number: {}".format(gausslog_file))
     if out_fname:
         f_name = create_out_fname(out_fname, base_dir=base_dir)
 
@@ -273,8 +291,8 @@ def main(argv=None):
 
         # Read template and data files
         com_tpl_content = process_gausscom_tpl(args.tpl, args.charge_from_tpl)
-        process_gausslog_files(gausslog_files, com_tpl_content, args.charge_from_tpl, args.low_energy, args.out_dir,
-                               args.output_fname)
+        process_gausslog_files(gausslog_files, com_tpl_content, args.charge_from_tpl, args.low_energy, args.step_num,
+                               args.out_dir, args.output_fname)
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR
