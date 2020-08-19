@@ -216,19 +216,11 @@ class TestGausslogUniqueFunctions(unittest.TestCase):
                 self.assertFalse(full_info_dict[fname][TS])
 
     def testCatchSortError(self):
-        log_info = {'ti_eg5_dime_pdc1_tsb_ts.log':
-                        {'atoms_section': {},
-                         'base_name': 'ti_eg5_dime_pdc1_tsb_ts.log',
-                         'Stoichiometry': 'C19H34O16Ti',
-                         'Transition_State': True,
-                         'Energy': -2797.66176465,
-                         'Enthalpy': -2797.058267,
-                         'converg_dict': {},
-                         'Charge': 0,
-                         'Mult': 1,
-                         'Dihedrals': {},
-                         'Convergence': 2.055833333333333,
-                         'Convergence_Error': True},
+        log_info = {'ti_eg5_dime_pdc1_tsb_ts.log': {'atoms_section': {}, 'base_name': 'ti_eg5_dime_pdc1_tsb_ts.log',
+                                                    'Stoichiometry': 'C19H34O16Ti', 'Transition_State': True,
+                                                    'Energy': -2797.66176465, 'Enthalpy': -2797.058267,
+                                                    'converg_dict': {}, 'Charge': 0, 'Mult': 1, 'Dihedrals': {},
+                                                    'Convergence': 2.055833333333333, 'Convergence_Error': True},
                     'ti_eg5_dime_pdc1_tsc_ts.log':
                         {'atoms_section': {},
                          'base_name': 'ti_eg5_dime_pdc1_tsc_ts.log',
@@ -269,12 +261,17 @@ class TestGausslogUniqueFunctions(unittest.TestCase):
                          'Convergence': np.nan,
                          'Convergence_Error': None},
                     }
+        expected_win_str = 'N/A; Required information not available from all files in set'
+        expected_warn_str = '\n    ti_eg5_dime_pdc1_tsc_ts.log:  171.12' \
+                            '\n    ti_eg5_dime_pdc1_tsb_ts.log:  2.06' \
+                            '\n    ti_eg5_dime_pdc1_tse_ts.log:  Not found'
+
         list_of_conf_lists = [['ti_eg5_dime_pdc1_tsb_ts.log'], ['ti_eg5_dime_pdc1_tsc_ts.log'],
                               ['ti_eg5_dime_pdc1_tsd_ts.log'], ['ti_eg5_dime_pdc1_tse_ts.log']]
         sort_by_enthalpy = False
         sort_by_energy = True
         winner_str, warn_files_str = print_results(log_info, list_of_conf_lists, sort_by_enthalpy,
                                                    sort_by_energy, print_winners=True)
-        self.assertEqual(winner_str, "N/A")
-        self.assertEqual(warn_files_str, "Required information not available from all files in set.")
+        self.assertEqual(winner_str, expected_win_str)
+        self.assertEqual(warn_files_str, expected_warn_str)
         pass

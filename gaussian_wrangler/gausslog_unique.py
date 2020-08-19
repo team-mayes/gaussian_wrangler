@@ -133,6 +133,7 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
                         log_info[low_conv_log][ENERGY], log_info[low_conv_log][ENTHALPY]))
 
     # sorting, if requested
+    sort_error = False
     if sort_by_enthalpy:
         sort_by_energy = False
         for winner in winners:
@@ -148,18 +149,22 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
         sort_key = 0
     try:
         winners.sort(key=lambda tup: tup[sort_key])
+        winner_str = ','.join(['File', CONVERG, ENERGY, ENTHALPY]) + '\n'
     except TypeError:
-        return "N/A", "Required information not available from all files in set."
+        sort_error = True
+        winner_str = "N/A; Required information not available from all files in set"
 
     # now gather results
-    winner_str = ','.join(['File', CONVERG, ENERGY, ENTHALPY]) + '\n'
     for winner, converg, energy, enthalpy in winners:
-        try:
-            winner_str += '{},{:.4f},{:.6f},{:.6f}\n'.format(winner, converg, energy, enthalpy)
-        except TypeError:
-            winner_str += '{},{:.4f},{:.6f},{}\n'.format(winner, converg, energy, enthalpy)
+        if not sort_error:
+            try:
+                winner_str += '{},{:.4f},{:.6f},{:.6f}\n'.format(winner, converg, energy, enthalpy)
+            except TypeError:
+                winner_str += '{},{:.4f},{:.6f},{}\n'.format(winner, converg, energy, enthalpy)
         if log_info[winner][CONVERG_ERR]:
-            warn_files_str += '\n    {:}:  {:.2f}'.format(winner, converg, energy, enthalpy)
+            warn_files_str += '\n    {:}:  {:.2f}'.format(winner, converg)
+        elif log_info[winner][CONVERG_ERR] is None:
+            warn_files_str += '\n    {:}:  Not found'.format(winner)
     if print_winners:
         print(winner_str)
     return winner_str, warn_files_str
