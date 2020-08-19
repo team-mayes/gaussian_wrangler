@@ -1,5 +1,6 @@
 import unittest
 import os
+import numpy as np
 from common_wrangler.common import capture_stdout, capture_stderr, DIHES
 from gaussian_wrangler.gausslog_unique import main, compare_gausslog_info, print_results
 from gaussian_wrangler.gw_common import process_gausslog_file, CONVERG_ERR, TS, CONVERG
@@ -213,3 +214,67 @@ class TestGausslogUniqueFunctions(unittest.TestCase):
                 self.assertTrue(full_info_dict[fname][TS])
             else:
                 self.assertFalse(full_info_dict[fname][TS])
+
+    def testCatchSortError(self):
+        log_info = {'ti_eg5_dime_pdc1_tsb_ts.log':
+                        {'atoms_section': {},
+                         'base_name': 'ti_eg5_dime_pdc1_tsb_ts.log',
+                         'Stoichiometry': 'C19H34O16Ti',
+                         'Transition_State': True,
+                         'Energy': -2797.66176465,
+                         'Enthalpy': -2797.058267,
+                         'converg_dict': {},
+                         'Charge': 0,
+                         'Mult': 1,
+                         'Dihedrals': {},
+                         'Convergence': 2.055833333333333,
+                         'Convergence_Error': True},
+                    'ti_eg5_dime_pdc1_tsc_ts.log':
+                        {'atoms_section': {},
+                         'base_name': 'ti_eg5_dime_pdc1_tsc_ts.log',
+                         'Stoichiometry': 'C19H34O16Ti',
+                         'Transition_State': None,
+                         'Energy': -2797.72551346,
+                         'Enthalpy': None,
+                         'converg_dict': {},
+                         'Charge': 0,
+                         'Mult': 1,
+                         'Dihedrals': {},
+                         'Convergence': 171.12472222222223,
+                         'Convergence_Error': True},
+                    'ti_eg5_dime_pdc1_tsd_ts.log':
+                        {'atoms_section': {},
+                         'base_name': 'ti_eg5_dime_pdc1_tsd_ts.log',
+                         'Stoichiometry': 'C19H34O16Ti',
+                         'Transition_State': True,
+                         'Energy': -2797.6659881,
+                         'Enthalpy': -2797.062691,
+                         'converg_dict': {},
+                         'Charge': 0,
+                         'Mult': 1,
+                         'Dihedrals': {},
+                         'Convergence': 0.8447222222222222,
+                         'Convergence_Error': False},
+                    'ti_eg5_dime_pdc1_tse_ts.log':
+                        {'atoms_section': {},
+                         'base_name': 'ti_eg5_dime_pdc1_tse_ts.log',
+                         'Stoichiometry': 'C19H34O16Ti',
+                         'Transition_State': None,
+                         'Energy': None,
+                         'Enthalpy': None,
+                         'converg_dict': {},
+                         'Charge': 0,
+                         'Mult': 1,
+                         'Dihedrals': {},
+                         'Convergence': np.nan,
+                         'Convergence_Error': None},
+                    }
+        list_of_conf_lists = [['ti_eg5_dime_pdc1_tsb_ts.log'], ['ti_eg5_dime_pdc1_tsc_ts.log'],
+                              ['ti_eg5_dime_pdc1_tsd_ts.log'], ['ti_eg5_dime_pdc1_tse_ts.log']]
+        sort_by_enthalpy = False
+        sort_by_energy = True
+        winner_str, warn_files_str = print_results(log_info, list_of_conf_lists, sort_by_enthalpy,
+                                                   sort_by_energy, print_winners=True)
+        self.assertEqual(winner_str, "N/A")
+        self.assertEqual(warn_files_str, "Required information not available from all files in set.")
+        pass

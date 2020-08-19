@@ -146,7 +146,10 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
         sort_key = 2
     else:
         sort_key = 0
-    winners.sort(key=lambda tup: tup[sort_key])
+    try:
+        winners.sort(key=lambda tup: tup[sort_key])
+    except TypeError:
+        return "N/A", "Required information not available from all files in set."
 
     # now gather results
     winner_str = ','.join(['File', CONVERG, ENERGY, ENTHALPY]) + '\n'
