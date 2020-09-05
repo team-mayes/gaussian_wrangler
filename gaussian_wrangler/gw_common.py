@@ -7,8 +7,8 @@ import re
 import os
 import collections
 import numpy as np
-from common_wrangler.common import (InvalidDataError, SEC_HEAD, SEC_ATOMS, SEC_TAIL, BASE_NAME, get_fname_root,
-                                    ATOM_TYPE, ATOM_COORDS, DIHES, ATOM_NUM_DICT, warning)
+from common_wrangler.common import (InvalidDataError, SEC_HEAD, SEC_ATOMS, SEC_TAIL, BASE_NAME,
+                                    ATOM_TYPE, ATOM_COORDS, DIHES, ATOM_NUM_DICT, warning, get_fname_root)
 
 
 GAU_HEADER_PAT = re.compile(r"#.*")

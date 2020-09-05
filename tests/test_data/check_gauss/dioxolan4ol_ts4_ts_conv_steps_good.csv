@@ -1,4 +1,4 @@
-"File","step_number","Max Force","RMS Force","Max Displacement","RMS Displacement","Convergence","Convergence_Error"
+"File Name","step_number","Max Force","RMS Force","Max Displacement","RMS Displacement","Convergence","Convergence_Error"
 "dioxolan4ol_ts4_ts.out",1,0.075371,0.00893,0.198615,0.042403,342.935278,True
 "dioxolan4ol_ts4_ts.out",34,0.004266,0.00076,0.637699,0.107977,456.271389,True
 "dioxolan4ol_ts4_ts.out",35,0.005368,0.000731,0.205975,0.038763,161.098611,True

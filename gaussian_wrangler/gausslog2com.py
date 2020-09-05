@@ -7,9 +7,9 @@ import os
 import re
 import sys
 import argparse
-from common_wrangler.common import (InvalidDataError, warning, create_out_fname, list_to_file, ATOM_NUM_DICT,
-                                    NUM_ATOMS, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, BASE_NAME, SEC_HEAD,
-                                    SEC_ATOMS, SEC_TAIL, check_for_files)
+from common_wrangler.common import (ATOM_NUM_DICT, NUM_ATOMS, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, BASE_NAME,
+                                    SEC_HEAD, SEC_ATOMS, SEC_TAIL, InvalidDataError, warning, check_for_files,
+                                    create_out_fname, list_to_file)
 from gaussian_wrangler.gw_common import (GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT, GAU_CHARGE_PAT, GAU_STEP_PAT)
 from gaussian_wrangler import __version__
 

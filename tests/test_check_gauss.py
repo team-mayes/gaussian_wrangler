@@ -163,7 +163,7 @@ class TestCheckGauss(unittest.TestCase):
 
     def testSingleFinalConvergence(self):
         test_input = ["-f", SINGLE_FILE, "-z"]
-        good_out = 'File                                 Convergence Convergence_Error\n'\
+        good_out = 'File Name                            Convergence Convergence_Error\n'\
                    'me2propprpnt_7.log                      111.4981 True\n'
         with capture_stdout(main, test_input) as output:
             self.assertTrue(good_out in output)
@@ -171,7 +171,7 @@ class TestCheckGauss(unittest.TestCase):
     def testListFinalConvergence(self):
         test_input = ["-l", LIST_FILE, "-z"]
         # main(test_input)
-        good_out = 'File                                 Convergence Convergence_Error\n' \
+        good_out = 'File Name                            Convergence Convergence_Error\n' \
                    'hexyl_acrylate_239.log                    1.1100 False\n' \
                    'hexyl_acrylate_419.log                    0.0706 False\n'
         with capture_stdout(main, test_input) as output:
@@ -312,7 +312,7 @@ class TestCheckGauss(unittest.TestCase):
     def testDirSubdirsLastStep(self):
         temp_files_list = make_fill_sub_dir()
         test_input = ["-ds", SUB_DATA_DIR, "-z"]
-        good_output = 'File                                 Convergence Convergence_Error\n' \
+        good_output = 'File Name                            Convergence Convergence_Error\n' \
                       'empty.log                                    nan None\n' \
                       'me2propprpnt_7.log                      111.4981 True\n' \
                       'pet_mono_671_tzvp.log                        nan None\n' \
@@ -320,7 +320,8 @@ class TestCheckGauss(unittest.TestCase):
                       'pet_mono_819_tzvp.log                        nan None\n' \
                       'pet_mono_872_tzvp.log                        nan None\n' \
                       'a579.log                                  0.1175 False\n' \
-                      'ipvc_11_10_cp.log                            nan None\n'
+                      'ipvc_11_10_cp.log                            nan None\n' \
+                      'ti_eg5_dime_tpa_tse.log                 414.3203 True'
         try:
             # main(test_input)
             with capture_stdout(main, test_input) as output:

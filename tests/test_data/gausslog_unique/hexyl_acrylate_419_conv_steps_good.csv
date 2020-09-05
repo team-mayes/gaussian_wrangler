@@ -1,4 +1,4 @@
-"File","step_number","Max Force","RMS Force","Max Displacement","RMS Displacement","Convergence","Convergence_Error"
+"File Name","step_number","Max Force","RMS Force","Max Displacement","RMS Displacement","Convergence","Convergence_Error"
 "hexyl_acrylate_419.log",1,0.016411,0.001497,0.797799,0.217659,666.063056,True
 "hexyl_acrylate_419.log",7,4.2e-05,5e-06,0.005768,0.001206,4.319444,True
 "hexyl_acrylate_419.log",8,0.0,0.0,9.7e-05,2e-05,0.070556,False

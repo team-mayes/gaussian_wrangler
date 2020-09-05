@@ -8,9 +8,9 @@ import copy
 import sys
 import argparse
 from configparser import ConfigParser, MissingSectionHeaderError
-from common_wrangler.common import (InvalidDataError, warning, process_cfg, create_out_fname, list_to_file,
-                                    process_pdb_file, MAIN_SEC, SEC_HEAD, SEC_ATOMS, SEC_TAIL, PDB_FORMAT, NUM_ATOMS,
-                                    ATOM_NUM_DICT, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, silent_remove)
+from common_wrangler.common import (MAIN_SEC, SEC_HEAD, SEC_ATOMS, SEC_TAIL, PDB_FORMAT, NUM_ATOMS, ATOM_NUM_DICT,
+                                    GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, InvalidDataError, warning,
+                                    process_cfg, create_out_fname, list_to_file, process_pdb_file, silent_remove)
 from gaussian_wrangler.gw_common import (GAU_COORD_PAT, GAU_SEP_PAT, GAU_E_PAT)
 from gaussian_wrangler import __version__
 

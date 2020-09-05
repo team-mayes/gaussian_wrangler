@@ -37,7 +37,7 @@ OUT_BASE_DIR = 'output_directory'
 
 # For convergence check
 STEP_NUM = 'step_number'
-F_NAME = 'File'
+F_NAME = 'File Name'
 STEP_CONVERG_HEADERS = [F_NAME, STEP_NUM, MAX_FORCE, RMS_FORCE, MAX_DISPL, RMS_DISPL, CONVERG, CONVERG_ERR]
 FINAL_CONVERG_HEADERS = [F_NAME, CONVERG, CONVERG_ERR]
 
@@ -201,11 +201,17 @@ def check_convergence(check_file_list, step_converg, last_step, best_conv, all_s
     :param best_conv: Boolean; if true, print ten steps with the best convergence
     :return: nothing: either saves a file or prints to stdout
     """
+    fname_str_length = 36
+    conv_str_length = 11
+    for fname in check_file_list:
+        if len(os.path.basename(fname)) > fname_str_length:
+            fname_str_length = len(os.path.basename(fname))
+
     if step_converg:
         headers = STEP_CONVERG_HEADERS
     else:
         headers = FINAL_CONVERG_HEADERS
-        print("{:36} {:11} {:}".format(*headers))
+        print(f"{headers[0]:{fname_str_length}} {headers[1]:{conv_str_length}} {headers[2]}")
     for fname in check_file_list:
         log_content = process_gausslog_file(fname, find_converg=True, find_step_converg=step_converg,
                                             last_step_to_read=last_step)
@@ -264,7 +270,8 @@ def check_convergence(check_file_list, step_converg, last_step, best_conv, all_s
         else:
             # this is the printing for final termination step only (not step_converg)
             fname = log_content[headers[0]]
-            print("{:36} {:11.4f} {:}".format(fname, log_content[headers[1]], log_content[headers[2]]))
+            print(f"{fname:{fname_str_length}} {log_content[headers[1]]:{conv_str_length}.4f} "
+                  f"{log_content[headers[2]]}")
 
 
 def main(argv=None):

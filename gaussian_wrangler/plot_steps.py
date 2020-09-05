@@ -9,7 +9,8 @@ import argparse
 import numpy as np
 from common_wrangler.common import (InvalidDataError, warning,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                                    create_out_fname, make_fig, EHPART_TO_KCAL_MOL, DEF_FIG_HEIGHT, DEF_FIG_WIDTH)
+                                    EHPART_TO_KCAL_MOL, DEF_FIG_HEIGHT, DEF_FIG_WIDTH,
+                                    create_out_fname, make_fig)
 from gaussian_wrangler import __version__
 
 
