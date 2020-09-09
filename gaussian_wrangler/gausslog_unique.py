@@ -6,9 +6,10 @@ if atoms are in the same order, checks for duplicate conformers
 import os
 import sys
 import argparse
+from numpy import isnan
 from configparser import MissingSectionHeaderError
 from common_wrangler.common import (InvalidDataError, warning,
-                                    GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, DIHES)
+                                    GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, DIHES, EHPART_TO_KCAL_MOL, quote)
 from gaussian_wrangler.gw_common import (STOICH, CONVERG, ENERGY, ENTHALPY, CONVERG_ERR, process_gausslog_file)
 from gaussian_wrangler import __version__
 
@@ -62,6 +63,11 @@ def parse_cmdline(argv):
     parser.add_argument("-e", "--energy", help="Sort output by lowest electronic energy (not ZPE corrected)."
                                                "The default is False. This flag is superseded by the enthalpy flag.",
                         action='store_true')
+    parser.add_argument("-m", "--max_diff", help="Option valid with '-e' or '-n' options. If a numerical value is "
+                                                 "provided with this option, the output will be split between files "
+                                                 "within or not within this maximum difference (in kcal/mol) from the "
+                                                 "lowest energy or enthalpy.",
+                        default=None)
     parser.add_argument("-n", "--enthalpy", help="Sort output by lowest enthalpy. If no enthalpy is found, it will "
                                                  "sort by the lowest electronic energy. The default is False.",
                         action='store_true')
@@ -99,13 +105,13 @@ def compare_gausslog_info(log_info, dih_tol):
                 for dih_name, dih_val in log_info[fname][DIHES].items():
                     try:
                         dih_diff = abs(dih_val - check_dihes[dih_name])
-                        if dih_diff > (360.0 - dih_tol):
+                        if dih_diff > (360.0 - dih_tol * 1.1):
                             dih_diff -= 360.0
                         if dih_diff > dih_tol:
                             add_to_current_group = False
                             break
                     except KeyError:
-                        # probably an isomer
+                        # may be a different molecule; possible not to reach but safer to leave
                         add_to_current_group = False
                         break
                 if add_to_current_group:
@@ -116,7 +122,7 @@ def compare_gausslog_info(log_info, dih_tol):
     return conf_groups
 
 
-def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy, print_winners=True):
+def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy, max_diff=None, print_winners=True):
     winners = []
     warn_files_str = ''
     for conf_list in list_of_conf_lists:
@@ -137,7 +143,7 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
     if sort_by_enthalpy:
         sort_by_energy = False
         for winner in winners:
-            if winner[3] is None:
+            if isnan(winner[3]):
                 sort_by_energy = True
                 sort_by_enthalpy = False
                 break
@@ -147,20 +153,40 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
         sort_key = 2
     else:
         sort_key = 0
-    try:
-        winners.sort(key=lambda tup: tup[sort_key])
-        winner_str = ','.join(['File', CONVERG, ENERGY, ENTHALPY]) + '\n'
-    except TypeError:
-        sort_error = True
-        winner_str = "N/A; Required information not available from all files in set"
+    winners.sort(key=lambda tup: tup[sort_key])
+    winner_str = quote('","'.join(['File', CONVERG, ENERGY, ENTHALPY]))
 
     # now gather results
+    if max_diff:
+        winner_str += ',"Diff(kcal/mol)"\n'
+        lowest_val = winners[0][sort_key]
+        if sort_by_enthalpy:
+            sort_type = "enthalpy"
+        else:
+            sort_type = "SCF energy"
+        winner_str += f'"Files within {sort_type} cutoff of {max_diff:.2f} kcal/mol"\n'
+        within_cutoff = True
+    else:
+        winner_str += '\n'
+        lowest_val = None  # to make IDE happy
+        within_cutoff = False
+    val_diff_str = ""
+    val_diff = 0.
     for winner, converg, energy, enthalpy in winners:
         if not sort_error:
-            try:
-                winner_str += '{},{:.4f},{:.6f},{:.6f}\n'.format(winner, converg, energy, enthalpy)
-            except TypeError:
-                winner_str += '{},{:.4f},{:.6f},{}\n'.format(winner, converg, energy, enthalpy)
+            if max_diff:
+                if sort_by_enthalpy:
+                    val_diff = (enthalpy - lowest_val) * EHPART_TO_KCAL_MOL
+                else:
+                    val_diff = (energy - lowest_val) * EHPART_TO_KCAL_MOL
+                val_diff_str = f",{val_diff:.2f}"
+
+            if within_cutoff:
+                if val_diff > max_diff:
+                    winner_str += f'"Files outside of cutoff:"\n'
+                    within_cutoff = False
+
+            winner_str += f'"{winner}",{converg:.4f},{energy:.6f},{enthalpy:.6f}{val_diff_str}\n'
         if log_info[winner][CONVERG_ERR]:
             warn_files_str += '\n    {:}:  {:.2f}'.format(winner, converg)
         elif log_info[winner][CONVERG_ERR] is None:
@@ -182,6 +208,10 @@ def main(argv=None):
         gausslog_files = []
         missing_files = []
         log_info = {}
+
+        # check input
+        if (args.enthalpy or args.energy) and args.max_diff:
+            args.max_diff = float(args.max_diff)
 
         # check that we have files
         with open(args.list) as f:
@@ -208,7 +238,8 @@ def main(argv=None):
 
         # process data from files
         list_of_conf_lists = compare_gausslog_info(log_info, args.tol)
-        winner_str, warn_files_str = print_results(log_info, list_of_conf_lists, args.enthalpy, args.energy)
+        winner_str, warn_files_str = print_results(log_info, list_of_conf_lists, args.enthalpy, args.energy,
+                                                   args.max_diff)
         if len(warn_files_str) > 0:
             warning("Check convergence of file(s):" + warn_files_str)
 
@@ -217,6 +248,9 @@ def main(argv=None):
         return IO_ERROR
     except InvalidDataError as e:
         warning("Problems reading data:", e)
+        return INVALID_DATA
+    except ValueError as e:
+        warning(e.args[0])
         return INVALID_DATA
     return GOOD_RET  # success
 

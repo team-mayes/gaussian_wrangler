@@ -107,7 +107,7 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
     base_name = os.path.basename(gausslog_file)
     with open(gausslog_file) as d:
         gausslog_content = {SEC_ATOMS: {}, BASE_NAME: base_name, STOICH: None, TS: None,
-                            ENERGY: None, ENTHALPY: None, CONVERG_STEP_DICT: collections.OrderedDict()}
+                            ENERGY: np.nan, ENTHALPY: np.nan, CONVERG_STEP_DICT: collections.OrderedDict()}
         section = SEC_HEAD
         atom_id = 1
 

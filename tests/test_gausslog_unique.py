@@ -18,11 +18,13 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
 SUB_DATA_DIR = os.path.join(DATA_DIR, 'gausslog_unique')
 
 LOG_LIST = os.path.join(SUB_DATA_DIR, 'list.txt')
+LIGNIN_LIST = os.path.join(SUB_DATA_DIR, 'lignin_list.txt')
 
-HEADER = 'File,Convergence,Energy,Enthalpy\n'
-ALPHA_FIRST = 'lme2acetoxprpnt_ts3_ircf_opt.log,7.5369,-535.578434,-535.403311\n'
-MISSING_FREQ = 'lme2acetoxprpnt_ts3_ircf_opt_no_freq.log,0.9367,-535.578434,None\n'
-ENERGY_FIRST = 'lme2acetoxypropionate_25_t.log,0.1303,-535.578443,-535.403293\n'
+HEADER = '"File","Convergence","Energy","Enthalpy"\n'
+ALPHA_FIRST = '"lme2acetoxprpnt_ts3_ircf_opt.log",7.5369,-535.578434,-535.403311\n'
+MISSING_FREQ = '"lme2acetoxprpnt_ts3_ircf_opt_no_freq.log",0.9367,-535.578434,nan\n'
+ENERGY_FIRST = '"lme2acetoxypropionate_25_t.log",0.1303,-535.578443,-535.403293\n'
+DIFF_HEADER = '"File","Convergence","Energy","Enthalpy","Diff(kcal/mol)"\n'
 
 EMPTY_LIST = os.path.join(SUB_DATA_DIR, 'empty_list.txt')
 LIST_NO_FREQ = os.path.join(SUB_DATA_DIR, 'list_no_freq.txt')
@@ -68,6 +70,11 @@ class TestGausslogUniqueNoOut(unittest.TestCase):
         with capture_stderr(main, test_input) as output:
             self.assertTrue("unrecognized arguments" in output)
 
+    def testSortByEnthalpyWithCutoff(self):
+        test_input = ["-l", LOG_LIST, '-n', "-m", "!.0"]
+        with capture_stderr(main, test_input) as output:
+            self.assertTrue("WARNING:  could not convert string to float" in output)
+
 
 class TestGausslogUnique(unittest.TestCase):
     # These test/demonstrate different options
@@ -96,6 +103,34 @@ class TestGausslogUnique(unittest.TestCase):
         with capture_stderr(main, test_input) as output:
             self.assertTrue('Check convergence' in output)
 
+    def testSortByEnergyWithCutoff(self):
+        test_input = ["-l", LOG_LIST, "-e", "-m", "5.0"]
+        good_output = '"File","Convergence","Energy","Enthalpy","Diff(kcal/mol)"\n' \
+                      '"Files within SCF energy cutoff of 5.00 kcal/mol"\n' \
+                      '"lme2acetoxypropionate_25_t.log",0.1303,-535.578443,-535.403293,0.00\n' \
+                      '"lme2acetoxprpnt_ts3_ircf_opt.log",7.5369,-535.578434,-535.403311,0.01'
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue(good_output in output)
+
+    def testSortByEnthalpyWithCutoffAlso(self):
+        test_input = ["-l", LIGNIN_LIST, '-e', "-m", "1.0"]
+        good_output = DIFF_HEADER + '"Files within SCF energy cutoff of 1.00 kcal/mol"\n' \
+                                    '"g_dimer_8.log",1.4217,-1225.835244,nan,0.00\n' \
+                                    '"g_dimer_102.log",0.2522,-1225.834813,nan,0.27\n' \
+                                    '"Files outside of cutoff:"\n' \
+                                    '"g_dimer_100.log",0.5761,-1225.831663,nan,2.25\n' \
+                                    '"g_dimer_901.log",0.3047,-1225.823048,nan,7.65'
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue(good_output in output)
+
+    def testSortByEnthalpyWithCutoff(self):
+        test_input = ["-l", LOG_LIST, '-n', "-m", "1.0"]
+        good_output = DIFF_HEADER + '"Files within enthalpy cutoff of 1.00 kcal/mol"\n' \
+                                    '"lme2acetoxprpnt_ts3_ircf_opt.log",7.5369,-535.578434,-535.403311,0.00\n' \
+                                    '"lme2acetoxypropionate_25_t.log",0.1303,-535.578443,-535.403293,0.01'
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue(good_output in output)
+
     def testNoFreq(self):
         # also tests that it can skip a blank line
         test_input = ["-l", LIST_NO_FREQ, "-n"]
@@ -107,8 +142,8 @@ class TestGausslogUnique(unittest.TestCase):
             self.assertFalse('Check convergence' in output)
 
     def testTwoMolecules(self):
-        pet_843 = 'pet_mono_843_tzvp.log,1.4694,-917.071861,-916.796704\n'
-        pet_1 = 'pet_mono_1_tzvp.log,0.8478,-917.069491,-916.794649\n'
+        pet_843 = '"pet_mono_843_tzvp.log",1.4694,-917.071861,-916.796704\n'
+        pet_1 = '"pet_mono_1_tzvp.log",0.8478,-917.069491,-916.794649\n'
         test_input = ["-l", TWO_MOL_LIST, "-n"]
         good_output = ''.join([HEADER, pet_843, pet_1, ALPHA_FIRST, ENERGY_FIRST]) + '\n'
         # main(test_input)
@@ -120,8 +155,8 @@ class TestGausslogUnique(unittest.TestCase):
     def testTwoMoreMolecules(self):
         # This test checks that the program can handle the case when Gaussian prints '********' for convergence,
         #    when the convergence is so bad that it can't fit in the space allotted
-        good_result = 'lme2acetoxprpnt_ts4_ircf_opt.log,2.0767,-535.576027,-535.401005\n' \
-                      'lme2acetoxprpnt_ts4_b_ts_ircf_opt.log,8.2747,-535.575022,-535.399906\n'
+        good_result = '"lme2acetoxprpnt_ts4_ircf_opt.log",2.0767,-535.576027,-535.401005\n' \
+                      '"lme2acetoxprpnt_ts4_b_ts_ircf_opt.log",8.2747,-535.575022,-535.399906\n'
         test_input = ["-l", TWO_MORE_MOL_LIST, "-n"]
         good_output = ''.join([HEADER, good_result]) + '\n'
         # main(test_input)
@@ -135,7 +170,7 @@ class TestGausslogUnique(unittest.TestCase):
         # I was surprised that these weren't listed as the same; turns out, the difference in dihedral angle
         #  was almost, but not quite, 360; now, if within tolerance of 360 degrees, it will subtract 360, catching
         #  these similar conformations
-        good_result = 'me2pheoxprpnt_30.log,0.0139,-613.945900,-613.726343\n\n'
+        good_result = '"me2pheoxprpnt_30.log",0.0139,-613.945900,-613.726343\n\n'
         good_output = ''.join([HEADER, good_result])
         test_input = ["-l", SIMILAR_LIST, "-n"]
         with capture_stdout(main, test_input) as output:
@@ -145,8 +180,8 @@ class TestGausslogUnique(unittest.TestCase):
 
     def testCalcAllOutput(self):
         # make sure program sees the enthalpy when "CalcAll" is run instead of frequency
-        good_result = 'hexyl_acrylate_239.log,1.1100,-503.005111,-502.751977\n' \
-                      'hexyl_acrylate_419.log,0.0706,-503.004423,-502.751021\n\n'
+        good_result = '"hexyl_acrylate_239.log",1.1100,-503.005111,-502.751977\n' \
+                      '"hexyl_acrylate_419.log",0.0706,-503.004423,-502.751021\n\n'
         good_output = ''.join([HEADER, good_result])
         test_input = ["-l", CALCALL_LIST, "-n"]
         # main(test_input)
@@ -227,7 +262,7 @@ class TestGausslogUniqueFunctions(unittest.TestCase):
                          'Stoichiometry': 'C19H34O16Ti',
                          'Transition_State': None,
                          'Energy': -2797.72551346,
-                         'Enthalpy': None,
+                         'Enthalpy': np.nan,
                          'converg_dict': {},
                          'Charge': 0,
                          'Mult': 1,
@@ -252,8 +287,8 @@ class TestGausslogUniqueFunctions(unittest.TestCase):
                          'base_name': 'ti_eg5_dime_pdc1_tse_ts.log',
                          'Stoichiometry': 'C19H34O16Ti',
                          'Transition_State': None,
-                         'Energy': None,
-                         'Enthalpy': None,
+                         'Energy': np.nan,
+                         'Enthalpy': np.nan,
                          'converg_dict': {},
                          'Charge': 0,
                          'Mult': 1,
@@ -261,7 +296,6 @@ class TestGausslogUniqueFunctions(unittest.TestCase):
                          'Convergence': np.nan,
                          'Convergence_Error': None},
                     }
-        expected_win_str = 'N/A; Required information not available from all files in set'
         expected_warn_str = '\n    ti_eg5_dime_pdc1_tsc_ts.log:  171.12' \
                             '\n    ti_eg5_dime_pdc1_tsb_ts.log:  2.06' \
                             '\n    ti_eg5_dime_pdc1_tse_ts.log:  Not found'
@@ -272,6 +306,6 @@ class TestGausslogUniqueFunctions(unittest.TestCase):
         sort_by_energy = True
         winner_str, warn_files_str = print_results(log_info, list_of_conf_lists, sort_by_enthalpy,
                                                    sort_by_energy, print_winners=True)
-        self.assertEqual(winner_str, expected_win_str)
+        self.assertTrue('"ti_eg5_dime_pdc1_tse_ts.log",nan,nan,nan' in winner_str)
         self.assertEqual(warn_files_str, expected_warn_str)
         pass
