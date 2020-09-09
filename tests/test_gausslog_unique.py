@@ -1,8 +1,8 @@
 import unittest
 import os
 import numpy as np
-from common_wrangler.common import capture_stdout, capture_stderr, DIHES
-from gaussian_wrangler.gausslog_unique import main, compare_gausslog_info, print_results
+from common_wrangler.common import capture_stdout, capture_stderr, DIHES, silent_remove
+from gaussian_wrangler.gausslog_unique import main, compare_gausslog_info, print_results, DEF_OUT_NAME
 from gaussian_wrangler.gw_common import process_gausslog_file, CONVERG_ERR, TS, CONVERG
 import logging
 
@@ -109,8 +109,15 @@ class TestGausslogUnique(unittest.TestCase):
                       '"Files within SCF energy cutoff of 5.00 kcal/mol"\n' \
                       '"lme2acetoxypropionate_25_t.log",0.1303,-535.578443,-535.403293,0.00\n' \
                       '"lme2acetoxprpnt_ts3_ircf_opt.log",7.5369,-535.578434,-535.403311,0.01'
-        with capture_stdout(main, test_input) as output:
-            self.assertTrue(good_output in output)
+        try:
+            with capture_stdout(main, test_input) as output:
+                self.assertTrue(good_output in output)
+            with open(DEF_OUT_NAME) as f:
+                cutoff_files = [row.strip() for row in f.readlines()]
+            self.assertEqual(cutoff_files, ['lme2acetoxypropionate_25_t.log', 'lme2acetoxprpnt_ts3_ircf_opt.log'])
+        finally:
+            silent_remove(DEF_OUT_NAME)
+            pass
 
     def testSortByEnthalpyWithCutoffAlso(self):
         test_input = ["-l", LIGNIN_LIST, '-e', "-m", "1.0"]
@@ -120,16 +127,25 @@ class TestGausslogUnique(unittest.TestCase):
                                     '"Files outside of cutoff:"\n' \
                                     '"g_dimer_100.log",0.5761,-1225.831663,nan,2.25\n' \
                                     '"g_dimer_901.log",0.3047,-1225.823048,nan,7.65'
-        with capture_stdout(main, test_input) as output:
-            self.assertTrue(good_output in output)
+        try:
+            with capture_stdout(main, test_input) as output:
+                self.assertTrue(good_output in output)
+            with open(DEF_OUT_NAME) as f:
+                cutoff_files = [row.strip() for row in f.readlines()]
+            self.assertEqual(cutoff_files, ['g_dimer_8.log', 'g_dimer_102.log'])
+        finally:
+            silent_remove(DEF_OUT_NAME)
 
     def testSortByEnthalpyWithCutoff(self):
         test_input = ["-l", LOG_LIST, '-n', "-m", "1.0"]
         good_output = DIFF_HEADER + '"Files within enthalpy cutoff of 1.00 kcal/mol"\n' \
                                     '"lme2acetoxprpnt_ts3_ircf_opt.log",7.5369,-535.578434,-535.403311,0.00\n' \
                                     '"lme2acetoxypropionate_25_t.log",0.1303,-535.578443,-535.403293,0.01'
-        with capture_stdout(main, test_input) as output:
-            self.assertTrue(good_output in output)
+        try:
+            with capture_stdout(main, test_input) as output:
+                self.assertTrue(good_output in output)
+        finally:
+            silent_remove(DEF_OUT_NAME)
 
     def testNoFreq(self):
         # also tests that it can skip a blank line
