@@ -120,7 +120,7 @@ class TestGausslogUnique(unittest.TestCase):
             pass
 
     def testSortByEnthalpyWithCutoffAlso(self):
-        test_input = ["-l", LIGNIN_LIST, '-e', "-m", "1.0"]
+        test_input = ["-l", LIGNIN_LIST, "-m", "1.0"]
         good_output = DIFF_HEADER + '"Files within SCF energy cutoff of 1.00 kcal/mol"\n' \
                                     '"g_dimer_8.log",1.4217,-1225.835244,nan,0.00\n' \
                                     '"g_dimer_102.log",0.2522,-1225.834813,nan,0.27\n' \

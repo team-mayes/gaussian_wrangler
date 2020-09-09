@@ -62,11 +62,15 @@ def parse_cmdline(argv):
                                              "run. This program assumes that all the given files have the same atom "
                                              "order.".format(DEF_LIST_FILE),
                         default=DEF_LIST_FILE)
-    parser.add_argument("-m", "--max_diff", help="Option valid with '-e' or '-n' options. If a numerical value is "
-                                                 "provided with this option, the output will be split between files "
-                                                 "within or not within this maximum difference (in kcal/mol) from the "
-                                                 "lowest energy or enthalpy.",
-                        default=None)
+    parser.add_argument("-m", "--max_diff", help="If a numerical value is provided with this option, the program will "
+                                                 "sort the the data should be sorted by enthalpy if the '-e'/'--energy "
+                                                 "option is not specified, and fall back on sorting by energy if "
+                                                 "enthalpy data is not present. The out put list will be split "
+                                                 "between files within or not within this maximum difference, in "
+                                                 "kcal/mol), from the lowest energy or enthalpy. Additionally, the "
+                                                 "program will output a file with only the file names of "
+                                                 "conformations within the cutoff; see the '-o'/'--out_name' option to "
+                                                 "specify the name of this file.", default=None)
     parser.add_argument("-n", "--enthalpy", help="Sort output by lowest enthalpy. If no enthalpy is found, it will "
                                                  "sort by the lowest electronic energy. The default is False.",
                         action='store_true')
@@ -225,8 +229,10 @@ def main(argv=None):
         log_info = {}
 
         # check input
-        if (args.enthalpy or args.energy) and args.max_diff:
+        if args.max_diff:
             args.max_diff = float(args.max_diff)
+            if not args.energy:
+                args.enthalpy = True
 
         # check that we have files
         with open(args.list) as f:
