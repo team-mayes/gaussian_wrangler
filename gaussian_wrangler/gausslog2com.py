@@ -296,7 +296,7 @@ def main(argv=None):
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR
-    except InvalidDataError as e:
+    except (InvalidDataError, UnicodeDecodeError) as e:
         warning("Problems reading data:", e)
         return INVALID_DATA
 

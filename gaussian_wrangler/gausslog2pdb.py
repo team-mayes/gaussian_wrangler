@@ -321,7 +321,7 @@ def main(argv=None):
         else:
             pdb_tpl_content = {}
         process_gausscom_files(cfg, pdb_tpl_content)
-    except IOError as e:
+    except (IOError, UnicodeDecodeError) as e:
         warning("Problems reading file:", e)
         return IO_ERROR
     except InvalidDataError as e:
