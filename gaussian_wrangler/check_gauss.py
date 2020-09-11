@@ -207,11 +207,11 @@ def check_convergence(check_file_list, step_converg, last_step, best_conv, all_s
         if len(os.path.basename(fname)) > fname_str_length:
             fname_str_length = len(os.path.basename(fname))
 
+    print(f"{F_NAME:{fname_str_length}} {CONVERG:{conv_str_length}} {CONVERG_ERR}")
     if step_converg:
         headers = STEP_CONVERG_HEADERS
     else:
         headers = FINAL_CONVERG_HEADERS
-        print(f"{headers[0]:{fname_str_length}} {headers[1]:{conv_str_length}} {headers[2]}")
     for fname in check_file_list:
         log_content = process_gausslog_file(fname, find_converg=True, find_step_converg=step_converg,
                                             last_step_to_read=last_step)
@@ -264,6 +264,8 @@ def check_convergence(check_file_list, step_converg, last_step, best_conv, all_s
                     print("    {:7} {:10.3f}".format(step_dict[STEP_NUM], step_dict[CONVERG]))
             else:
                 # save all steps, not sorted by convergence
+                print(f"{log_content[F_NAME]:{fname_str_length}} {step_list[-1][CONVERG]:{conv_str_length}.4f} "
+                      f"{step_list[-1][CONVERG_ERR]}")
                 write_csv(step_list, out_fname, headers, extrasaction="ignore", round_digits=6)
                 # also make plots of step versus convergence
                 create_conv_plots(out_fname, step_list)
