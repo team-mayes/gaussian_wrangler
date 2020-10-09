@@ -432,7 +432,7 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_mode):
     move_on = False
     while not move_on:
         try:
-            fill_save_tpl(cfg[OUT_DIR], tpl_str, tpl_dict, tpl_file, job_runner_fname)
+            fill_save_tpl(tpl_str, tpl_dict, tpl_file, job_runner_fname)
             move_on = True
         except KeyError as e:
             missing_key = e.args[0].split("\'")[1]
@@ -572,7 +572,7 @@ def setup_and_submit(cfg, current_job_list, tpl_dict, testing_mode, chk_warn):
     sbatch_dict = create_sbatch_dict(cfg, tpl_dict, os.path.relpath(new_ini_fname), current_job_list,
                                      start_from_job_name_chk=cfg[START_FROM_SAME_CHK], ignore_chk_warning=chk_warn)
     tpl_str = read_tpl(cfg[SBATCH_TPL])
-    fill_save_tpl(cfg[OUT_DIR], tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
+    fill_save_tpl(tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
 
     # read ini_tpl and check if it has fields for submitting spawned jobs, if needed
     create_ini_with_req_keys(current_job_list, cfg[TPL_DICT], cfg, new_ini_fname)
