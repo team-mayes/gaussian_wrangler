@@ -117,9 +117,9 @@ def parse_cmdline(argv):
     # initialize the parser object:
     parser = argparse.ArgumentParser(description='Creates cp files from Gaussian input files, given a list of atom '
                                                  'numbers where to cut (list format: atom1, atom2; atom3, atom4).')
-    parser.add_argument("-c", "--config", help="The location of the configuration file in ini format. "
-                                               "The default file name is {}, located in the "
-                                               "base directory where the program as run.".format(DEF_CFG_FILE),
+    parser.add_argument("-c", "--config", help=f"The location of the configuration file in ini format. "
+                                               f"The default file name is {DEF_CFG_FILE}, located in the "
+                                               f"base directory where the program as run.",
                         default=DEF_CFG_FILE, type=read_cfg)
     args = None
     try:
