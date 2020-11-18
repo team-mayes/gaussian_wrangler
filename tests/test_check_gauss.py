@@ -1,8 +1,10 @@
 import unittest
 import os
+import numpy as np
 from shutil import copyfile
-from gaussian_wrangler.check_gauss import main
-from common_wrangler.common import capture_stdout, capture_stderr, diff_lines, silent_remove
+from gaussian_wrangler.check_gauss import main, plot_scan, process_scan_array
+from common_wrangler.common import capture_stdout, capture_stderr, diff_lines, silent_remove, list_to_file, \
+    EHPART_TO_KCAL_MOL
 import logging
 
 # logging.basicConfig(level=logging.DEBUG)
@@ -360,3 +362,114 @@ class TestCheckGauss(unittest.TestCase):
                 silent_remove(temp_name, disable=DISABLE_REMOVE)
             silent_remove(SUB_SUB_DIR, disable=DISABLE_REMOVE, dir_with_files=True)
             pass
+
+    def testCheckFinalConverg(self):
+        input_fname = os.path.join(SUB_DATA_DIR, "prop_acetate_8.log")
+        test_input = ["-f", input_fname, "-z"]
+        # main(test_input)
+        with capture_stdout(main, test_input) as output:
+            self.assertTrue("False (negligible forces)" in output)
+
+    def testMakeScanPlot(self):
+        list_fname = os.path.join(SUB_DATA_DIR, "scan_list.txt")
+        fnames = [os.path.join(SUB_DATA_DIR, "pet_dimer_scan_neg.log"),
+                  os.path.join(SUB_DATA_DIR, "pet_dimer_scan_pos.log")]
+        list_to_file(fnames, list_fname)
+        test_input = ["-l", list_fname, "--scan"]
+        try:
+            main(test_input)
+            # with capture_stdout(main, test_input) as output:
+            #     self.assertTrue(good_output in output)
+            pass
+        finally:
+            silent_remove(list_fname)
+            # for temp_name in temp_files_list:
+            #     silent_remove(temp_name, disable=DISABLE_REMOVE)
+            pass
+
+
+class TestCheckScanPlotParts(unittest.TestCase):
+    def testMakePlot(self):
+        scan_data = np.asarray([[0., -1602.03389705],
+                               [10., -1602.03489267],
+                               [20., -1602.03698555],
+                               [30., -1602.03968177],
+                               [40., -1602.04234975],
+                               [50., -1602.04440237],
+                               [60., -1602.04542364],
+                               [70., -1602.04537614],
+                               [80., -1602.04447086],
+                               [90., -1602.04303797],
+                               [100., -1602.04146383],
+                               [110., -1602.04019963],
+                               [120., -1602.03957399],
+                               [130., -1602.03972339],
+                               [140., -1602.04051593],
+                               [150., -1602.04166748],
+                               [160., -1602.04281467],
+                               [170., -1602.04365179],
+                               [180., -1602.04394884],
+                               [190., -1602.04365181],
+                               [200., -1602.04281471],
+                               [210., -1602.04166751],
+                               [220., -1602.04051595],
+                               [230., -1602.03972340],
+                               [240., -1602.03957399],
+                               [250., -1602.04019960],
+                               [260., -1602.04146379],
+                               [270., -1602.04303792],
+                               [280., -1602.04447082],
+                               [290., -1602.04537612],
+                               [300., -1602.04542365],
+                               [310., -1602.04440242],
+                               [320., -1602.04234981],
+                               [330., -1602.03968185],
+                               [340., -1602.03698562],
+                               [350., -1602.03489272],
+                               [360., -1602.03389706]])
+        min_e = np.min(scan_data[:, 1])
+        scan_data[:, 1] = (scan_data[:, 1] - min_e) * EHPART_TO_KCAL_MOL
+        plot_scan(scan_data)
+
+    def testProcessScanArray(self):
+        scan_data = np.asarray([[180., -1602.04394884],
+                               [-170., -1602.04365181],
+                               [-160., -1602.04281471],
+                               [-150., -1602.04166751],
+                               [-140., -1602.04051595],
+                               [-130., -1602.03972340],
+                               [-120., -1602.03957399],
+                               [-110., -1602.04019960],
+                               [-100., -1602.04146379],
+                               [-90., -1602.04303792],
+                               [-80., -1602.04447082],
+                               [-70., -1602.04537612],
+                               [-60., -1602.04542365],
+                               [-50., -1602.04440242],
+                               [-40., -1602.04234981],
+                               [-30., -1602.03968185],
+                               [-20., -1602.03698562],
+                               [-10., -1602.03489272],
+                               [-0., -1602.03389706]])
+        good_processed_data = np.asarray([[180., -1602.04394884],
+                                          [190., -1602.04365181],
+                                          [200., -1602.04281471],
+                                          [210., -1602.04166751],
+                                          [220., -1602.04051595],
+                                          [230., -1602.03972340],
+                                          [240., -1602.03957399],
+                                          [250., -1602.04019960],
+                                          [260., -1602.04146379],
+                                          [270., -1602.04303792],
+                                          [280., -1602.04447082],
+                                          [290., -1602.04537612],
+                                          [300., -1602.04542365],
+                                          [310., -1602.04440242],
+                                          [320., -1602.04234981],
+                                          [330., -1602.03968185],
+                                          [340., -1602.03698562],
+                                          [350., -1602.03489272],
+                                          [360., -1602.03389706]])
+        first_vals_diff = process_scan_array(scan_data)
+        self.assertAlmostEqual(first_vals_diff, 10)
+        self.assertTrue(np.allclose(scan_data, good_processed_data))

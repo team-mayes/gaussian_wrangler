@@ -170,3 +170,4 @@ tests/test_data/goodvibes_helper/aea_prod_vibes.dat
 /out/
 temp*
 /tests/test_data/gausslog2com/ti_eg5_mipa_tsa_ircr_opt_tsa_ts_ircf_opt_tsa_ts_route_only.com
+/tests/test_data/check_gauss/scan_list.txt

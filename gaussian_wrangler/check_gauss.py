@@ -9,13 +9,14 @@ import re
 import sys
 import argparse
 import matplotlib.pyplot as plt
+import numpy as np
 from operator import itemgetter
 from configparser import MissingSectionHeaderError
 from common_wrangler.common import (InvalidDataError, warning, GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
-                                    create_out_fname, write_csv, check_for_files)
+                                    create_out_fname, write_csv, check_for_files, EHPART_TO_KCAL_MOL)
 
 from gaussian_wrangler.gw_common import (MAX_FORCE, RMS_FORCE, MAX_DISPL, RMS_DISPL, CONVERG, CONVERG_ERR,
-                                         process_gausslog_file, CONVERG_STEP_DICT, ENERGY)
+                                         process_gausslog_file, CONVERG_STEP_DICT, ENERGY, SCAN_DICT)
 from gaussian_wrangler import __version__
 
 
@@ -92,6 +93,9 @@ def parse_cmdline(argv):
                                                       "When this option is chosen, the check for normal termination "
                                                       "is skipped. The default is False.", action="store_true",
                         default=False)
+    parser.add_argument("--scan", help="Read output file(s) from a scan and writes the converged energies from each "
+                                       "point of the scan to a csv file and creates a plot.", action="store_true",
+                        default=False)
     args = None
     try:
         args = parser.parse_args(argv)
@@ -114,7 +118,7 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
-def process_list_file(output_file, good_output_directory, completed_list, likely_failed_list, perhaps_running_list):
+def check_file_termination(output_file, good_output_dir, completed_list, likely_failed_list, perhaps_running_list):
     try:
         with open(output_file, 'r') as fh:
             last_line = fh.readlines()[-1].strip()
@@ -124,7 +128,7 @@ def process_list_file(output_file, good_output_directory, completed_list, likely
     if NORM_TERM_PAT.match(last_line):
         base_name = os.path.basename(output_file)
         completed_list.append(output_file)
-        os.rename(output_file, os.path.join(good_output_directory, base_name))
+        os.rename(output_file, os.path.join(good_output_dir, base_name))
         return
     for pattern in FAIL_PAT_LIST:
         if pattern.match(last_line):
@@ -139,7 +143,7 @@ def check_termination(args, check_file_list):
     likely_failed_list = []
 
     for fname in check_file_list:
-        process_list_file(fname, args.output_directory, completed_list, likely_failed_list, perhaps_running_list)
+        check_file_termination(fname, args.output_directory, completed_list, likely_failed_list, perhaps_running_list)
     # sort if list is at least 2 long:
     for file_list in [completed_list, likely_failed_list, perhaps_running_list]:
         if len(file_list) > 1:
@@ -276,6 +280,86 @@ def check_convergence(check_file_list, step_converg, last_step, best_conv, all_s
                   f"{log_content[headers[2]]}")
 
 
+def process_scan_array(scan_array):
+    """
+    Script to find the first pair of values in 1st column of a numpy array and process scan arrays
+    in degrees to remove jump in periodicity
+    :param scan_array: a numpy array with at least two rows and 1 column
+    :return: difference in values, accounting for possible angle periodicity in degrees
+    """
+    first_val = scan_array[0][0]
+    first_vals_diff = scan_array[1][0] - first_val
+    for idx in range(1, len(scan_array)):
+        array_val = scan_array[idx][0]
+        val_diff = array_val - first_val
+        if val_diff > 300.:
+            val_diff -= 360.
+            scan_array[idx][0] = array_val - 360.
+        elif val_diff < 300:
+            val_diff += 360.
+            scan_array[idx][0] = array_val + 360.
+        if idx == 1:
+            first_vals_diff = val_diff
+    return first_vals_diff
+
+
+def collect_output_scan_steps(check_file_list):
+    """
+    Looks for scan values in one or more files.
+    Current functionality: returns one scan, or combines two scans if they search in opposite directions
+    :param check_file_list:
+    :return: a 2D numpy array with the scan values and energy differences in kcal/mol
+    """
+    scan_arrays = []
+    for fname in check_file_list:
+        log_content = process_gausslog_file(fname, collect_scan_steps=True)
+        if len(log_content[SCAN_DICT]) > 0:
+            scan_arrays.append(np.array(list(log_content[SCAN_DICT].items()), dtype=float))
+    num_arrays = len(scan_arrays)
+    # if only one scan file, return it
+    if num_arrays == 1:
+        return_array = scan_arrays[0]
+    elif num_arrays == 0:
+        raise InvalidDataError("No scan information found.")
+    elif num_arrays == 2:
+        first_array = scan_arrays[0]
+        second_array = scan_arrays[1]
+        first_diff = process_scan_array(first_array)
+        second_diff = process_scan_array(second_array)
+        # check if the first entry is in common, as for scan in two directions
+        if abs(first_array[0][0] - second_array[0][0]) < 0.001:
+            if first_diff < 0 < second_diff:
+                first_array = np.flip(first_array, 0)
+                return_array = np.vstack((first_array[:-1, :], second_array))
+            elif first_diff > 0 > second_diff:
+                second_array = np.flip(second_array, 0)
+                return_array = np.vstack((second_array[:-1, :], first_array))
+            else:
+                raise InvalidDataError("Check how the scans are to be combined.")
+        else:
+            raise InvalidDataError("The program can't yet handle this number of files. Please open an issue.")
+    # convert dict to array
+    else:
+        raise InvalidDataError("The program can't yet handle this number of files. Please open an issue.")
+    # find lowest energy and convert to differences in kcal/mol
+    min_e = np.min(return_array[:, 1])
+    return_array[:, 1] = (return_array[:, 1] - min_e) * EHPART_TO_KCAL_MOL
+    return return_array
+
+
+def plot_scan(scan_array):
+    png_out = "test.png"
+    plt.plot(scan_array[:, 0], scan_array[:, 1], '.')
+    # plt.plot(t, data_first_guess, label='first guess')
+    # plt.plot(fine_t, data_fit, label='after fitting')
+    # plt.legend()
+    plt.savefig(png_out, transparent=True,
+                bbox_inches='tight',
+                )
+    plt.close()
+    print(f"Wrote file: {os.path.relpath(png_out)}")
+
+
 def main(argv=None):
     print(f"Running GaussianWrangler script check_gauss version {__version__}")
 
@@ -302,7 +386,11 @@ def main(argv=None):
             # If output directory does not exist, make it:
             if not os.path.exists(args.output_directory):
                 os.makedirs(args.output_directory)
-            check_termination(args, check_file_list)
+            if args.scan:
+                scan_array = collect_output_scan_steps(check_file_list)
+                plot_scan(scan_array)
+            else:
+                check_termination(args, check_file_list)
 
     except IOError as e:
         warning("Problems reading file:", e)

@@ -19,6 +19,7 @@ GAU_CHARGE_PAT = re.compile(r"Charge =.*")
 GAU_STOICH_PAT = re.compile(r"Stoichiometry.*")
 GAU_CONVERG_PAT = re.compile(r"Item {15}Value {5}Threshold {2}Converged?")
 GAU_DIH_PAT = re.compile(r"! D.*")
+GAU_DERIV_PAT = re.compile(r"! Name {2}Definition {14}Value {10}Derivative Info.*")
 GAU_H_PAT = re.compile(r"Sum of electronic and thermal Enthalpies.*")
 GAU_STEP_PAT = re.compile(r"Step number.*")
 HARM_FREQ_PAT = re.compile(r"Harmonic frequencies.*")
@@ -29,6 +30,7 @@ MULT = 'Mult'
 MULTIPLICITY = 'Multiplicity'
 ENERGY = 'Energy'
 CONVERG_STEP_DICT = 'converg_dict'
+SCAN_DICT = 'scan_dict'
 MAX_FORCE = 'Max Force'
 RMS_FORCE = 'RMS Force'
 MAX_DISPL = 'Max Displacement'
@@ -37,6 +39,7 @@ CONVERG = 'Convergence'
 CONVERG_ERR = 'Convergence_Error'
 ENTHALPY = 'Enthalpy'
 TS = 'Transition_State'
+SCAN_STR = "  Scan  "
 
 
 def process_gausscom_file(gausscom_file):
@@ -94,7 +97,7 @@ def process_gausscom_file(gausscom_file):
 
 
 def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, find_step_converg=False,
-                          last_step_to_read=None):
+                          last_step_to_read=None, collect_scan_steps=False):
     # Grabs and stores in gausslog_content as a dictionary with the keys:
     #    (fyi: unlike process_gausscom_file, no SEC_HEAD is collected)
     #    CHARGE: overall charge (only) as int
@@ -107,9 +110,11 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
     base_name = os.path.basename(gausslog_file)
     with open(gausslog_file) as d:
         gausslog_content = {SEC_ATOMS: {}, BASE_NAME: base_name, STOICH: None, TS: None,
-                            ENERGY: np.nan, ENTHALPY: np.nan, CONVERG_STEP_DICT: collections.OrderedDict()}
+                            ENERGY: np.nan, ENTHALPY: np.nan, CONVERG_STEP_DICT: collections.OrderedDict(),
+                            SCAN_DICT: {}}
         section = SEC_HEAD
         atom_id = 1
+        scan_parameter = None
 
         # add stop iteration catch because error can be thrown if EOF reached in one of the while loops
         try:
@@ -127,16 +132,41 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
 
                 elif section == SEC_TAIL:
                     # there is not always a dih section in every step
-                    while not (GAU_DIH_PAT.match(line) or GAU_COORD_PAT.match(line) or GAU_STOICH_PAT.match(line)):
+                    while not (GAU_DERIV_PAT.match(line) or GAU_COORD_PAT.match(line) or GAU_STOICH_PAT.match(line)):
                         line = next(d).strip()
                     # sometimes this will execute
-                    if find_dih and GAU_DIH_PAT.match(line):
-                        dih_dict = {}
-                        while GAU_DIH_PAT.match(line):
-                            line_split = line.split()
-                            dih_dict[line_split[2]] = float(line_split[3])
+                    if (find_dih or collect_scan_steps) and GAU_DERIV_PAT.match(line):
+                        if find_dih:
+                            while not GAU_DIH_PAT.match(line):
+                                line = next(d).strip()
+                            dih_dict = {}
+                            while GAU_DIH_PAT.match(line):
+                                line_split = line.split()
+                                dih_dict[line_split[2]] = float(line_split[3])
+                                line = next(d).strip()
+                            gausslog_content[DIHES] = dih_dict
+                        else:
+                            # the initial parameters indicate which parameter will be scanned, otherwise search for
+                            #     parameter pattern
+                            if scan_parameter:
+                                search_term = scan_parameter
+                            else:
+                                search_term = SCAN_STR
+                            # move past first separator
+                            next(d)
                             line = next(d).strip()
-                        gausslog_content[DIHES] = dih_dict
+                            while search_term not in line and not GAU_SEP_PAT.match(line):
+                                line = next(d).strip()
+                            if search_term in line:
+                                line_split = line.split()
+                                # Only if scan parameter already found will there be an energy collected to store
+                                if search_term == SCAN_STR:
+                                    scan_parameter = line_split[2]
+                                else:
+                                    gausslog_content[SCAN_DICT][line_split[3]] = gausslog_content[ENERGY]
+                            else:
+                                raise InvalidDataError(f"Did not find expected parameter scan info in file: "
+                                                       f"{os.path.relpath(gausslog_file)}")
                     # may gave stopped by matching dih pat, so may need to continue
                     #   for some jobs, stoich before coordinates
                     while not GAU_COORD_PAT.match(line) and not GAU_STOICH_PAT.match(line):
@@ -249,7 +279,7 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                         next(d)
                         line = next(d).strip()
                         if "Optimization completed on the basis of negligible forces." in line:
-                            converge_error = False
+                            converge_error = "False (negligible forces)"
                         if find_step_converg:
                             # the transformations with step_num_list may not be strictly necessary, but makes IDE happy
                             #    and (likely due to casting the list) removed an error that appeared on a unix cluster
@@ -270,6 +300,9 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                             #    as the last thing kept from a middle step is convergence
                             if last_step_to_read and last_step_to_read == step_num:
                                 return gausslog_content
+                        elif collect_scan_steps:
+                            pass
+
                         else:
                             gausslog_content[CONVERG] = converg
                             gausslog_content[CONVERG_ERR] = converge_error
@@ -277,7 +310,7 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                     section = SEC_TAIL
                     atom_id = 1
         except StopIteration:
-            # want to continue to error checking
+            # continue to error checking
             pass
 
     # Sometimes we want data that is not in the output file. Put placeholders.
