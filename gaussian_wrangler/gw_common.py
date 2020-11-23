@@ -115,6 +115,10 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
         section = SEC_HEAD
         atom_id = 1
         scan_parameter = None
+        current_scan_val = None
+        # using step convergence for collecting scan step energies, so set flag to true
+        if collect_scan_steps:
+            find_step_converg = True
 
         # add stop iteration catch because error can be thrown if EOF reached in one of the while loops
         try:
@@ -159,7 +163,11 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                                 line = next(d).strip()
                             if search_term in line:
                                 line_split = line.split()
-                                # Only if scan parameter already found will there be an energy collected to store
+                                # scan_parameter = line_split[2]
+                                # current_scan_val = line_split[3]
+
+
+                                # # Only if scan parameter already found will there be an energy collected to store
                                 if search_term == SCAN_STR:
                                     scan_parameter = line_split[2]
                                 else:
@@ -257,24 +265,26 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                         ind_converg = []
                         while not GAU_CONVERG_PAT.match(line):
                             line = next(d).strip()
+                        # in all cases, use the loop below to advance lines, but do not get values if not needed
                         for i in range(4):
                             line = next(d).strip()
-                            line_split = line.split()
-                            try:
-                                # sometimes the convergence is so bad that then Gaussian prints '********' instead of
-                                # a number (which won't fit). Let's catch that, and assign a large convergence penalty
-                                ind_converg.append(float(line_split[2]))
-                                current_converge = ind_converg[i] / float(line_split[3])
-                                if current_converge > 1.0:
-                                    converge_error = True
-                                converg += current_converge
-                            except ValueError as e:
-                                if '********' in e.args[0]:
-                                    ind_converg.append(9.999999)
-                                    converg += 2000.00
-                                    converge_error = True
-                                else:
-                                    raise InvalidDataError(e)
+                            if find_converg or find_step_converg:
+                                line_split = line.split()
+                                try:
+                                    # Catching case when convergence is so poor that Gaussian prints '********' instead
+                                    # of a number (that won't fit) and assign an arbitrarily large convergence penalty
+                                    ind_converg.append(float(line_split[2]))
+                                    current_converge = ind_converg[i] / float(line_split[3])
+                                    if current_converge > 1.0:
+                                        converge_error = True
+                                    converg += current_converge
+                                except ValueError as e:
+                                    if '********' in e.args[0]:
+                                        ind_converg.append(9.999999)
+                                        converg += 2000.00
+                                        converge_error = True
+                                    else:
+                                        raise InvalidDataError(e)
                         # sometimes, Gaussian ignores the convergence error with the line below. Look for it.
                         next(d)
                         line = next(d).strip()
@@ -300,9 +310,6 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                             #    as the last thing kept from a middle step is convergence
                             if last_step_to_read and last_step_to_read == step_num:
                                 return gausslog_content
-                        elif collect_scan_steps:
-                            pass
-
                         else:
                             gausslog_content[CONVERG] = converg
                             gausslog_content[CONVERG_ERR] = converge_error
@@ -317,9 +324,10 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
     if find_dih and DIHES not in gausslog_content and len(gausslog_content[SEC_ATOMS]) > 3:
         warning("Requested dihedral data not found for file:", os.path.basename(gausslog_file))
         gausslog_content[DIHES] = None
-    if (find_converg or find_step_converg) and CONVERG_ERR not in gausslog_content:
-        warning("Did not find final convergence report for file:", os.path.basename(gausslog_file))
-        gausslog_content[CONVERG] = np.nan
-        gausslog_content[CONVERG_ERR] = None
+    if not collect_scan_steps:
+        if (find_converg or find_step_converg) and CONVERG_ERR not in gausslog_content:
+            warning("Did not find final convergence report for file:", os.path.basename(gausslog_file))
+            gausslog_content[CONVERG] = np.nan
+            gausslog_content[CONVERG_ERR] = None
 
     return gausslog_content

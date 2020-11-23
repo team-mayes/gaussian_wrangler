@@ -246,7 +246,7 @@ class TestGausslogUniqueFunctions(unittest.TestCase):
         # in those cases, let's also ignore the error and change the error flag to false
         gausslog_loc = os.path.join(SUB_DATA_DIR, "tieg5pdc2tsc_ts_ircr_opt.log")
         gausslog_content = process_gausslog_file(gausslog_loc, find_dih=True, find_converg=True)
-        self.assertFalse(gausslog_content[CONVERG_ERR])
+        self.assertTrue("False" in gausslog_content[CONVERG_ERR])
         self.assertAlmostEqual(gausslog_content[CONVERG], 1.5711111111111113)
 
     def testTSInfo(self):
