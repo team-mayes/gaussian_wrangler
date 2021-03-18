@@ -115,7 +115,6 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
         section = SEC_HEAD
         atom_id = 1
         scan_parameter = None
-        current_scan_val = None
         # using step convergence for collecting scan step energies, so set flag to true
         if collect_scan_steps:
             find_step_converg = True
@@ -163,11 +162,8 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                                 line = next(d).strip()
                             if search_term in line:
                                 line_split = line.split()
-                                # scan_parameter = line_split[2]
-                                # current_scan_val = line_split[3]
 
-
-                                # # Only if scan parameter already found will there be an energy collected to store
+                                # Only if scan parameter already found will there be an energy collected to store
                                 if search_term == SCAN_STR:
                                     scan_parameter = line_split[2]
                                 else:

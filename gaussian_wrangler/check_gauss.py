@@ -17,7 +17,8 @@ from scipy.signal import argrelmin, argrelmax
 from operator import itemgetter
 from configparser import MissingSectionHeaderError
 from common_wrangler.common import (GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, EHPART_TO_KCAL_MOL, COLOR_SEQUENCE,
-                                    InvalidDataError, warning, create_out_fname, write_csv, check_for_files)
+                                    InvalidDataError, warning, create_out_fname, write_csv, check_for_files,
+                                    assign_color)
 
 from gaussian_wrangler.gw_common import (MAX_FORCE, RMS_FORCE, MAX_DISPL, RMS_DISPL, CONVERG, CONVERG_ERR,
                                          process_gausslog_file, CONVERG_STEP_DICT, ENERGY, SCAN_DICT)
@@ -47,21 +48,6 @@ STEP_CONVERG_HEADERS = [F_NAME, STEP_NUM, MAX_FORCE, RMS_FORCE, MAX_DISPL, RMS_D
 FINAL_CONVERG_HEADERS = [F_NAME, CONVERG, CONVERG_ERR]
 
 N_DIHE = np.asarray([1, 2, 3, 4, 6])
-
-
-def assign_color(int_val):
-    """
-    Given an integer, return a color; this function allows repeating colors instead of getting an index error if the
-    index is greater than the length of the color array
-    :param int_val: int, can be zero
-    :return:
-    """
-    num_colors = len(COLOR_SEQUENCE)
-    # catch int = 0, then return the first color
-    if int_val:
-        return COLOR_SEQUENCE[num_colors % int_val]
-    else:
-        return COLOR_SEQUENCE[0]
 
 
 def parse_cmdline(argv):

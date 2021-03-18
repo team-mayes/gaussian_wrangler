@@ -30,14 +30,14 @@ GAU_TPL_FILE = 'gau_tpl_file'
 PDB_LIST_FILE = 'pdb_list_file'
 PDB_FILE = 'pdb_file'
 REMOVE_H = 'remove_final_h'
-FIRST_ONLY = 'first_only'
+NUM = 'num'
 
 # Defaults
 DEF_CFG_FILE = 'pdb2gau.ini'
 DEF_CFG_VALS = {PDB_LIST_FILE: 'pdb_list.txt',
                 PDB_FILE: None,
                 REMOVE_H: False,
-                FIRST_ONLY: False,
+                NUM: None,
                 }
 REQ_KEYS = {GAU_TPL_FILE: str,
             }
@@ -61,6 +61,8 @@ def read_cfg(floc, cfg_proc=process_cfg):
     good_files = config.read(floc)
     if good_files:
         main_proc = cfg_proc(dict(config.items(MAIN_SEC)), def_cfg_vals=DEF_CFG_VALS, req_keys=REQ_KEYS)
+        if main_proc[NUM]:
+            main_proc[NUM] = int(main_proc[NUM])
     else:
         main_proc = {GAU_TPL_FILE: None, CONFIG_NAME: floc}
         for key, def_val in DEF_CFG_VALS.items():
@@ -83,30 +85,26 @@ def parse_cmdline(argv):
     parser.add_argument("-c", "--config", help="Optional: the location of the configuration file. The default file "
                                                "name is '{}', located in the base directory where the program as run. "
                                                "If a config file is not provided, use the command-line options to "
-                                               "specify the '{}' (-t) and '{}' (-1) or '{}' (-p). The command lines "
+                                               "specify the '{}' (-t) and '{}' (-1) or '{}' (-f). The command lines "
                                                "for the '{}' flag (-r) or only the first entry in the pdb ('{}', -a) "
                                                "may also be specified.".format(DEF_CFG_FILE, GAU_TPL_FILE,
-                                                                               PDB_LIST_FILE, PDB_FILE,
-                                                                               REMOVE_H, FIRST_ONLY),
+                                                                               PDB_LIST_FILE, PDB_FILE, REMOVE_H, NUM),
                         default=DEF_CFG_FILE, type=read_cfg)
-    parser.add_argument("-t", "--tpl_file", help="Only if a config file is not provided, this command is required to "
-                                                 "specify the '{}'".format(GAU_TPL_FILE),
+    parser.add_argument("-t", "--tpl_file", help="Specifies the '{}'".format(GAU_TPL_FILE),
                         default=None)
-    parser.add_argument("-l", "--pdb_list_file", help="Only if a config file is not provided, this command can be used "
-                                                      "to specify a file with a list of pdbs ('{}') to convert (one "
-                                                      "file per line on the list).".format(PDB_LIST_FILE),
+    parser.add_argument("-l", "--pdb_list_file", help="Option to specify a file with a list of pdbs ('{}') to convert "
+                                                      "(one file per line on the list).".format(PDB_LIST_FILE),
                         default=None)
-    parser.add_argument("-p", "--pdb_file", help="Only if a config file is not provided, this command can be used to "
-                                                 "specify a pdb file ('{}') to convert.".format(PDB_FILE),
+    parser.add_argument("-f", "--file", help="Option to specify a pdb file ('{}') to convert.".format(PDB_FILE),
                         default=None)
-    parser.add_argument("-r", "--remove_final_h", help="Only if a config file is not provided, this command can be "
-                                                       "used to specify removing the last H atom from the PDB file(s) "
-                                                       "when creating the gausscom files. The default is False.",
-                        action='store_true')
-    parser.add_argument("-a", "--first_only", help="Only read if a config file is not provided. This command can be "
-                                                   "used to specify only using the first set of coordinates in a pdb "
-                                                   "file to create gausscom file(s). The default is False.",
-                        action='store_true')
+    parser.add_argument("-r", "--remove_final_h", help="Option to specify removing the last H atom from the PDB "
+                                                       "file(s) when creating the gausscom files. The default is "
+                                                       "False.", action='store_true')
+    parser.add_argument("-n", "--num", help="Only read if a config file is not provided. This command can be used to "
+                                            "specify only using the first '-n'/'--num' set(s) of coordinates in a pdb "
+                                            "file to create gausscom file(s). The default is to use all coordinates, "
+                                            "making as many input files as there are molecules/conformations in the "
+                                            "pdb.", default=None, type=int)
 
     args = None
     try:
@@ -118,12 +116,12 @@ def parse_cmdline(argv):
                                        "script.".format(args.config[CONFIG_NAME]))
             else:
                 args.config[GAU_TPL_FILE] = args.tpl_file
-                if args.first_only:
-                    args.config[FIRST_ONLY] = True
+                if args.num:
+                    args.config[NUM] = args.num
                 if args.remove_final_h:
                     args.config[REMOVE_H] = True
-                if args.pdb_file:
-                    args.config[PDB_FILE] = args.pdb_file
+                if args.file:
+                    args.config[PDB_FILE] = args.file
                 if args.pdb_list_file:
                     args.config[PDB_LIST_FILE] = args.pdb_list_file
     except (IOError, KeyError, InvalidDataError, MissingSectionHeaderError, SystemExit) as e:
@@ -179,7 +177,7 @@ def process_pdb_file(cfg, gau_tpl_content, pdb_file):
                     del pdb_atom_line[-1]
                 list_to_file(gau_tpl_content[SEC_HEAD] + pdb_atom_line + gau_tpl_content[SEC_TAIL],
                              d_out)
-                if cfg[FIRST_ONLY]:
+                if cfg[NUM] and mol_num >= cfg[NUM]:
                     return
                 pdb_atom_line = []
 
