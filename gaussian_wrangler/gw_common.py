@@ -38,6 +38,7 @@ RMS_DISPL = 'RMS Displacement'
 CONVERG = 'Convergence'
 CONVERG_ERR = 'Convergence_Error'
 ENTHALPY = 'Enthalpy'
+GIBBS = 'Gibbs_Free_E'
 TS = 'Transition_State'
 SCAN_STR = "  Scan  "
 
@@ -110,8 +111,8 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
     base_name = os.path.basename(gausslog_file)
     with open(gausslog_file) as d:
         gausslog_content = {SEC_ATOMS: {}, BASE_NAME: base_name, STOICH: None, TS: None,
-                            ENERGY: np.nan, ENTHALPY: np.nan, CONVERG_STEP_DICT: collections.OrderedDict(),
-                            SCAN_DICT: {}}
+                            ENERGY: np.nan, ENTHALPY: np.nan, GIBBS: np.nan,
+                            CONVERG_STEP_DICT: collections.OrderedDict(), SCAN_DICT: {}}
         section = SEC_HEAD
         atom_id = 1
         scan_parameter = None
@@ -244,6 +245,8 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
 
                     if GAU_H_PAT.match(line):
                         gausslog_content[ENTHALPY] = float(line.split('=')[1].strip())
+                        line = next(d).strip()
+                        gausslog_content[GIBBS] = float(line.split('=')[1].strip())
                         line = next(d).strip()
 
                     # Step num after SCF Done

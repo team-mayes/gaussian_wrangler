@@ -11,7 +11,7 @@ from configparser import MissingSectionHeaderError
 from common_wrangler.common import (InvalidDataError, warning,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, DIHES, EHPART_TO_KCAL_MOL, quote,
                                     list_to_file)
-from gaussian_wrangler.gw_common import (STOICH, CONVERG, ENERGY, ENTHALPY, CONVERG_ERR, process_gausslog_file)
+from gaussian_wrangler.gw_common import (STOICH, CONVERG, ENERGY, ENTHALPY, GIBBS, CONVERG_ERR, process_gausslog_file)
 from gaussian_wrangler import __version__
 
 __author__ = 'hmayes'
@@ -54,7 +54,11 @@ def parse_cmdline(argv):
                                                  'unique conformers, defined by having dihedral angles within the '
                                                  'specified tolerance.')
     parser.add_argument("-e", "--energy", help="Sort output by lowest electronic energy (not ZPE corrected)."
-                                               "The default is False. This flag is superseded by the enthalpy flag.",
+                                               "The default is False. This flag is superseded by the '-n'/'--enthalpy'"
+                                               "and '-g'/'--gibbs' flags.",
+                        action='store_true')
+    parser.add_argument("-g", "--gibbs", help="Sort output by lowest Gibbs free energy. If not found, the script will "
+                                              "sort output by the lowest electronic energy. The default is False.",
                         action='store_true')
     parser.add_argument("-l", "--list", help="The file location of the list of Gaussian output files. There should "
                                              "be one output file listed per line. The default file name is '{}', "
@@ -62,15 +66,12 @@ def parse_cmdline(argv):
                                              "run. This program assumes that all the given files have the same atom "
                                              "order.".format(DEF_LIST_FILE),
                         default=DEF_LIST_FILE)
-    parser.add_argument("-m", "--max_diff", help="If a numerical value is provided with this option, the program will "
-                                                 "sort the the data should be sorted by enthalpy if the '-e'/'--energy "
-                                                 "option is not specified, and fall back on sorting by energy if "
-                                                 "enthalpy data is not present. The out put list will be split "
-                                                 "between files within or not within this maximum difference, in "
-                                                 "kcal/mol), from the lowest energy or enthalpy. Additionally, the "
-                                                 "program will output a file with only the file names of "
-                                                 "conformations within the cutoff; see the '-o'/'--out_name' option to "
-                                                 "specify the name of this file.", default=None)
+    parser.add_argument("-m", "--max_diff", help="If a numerical value is provided with this option, the output list "
+                                                 "will be split between files within or not within this maximum "
+                                                 "difference, in kcal/mol), from the lowest energy or enthalpy. "
+                                                 "Additionally, the program will output a file with only the file "
+                                                 "names of conformations within the cutoff; see the '-o'/'--out_name' "
+                                                 "option to specify the name of this file.", default=None)
     parser.add_argument("-n", "--enthalpy", help="Sort output by lowest enthalpy. If no enthalpy is found, it will "
                                                  "sort by the lowest electronic energy. The default is False.",
                         action='store_true')
@@ -148,8 +149,8 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
                 if log_info[log_file][CONVERG] < lowest_converg:
                     lowest_converg = log_info[log_file][CONVERG]
                     low_conv_log = log_file
-        winners.append((low_conv_log, log_info[low_conv_log][CONVERG],
-                        log_info[low_conv_log][ENERGY], log_info[low_conv_log][ENTHALPY]))
+        winners.append((low_conv_log, log_info[low_conv_log][CONVERG], log_info[low_conv_log][ENERGY],
+                        log_info[low_conv_log][ENTHALPY], log_info[low_conv_log][GIBBS]))
 
     # sorting, if requested
     sort_error = False
@@ -165,9 +166,9 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
     elif sort_by_energy:
         sort_key = 2
     else:
-        sort_key = 0
+        sort_key = 4
     winners.sort(key=lambda tup: tup[sort_key])
-    winner_str = quote('","'.join(['File', CONVERG, ENERGY, ENTHALPY]))
+    winner_str = quote('","'.join(['File', CONVERG, ENERGY, ENTHALPY, GIBBS]))
 
     # now gather results
     cutoff_list = []
@@ -176,8 +177,10 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
         lowest_val = winners[0][sort_key]
         if sort_by_enthalpy:
             sort_type = "enthalpy"
-        else:
+        elif sort_by_energy:
             sort_type = "SCF energy"
+        else:
+            sort_type = "Gibbs free energy"
         winner_str += f'"Files within {sort_type} cutoff of {max_diff:.2f} kcal/mol"\n'
         within_cutoff = True
     else:
@@ -186,13 +189,15 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
         within_cutoff = False
     val_diff_str = ""
     val_diff = 0.
-    for winner, converg, energy, enthalpy in winners:
+    for winner, converg, energy, enthalpy, gibbs, in winners:
         if not sort_error:
             if max_diff:
                 if sort_by_enthalpy:
                     val_diff = (enthalpy - lowest_val) * EHPART_TO_KCAL_MOL
-                else:
+                elif sort_by_energy:
                     val_diff = (energy - lowest_val) * EHPART_TO_KCAL_MOL
+                else:
+                    val_diff = (gibbs - lowest_val) * EHPART_TO_KCAL_MOL
                 val_diff_str = f",{val_diff:.2f}"
 
             if within_cutoff:
@@ -202,7 +207,7 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
                 else:
                     cutoff_list.append(winner)
 
-            winner_str += f'"{winner}",{converg:.4f},{energy:.6f},{enthalpy:.6f}{val_diff_str}\n'
+            winner_str += f'"{winner}",{converg:.4f},{energy:.6f},{enthalpy:.6f},{gibbs:.6f}{val_diff_str}\n'
         if log_info[winner][CONVERG_ERR]:
             warn_files_str += '\n    {:}:  {:.2f}'.format(winner, converg)
         elif log_info[winner][CONVERG_ERR] is None:
@@ -231,7 +236,7 @@ def main(argv=None):
         # check input
         if args.max_diff:
             args.max_diff = float(args.max_diff)
-            if not args.energy:
+            if not args.energy and not args.gibbs:
                 args.enthalpy = True
 
         # check that we have files
