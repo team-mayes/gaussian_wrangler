@@ -6,10 +6,16 @@ Provide template input file
 List of pdb files to convert; there may be multiple structures in one file; each one must end with "END/n"
 """
 
+import argparse
 import os
 import sys
-import argparse
+import numpy as np
 from configparser import ConfigParser, MissingSectionHeaderError
+from operator import itemgetter
+from rdkit import RDLogger
+from rdkit.Chem.rdmolfiles import MolFromPDBFile, MolToPDBBlock
+from rdkit.Chem.rdMolTransforms import GetDihedralDeg, SetDihedralDeg
+from rdkit.Chem.AllChem import MMFFOptimizeMoleculeConfs
 from common_wrangler.common import (GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, PDB_LINE_TYPE_LAST_CHAR,
                                     PDB_MOL_NUM_LAST_CHAR, PDB_Z_LAST_CHAR, PDB_BEFORE_ELE_LAST_CHAR,
                                     PDB_ELE_LAST_CHAR, PDB_ATOM_NUM_LAST_CHAR, PDB_ATOM_TYPE_LAST_CHAR,
@@ -31,6 +37,10 @@ PDB_LIST_FILE = 'pdb_list_file'
 PDB_FILE = 'pdb_file'
 REMOVE_H = 'remove_final_h'
 NUM = 'num'
+DIH_ROT = "dih_rot"  # enter as list: four atom ids (base 1), then rotation in degrees
+DIH_DATA = "dih_data"
+MAX_CONF = "max_conf"
+ORIGINAL = "original"
 
 # Defaults
 DEF_CFG_FILE = 'pdb2gau.ini'
@@ -38,6 +48,9 @@ DEF_CFG_VALS = {PDB_LIST_FILE: 'pdb_list.txt',
                 PDB_FILE: None,
                 REMOVE_H: False,
                 NUM: None,
+                DIH_ROT: None,
+                MAX_CONF: 500,
+                ORIGINAL: False,
                 }
 REQ_KEYS = {GAU_TPL_FILE: str,
             }
@@ -67,6 +80,28 @@ def read_cfg(floc, cfg_proc=process_cfg):
         main_proc = {GAU_TPL_FILE: None, CONFIG_NAME: floc}
         for key, def_val in DEF_CFG_VALS.items():
             main_proc[key] = def_val
+
+    main_proc[DIH_DATA] = []
+    if main_proc[DIH_ROT] is not None:
+        try:
+            dih_list = main_proc[DIH_ROT].split(";")
+            for dih in dih_list:
+                dih_data = dih.split(",")
+                if len(dih_data) != 5:
+                    raise IndexError
+                # note: RDKit is zero-based with atom indices, thus subtracting one from each number
+                dih_data[:4] = [int(x) - 1 for x in dih_data[:4]]
+                # noinspection PyTypeChecker
+                dih_data[4] = float(dih_data[4])
+                main_proc[DIH_DATA].append(dih_data)
+        except (ValueError, IndexError):
+            raise InvalidDataError("Error in parsing dihedral entry. Enter multiple dihedrals by separating data "
+                                   "with a semicolon (';'). Each dihedral should be specified with 5 values, were the "
+                                   "first four are one-based integer atom ids, and the last value is the rotation "
+                                   "increment in degrees. ")
+
+        if main_proc[MAX_CONF]:
+            main_proc[MAX_CONF] = int(main_proc[MAX_CONF])
     return main_proc
 
 
@@ -97,15 +132,14 @@ def parse_cmdline(argv):
                         default=None)
     parser.add_argument("-f", "--file", help="Option to specify a pdb file ('{}') to convert.".format(PDB_FILE),
                         default=None)
-    parser.add_argument("-r", "--remove_final_h", help="Option to specify removing the last H atom from the PDB "
-                                                       "file(s) when creating the gausscom files. The default is "
-                                                       "False.", action='store_true')
     parser.add_argument("-n", "--num", help="Only read if a config file is not provided. This command can be used to "
                                             "specify only using the first '-n'/'--num' set(s) of coordinates in a pdb "
                                             "file to create gausscom file(s). The default is to use all coordinates, "
                                             "making as many input files as there are molecules/conformations in the "
                                             "pdb.", default=None, type=int)
-
+    parser.add_argument("-r", "--remove_final_h", help="Option to specify removing the last H atom from the PDB "
+                                                       "file(s) when creating the gausscom files. The default is "
+                                                       "False.", action='store_true')
     args = None
     try:
         args = parser.parse_args(argv)
@@ -134,6 +168,115 @@ def parse_cmdline(argv):
     return args, GOOD_RET
 
 
+def add_atom_indices(mol):
+    for i, a in enumerate(mol.GetAtoms()):
+        a.SetAtomMapNum(i)
+
+
+def create_com_from_pdb_str(pdb_str, gau_tpl_content, com_fname):
+    """
+    Extracts one set of pdb coordinates from the "pdb_str" and combines with
+    :param pdb_str: str in pdb format
+    :param gau_tpl_content: dict with contents of the Gaussian template file
+    :param com_fname: str, name of file to be created
+    :return:
+    """
+    coord_list = []
+    pdb_str_list = pdb_str.split("\n")
+    for line in pdb_str_list:
+        if line.startswith('ATOM') or line.startswith('HETATM'):
+            element = line[PDB_BEFORE_ELE_LAST_CHAR:PDB_ELE_LAST_CHAR].strip()
+            pdb_xyz = line[PDB_MOL_NUM_LAST_CHAR:PDB_Z_LAST_CHAR]
+            coord_list.append(["{:6}".format(element), pdb_xyz])
+        elif line.startswith('CONECT') or line.startswith('END'):
+            break
+    list_to_file(gau_tpl_content[SEC_HEAD] + coord_list + gau_tpl_content[SEC_TAIL], com_fname, print_message=False)
+
+
+def rotate_dihes_pdb_files(cfg, gau_tpl_content, pdb_files):
+    """
+    If dihedral data is specified, use RDkit to rotate specified dihedrals
+    :param cfg: dict of configuration input
+    :param gau_tpl_content: dict of data to create gaussian input files
+    :param pdb_files: list of pdb files with dihedral angles to be rotated
+    :return: n/a, saves new Gaussian input files
+    """
+    for pdb_file in pdb_files:
+        mol_orig = MolFromPDBFile(pdb_file, removeHs=False)
+        all_confs = [mol_orig]
+        num_atoms = mol_orig.GetNumAtoms()
+        for dih in cfg[DIH_DATA]:
+            max_id = max(dih[:4])
+            rot_deg = dih[4]
+            if max_id > num_atoms:
+                raise InvalidDataError(f"Dihedral rotation specifies an atom id of {max_id}, while only {num_atoms} "
+                                       f"atoms were found in the PBD file {os.path.relpath(pdb_file)}")
+            new_confs = []
+            for mol_id, current_mol in enumerate(all_confs):
+                # atoms = [a for a in current_mol.GetAtoms()]
+                # for a in atoms:
+                #     print(a.GetIdx(), a.GetSymbol())
+                dih_deg = GetDihedralDeg(current_mol.GetConformer(0), *dih[:4])
+                for _ in range(int(round(360. / rot_deg, 0) - 1)):
+                    dih_deg = dih_deg + rot_deg
+                    # print(dih, dih_deg)
+                    SetDihedralDeg(current_mol.GetConformer(0), *dih[:4], dih_deg)
+                    new_confs.append(current_mol.__copy__())
+            all_confs.extend(new_confs)
+        create_coms_from_mol_list(all_confs, gau_tpl_content, pdb_file, cfg[MAX_CONF], cfg[ORIGINAL])
+
+
+def create_coms_from_mol_list(conformer_list, gau_tpl_content, base_out_name, max_num_coms, print_original):
+    """
+    From a list of RDKit mol objects, create gaussian output files, optionally for only the specified number of
+    objects
+    :param conformer_list:
+    :param gau_tpl_content:
+    :param base_out_name:
+    :param max_num_coms: int or infinity
+    :param print_original: Boolean, whether to print the initial conformation
+    :return:
+    """
+    energy_list = []
+    if print_original:
+        start_at = 0
+    else:
+        start_at = 1
+
+    RDLogger.DisableLog('rdApp.*')
+    for current_mol in conformer_list[start_at:]:
+        opt_results = MMFFOptimizeMoleculeConfs(current_mol, maxIters=0)
+        energy_list.append(opt_results[0][1])
+
+    combined_lists = zip(energy_list, conformer_list)
+    zipped_sorted = sorted(combined_lists, key=itemgetter(0))
+
+    # for energy in sorted(energy_list):
+    #     print(f"{energy:15.8f}")
+    mol_num = 0
+    last_energy = np.nan
+    print_note = False
+    com_fname = None
+    for energy, current_mol in zipped_sorted:
+        if mol_num >= max_num_coms:
+            if np.isclose(energy, last_energy):
+                print_note = True
+            else:
+                break
+        mol_num += 1
+        last_energy = energy
+        com_fname = create_out_fname(base_out_name, suffix=f"_{mol_num}", ext=".com")
+        pdb_str = MolToPDBBlock(current_mol)
+        create_com_from_pdb_str(pdb_str, gau_tpl_content, com_fname)
+
+    if com_fname:
+        print(f"Wrote {mol_num} files, ending with: {os.path.relpath(com_fname)}")
+    else:
+        print("No output created from rotating dihedrals.")
+    if print_note:
+        print(f"More than {max_num_coms} conformations were output to ties calculated energies.")
+
+
 def process_pdb_files(cfg, gau_tpl_content):
     pdb_files = []
     if cfg[PDB_FILE]:
@@ -149,8 +292,11 @@ def process_pdb_files(cfg, gau_tpl_content):
                     pdb_files.append(pdb_file)
     if len(pdb_files) == 0:
         raise InvalidDataError("No pdb files found to process.")
-    for pdb_file in pdb_files:
-        process_pdb_file(cfg, gau_tpl_content, pdb_file)
+    if cfg[DIH_DATA]:
+        rotate_dihes_pdb_files(cfg, gau_tpl_content, pdb_files)
+    else:
+        for pdb_file in pdb_files:
+            process_pdb_file(cfg, gau_tpl_content, pdb_file)
 
 
 def process_pdb_file(cfg, gau_tpl_content, pdb_file):

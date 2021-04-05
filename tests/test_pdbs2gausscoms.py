@@ -180,3 +180,19 @@ class TestPdbs2Gausscoms(unittest.TestCase):
             silent_remove(REMOVE_H_OUT1, disable=DISABLE_REMOVE)
             silent_remove(REMOVE_H_OUT2, disable=DISABLE_REMOVE)
             pass
+
+    def testRotateDihedral(self):
+        ini_file = os.path.join(SUB_DATA_DIR, "pchl_eq_mono_rs_ends.ini")
+        test_input = ["-c", ini_file]
+        try:
+            main(test_input)
+        finally:
+            pass
+
+    def testRotateDihedralMaxConfs(self):
+        ini_file = os.path.join(SUB_DATA_DIR, "pchl_eq_mono_rs_ends_max_conf.ini")
+        test_input = ["-c", ini_file]
+        try:
+            main(test_input)
+        finally:
+            pass

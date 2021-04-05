@@ -1,0 +1,67 @@
+TITLE      pchl monomer (segment) with 2nd degree amide end groups
+REMARK   1 File created by GaussView 6.1.1
+HETATM    1  C           0      -5.545   7.568   0.235                       C
+HETATM    2  H           0      -6.580   7.602   0.568                       H
+HETATM    3  C           0      -5.357   8.074  -1.174                       C
+HETATM    4  O           0      -4.246   8.121  -1.691                       O
+HETATM    5  N           0      -6.471   8.473  -1.818                       N
+HETATM    6  H           0      -7.360   8.371  -1.356                       H
+HETATM    7  C           0      -6.461   8.952  -3.191                       C
+HETATM    8  C           0      -6.479   7.796  -4.191                       C
+HETATM    9  C           0      -7.646   9.885  -3.410                       C
+HETATM   10  H           0      -5.531   9.511  -3.322                       H
+HETATM   11  C           0      -6.497   8.320  -5.623                       C
+HETATM   12  H           0      -7.374   7.193  -4.005                       H
+HETATM   13  H           0      -5.610   7.160  -4.017                       H
+HETATM   14  C           0      -7.672  10.411  -4.846                       C
+HETATM   15  H           0      -8.577   9.343  -3.222                       H
+HETATM   16  H           0      -7.598  10.716  -2.702                       H
+HETATM   17  C           0      -7.685   9.250  -5.850                       C
+HETATM   18  H           0      -6.535   7.487  -6.327                       H
+HETATM   19  H           0      -5.568   8.863  -5.823                       H
+HETATM   20  H           0      -6.772  11.009  -5.019                       H
+HETATM   21  H           0      -7.676   9.644  -6.868                       H
+HETATM   22  H           0      -8.619   8.695  -5.721                       H
+HETATM   23  C           0      -8.898  11.277  -5.067                       C
+HETATM   24  O           0     -10.022  10.897  -4.758                       O
+HETATM   25  N           0      -8.687  12.469  -5.649                       N
+HETATM   26  H           0      -7.747  12.740  -5.883                       H
+HETATM   27  C           0      -9.781  13.365  -5.963                       C
+HETATM   28  H           0     -10.324  13.640  -5.058                       H
+HETATM   29  H           0      -5.183   6.542   0.284                       H
+HETATM   30  H           0     -10.481  12.892  -6.652                       H
+HETATM   31  H           0      -9.377  14.262  -6.423                       H
+HETATM   32  H           0      -4.930   8.171   0.902                       H
+END
+CONECT    1    2    3   29   32
+CONECT    2    1
+CONECT    3    1    4    5
+CONECT    4    3
+CONECT    5    3    6    7
+CONECT    6    5
+CONECT    7    5    8    9   10
+CONECT    8    7   11   12   13
+CONECT    9    7   14   15   16
+CONECT   10    7
+CONECT   11    8   17   18   19
+CONECT   12    8
+CONECT   13    8
+CONECT   14    9   17   20   23
+CONECT   15    9
+CONECT   16    9
+CONECT   17   14   11   21   22
+CONECT   18   11
+CONECT   19   11
+CONECT   20   14
+CONECT   21   17
+CONECT   22   17
+CONECT   23   14   24   25
+CONECT   24   23
+CONECT   25   23   26   27
+CONECT   26   25
+CONECT   27   25   28   30   31
+CONECT   28   27
+CONECT   29    1
+CONECT   30   27
+CONECT   31   27
+CONECT   32    1

@@ -7,14 +7,17 @@ A suite of scripts that have been helpful primarily with work flows involving Ga
 
 ## Installation
 
-In three simple steps!
+In <= 3 simple steps!
 
 + If you do not already have python \geq 3.0 installed, start with that installation. 
 [Anaconda](https://www.anaconda.com/distribution/) or [miniconda](https://docs.conda.io/en/latest/miniconda.html) are 
 recommended.
-+ If you do not already have a `$HOME/.local/bin` directory, create it. Make sure `$HOME/.local/bin` is included in your 
-paths in your `.bashrc` and/or `.bash_profile` (e.g. `export PATH="$PATH:$HOME/.local/bin`).
-+ Run `pip install gaussian-wrangler`
++ Install [RDKit](https://www.rdkit.org/docs/Install.html) using conda. 
+  -  To install it in a new environment, run: `conda create -c rdkit -n gaussian-wrangler rdkit`, followed by 
+     `conda activate lignin-wrangler` 
+  -  If you already have a conda environment created and want to add rdkit to that environment, instead run: 
+     `conda install -c conda-forge rdkit`  
++ Install this package with pip (`pip install gaussian-wrangler`) or by building it yourself (see below)
 
 ## Build
 
@@ -71,7 +74,7 @@ the same conformation, the output file with the best convergence is shown. The p
 the final calculations is not fully converged (as can happen due to optimization calculations using estimated 
 convergence; a subsequent frequency calculation can then show that the structure is not fully optimized).
 
-**test_goodvibes_helper**: This script uses goodvibes to calculate entropy and enthalpy at multiple temperatures. It is 
+**goodvibes_helper**: This script uses goodvibes to calculate entropy and enthalpy at multiple temperatures. It is 
 set up to help calculate the enthalpy of reaction at specified temperatures, and/or to determine the kinetic parameters 
 (A, E_A) for reactions. Note: this program requires requires [hartree](https://github.com/team-mayes/hartree), and
 will look for [this version of goodvibes](https://github.com/team-mayes/GoodVibes), which has a correction for 
@@ -99,7 +102,7 @@ assuming the whole node is used for the Gaussian job) if a `{mem}` and/or `{proc
 
 ### Copyright
 
-Copyright (c) 2019, Heather B Mayes
+Copyright (c) 2021, Heather B Mayes
 
 
 #### Acknowledgements
