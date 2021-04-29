@@ -16,11 +16,11 @@ from rdkit import RDLogger
 from rdkit.Chem.rdmolfiles import MolFromPDBFile, MolToPDBBlock
 from rdkit.Chem.rdMolTransforms import GetDihedralDeg, SetDihedralDeg
 from rdkit.Chem.AllChem import MMFFOptimizeMoleculeConfs
-from common_wrangler.common import (GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, PDB_LINE_TYPE_LAST_CHAR,
-                                    PDB_MOL_NUM_LAST_CHAR, PDB_Z_LAST_CHAR, PDB_BEFORE_ELE_LAST_CHAR,
-                                    PDB_ELE_LAST_CHAR, PDB_ATOM_NUM_LAST_CHAR, PDB_ATOM_TYPE_LAST_CHAR,
-                                    MAIN_SEC, SEC_HEAD, SEC_TAIL, InvalidDataError, warning,
-                                    create_out_fname, list_to_file, process_cfg)
+from common_wrangler.common import (GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
+                                    PDB_LINE_TYPE_LAST_CHAR, PDB_MOL_NUM_LAST_CHAR, PDB_Z_LAST_CHAR,
+                                    PDB_BEFORE_ELE_LAST_CHAR, PDB_ELE_LAST_CHAR, PDB_ATOM_NUM_LAST_CHAR,
+                                    PDB_ATOM_TYPE_LAST_CHAR, MAIN_SEC, SEC_HEAD, SEC_TAIL,
+                                    InvalidDataError, warning, create_out_fname, list_to_file, process_cfg)
 from gaussian_wrangler.gw_common import (process_gausscom_file)
 from gaussian_wrangler import __version__
 
@@ -265,9 +265,10 @@ def create_coms_from_mol_list(conformer_list, gau_tpl_content, base_out_name, ma
                 break
         mol_num += 1
         last_energy = energy
-        com_fname = create_out_fname(base_out_name, suffix=f"_{mol_num}", ext=".com")
+        com_fname = create_out_fname(base_out_name, suffix=f"_{mol_num}", ext=".com", rel_path=True)
         pdb_str = MolToPDBBlock(current_mol)
         create_com_from_pdb_str(pdb_str, gau_tpl_content, com_fname)
+        print(f"{int(energy):12,} {com_fname}")
 
     if com_fname:
         print(f"Wrote {mol_num} files, ending with: {os.path.relpath(com_fname)}")
