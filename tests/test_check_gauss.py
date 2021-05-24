@@ -1,17 +1,15 @@
-import unittest
+import logging
 import os
+import unittest
 import numpy as np
-import matplotlib.pyplot as plt
 from shutil import copyfile
-from scipy.optimize import curve_fit
+from common_wrangler.common import (capture_stdout, capture_stderr, diff_lines, silent_remove, list_to_file, make_dir)
+from gaussian_wrangler.gw_common import process_gausslog_file, SCAN_DICT
 from gaussian_wrangler.check_gauss import main, plot_scan, process_scan_array, charmm_dihedral, find_good_fit, \
     find_stable_points, collect_output_scan_steps
-from common_wrangler.common import (capture_stdout, capture_stderr, diff_lines, silent_remove, list_to_file, make_dir)
-import logging
+
 
 # logging.basicConfig(level=logging.DEBUG)
-from gw_common import process_gausslog_file, SCAN_DICT
-
 logger = logging.getLogger(__name__)
 DISABLE_REMOVE = logger.isEnabledFor(logging.DEBUG)
 
@@ -76,31 +74,31 @@ def make_fill_sub_dir():
     return temp_files_list
 
 
-def test_curve_func(x, a, b):
-    return a*x*x + b
-
-
-class TestFittingCurve(unittest.TestCase):
-    def testFit(self):
-        x_data = np.linspace(0, 4, 50)
-        y = test_curve_func(x_data, 2.5, 1.3)
-        np.random.seed(1729)
-        y_noise = 0.2 * np.random.normal(size=x_data.size)
-        y_data = y + y_noise
-        b = 2.2
-        png_out = os.path.join(SUB_DATA_DIR, "test.png")
-        try:
-            silent_remove(png_out)
-            popt, pcov = curve_fit(lambda x, a: test_curve_func(x, a, b), x_data, y_data)
-            a_fit = popt[0]
-            plt.plot(x_data, y_data, 'b-', label='data')
-            plt.plot(x_data, test_curve_func(x_data, a_fit, b), 'r-', label=f'fit: a={a_fit:5.3f}')
-            plt.legend()
-            plt.savefig(png_out, transparent=True, bbox_inches='tight',)
-            plt.close()
-            self.assertTrue(os.path.isfile(png_out))
-        finally:
-            silent_remove(png_out, disable=DISABLE_REMOVE)
+# def test_curve_func(x, a, b):
+#     return a*x*x + b
+#
+#
+# class TestFittingCurve(unittest.TestCase):
+#     def testFit(self):
+#         x_data = np.linspace(0, 4, 50)
+#         y = test_curve_func(x_data, 2.5, 1.3)
+#         np.random.seed(1729)
+#         y_noise = 0.2 * np.random.normal(size=x_data.size)
+#         y_data = y + y_noise
+#         b = 2.2
+#         png_out = os.path.join(SUB_DATA_DIR, "test.png")
+#         try:
+#             silent_remove(png_out)
+#             popt, pcov = curve_fit(lambda x, a: test_curve_func(x, a, b), x_data, y_data)
+#             a_fit = popt[0]
+#             plt.plot(x_data, y_data, 'b-', label='data')
+#             plt.plot(x_data, test_curve_func(x_data, a_fit, b), 'r-', label=f'fit: a={a_fit:5.3f}')
+#             plt.legend()
+#             plt.savefig(png_out, transparent=True, bbox_inches='tight',)
+#             plt.close()
+#             self.assertTrue(os.path.isfile(png_out))
+#         finally:
+#             silent_remove(png_out, disable=DISABLE_REMOVE)
 
 
 class TestCheckGaussNoOut(unittest.TestCase):
