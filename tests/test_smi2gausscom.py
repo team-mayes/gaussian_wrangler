@@ -63,6 +63,19 @@ class TestMainNoOutput(unittest.TestCase):
         with capture_stderr(main, test_input) as output:
             self.assertTrue("No such" in output)
 
+    def testBadSmi(self):
+        test_input = ["-s", "CCC0,CCCO", "-t", GAU_TPL, "-o", TEMP_DIR]
+        an_output = os.path.join(TEMP_DIR, "propan-1-ol_0.com")
+        try:
+            silent_remove(TEMP_DIR, dir_with_files=True)
+            # main(test_input)
+            with capture_stderr(main, test_input) as output:
+                self.assertTrue("Skipping" in output)
+            self.assertTrue(os.path.isfile(an_output))
+        finally:
+            silent_remove(TEMP_DIR, dir_with_files=True)
+            pass
+
 
 class TestMain(unittest.TestCase):
     # These test/demonstrate different options
@@ -107,6 +120,19 @@ class TestMain(unittest.TestCase):
             main(test_input)
             num_created_files = len(os.listdir(TEMP_DIR))
             self.assertEqual(60, num_created_files)
+        finally:
+            silent_remove(TEMP_DIR, dir_with_files=True)
+            pass
+
+    def testSmiListDup(self):
+        # check that making a set removes duplicate input
+        list_fname = os.path.join(SUB_DATA_DIR, "smi_list_with_dup.txt")
+        test_input = ["-l", list_fname, "-t", GAU_TPL, "-o", TEMP_DIR, "-m", "10"]
+        try:
+            silent_remove(TEMP_DIR, dir_with_files=True)
+            # main(test_input)
+            with capture_stdout(main, test_input) as output:
+                self.assertEqual(output.count("2-methylidenebutanedioic_acid"), 1)
         finally:
             silent_remove(TEMP_DIR, dir_with_files=True)
             pass

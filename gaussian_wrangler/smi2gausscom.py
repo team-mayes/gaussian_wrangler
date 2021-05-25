@@ -36,7 +36,7 @@ DEF_MAX_CONFS = 50
 ATOMS = "atoms"
 REQ_STR = f"{{{ATOMS}}}"
 SPECIAL_REPLACE = {"(": "p", ")": "q", "[": "s", "]": "t",
-                   "=": "e", "@": "a", "#": "h", "'": "i",
+                   "=": "e", "@  ": "a", "#": "h", "'": "i",
                    ",": "c", " ": "_", ".": "p", "+": "w",
                    "/": "d", "\\": "b"}
 
@@ -99,6 +99,7 @@ def parse_cmdline(argv):
             raise InvalidDataError(f"No SMILES input has been specified. Specify a single SMILES string with the "
                                    f"'-s'/'--{SMI}' option or a files with a list of SMILES strings (one per line) "
                                    f"with the '-l'/'--{LIST_FNAME}' option.")
+        args.list_file = list(set(args.list_file))
 
         if args.out_dir is not None:
             make_dir(args.out_dir)
@@ -163,6 +164,9 @@ def process_smiles(gau_tpl_fname, smi_list, max_num_confs, out_dir):
                                f"template file.")
     for smi in smi_list:
         mol = Chem.MolFromSmiles(smi)
+        if mol is None:
+            warning(f"Skipping SMILES input string '{smi}' due to error\n")
+            continue
         Chem.Kekulize(mol)
         mol = AddHs(mol)
         confs = gen_conformers(mol, num_confs=max_num_confs)
