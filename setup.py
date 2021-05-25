@@ -42,7 +42,7 @@ setup(
                                       'goodvibes_helper = gaussian_wrangler.goodvibes_helper:main',
                                       'goodvibes_hm = gaussian_wrangler.goodvibes_hm:main',
                                       'plot_steps = gaussian_wrangler.plot_steps:main',
-                                      'test_data.smi2gausscom = gaussian_wrangler.test_data.smi2gausscom:main'
+                                      'smi2gausscom = gaussian_wrangler.smi2gausscom:main'
                                       ],
                   },     package_dir={'gaussian_wrangler': 'gaussian_wrangler'},
 
