@@ -8,7 +8,9 @@ import os
 import collections
 import numpy as np
 from common_wrangler.common import (InvalidDataError, SEC_HEAD, SEC_ATOMS, SEC_TAIL, BASE_NAME,
-                                    ATOM_TYPE, ATOM_COORDS, DIHES, ATOM_NUM_DICT, warning, get_fname_root)
+                                    ATOM_TYPE, ATOM_COORDS, DIHES, ATOM_NUM_DICT, warning, get_fname_root,
+                                    PDB_BEFORE_ELE_LAST_CHAR, PDB_ELE_LAST_CHAR, PDB_MOL_NUM_LAST_CHAR, PDB_Z_LAST_CHAR,
+                                    list_to_file)
 
 
 GAU_HEADER_PAT = re.compile(r"#.*")
@@ -330,3 +332,36 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
             gausslog_content[CONVERG_ERR] = None
 
     return gausslog_content
+
+
+def get_pdb_coord_list(pdb_str):
+    coord_list = []
+    pdb_str_list = pdb_str.split("\n")
+    for line in pdb_str_list:
+        if line.startswith('ATOM') or line.startswith('HETATM'):
+            element = line[PDB_BEFORE_ELE_LAST_CHAR:PDB_ELE_LAST_CHAR].strip()
+            pdb_xyz = line[PDB_MOL_NUM_LAST_CHAR:PDB_Z_LAST_CHAR]
+            coord_list.append(f"{element:6} {pdb_xyz}")
+        elif line.startswith('CONECT') or line.startswith('END'):
+            break
+    return coord_list
+
+
+def create_com_from_pdb_str(pdb_str, gau_tpl_content, com_fname):
+    """
+    Extracts one set of pdb coordinates from the "pdb_str" and combines with
+    :param pdb_str: str in pdb format
+    :param gau_tpl_content: dict with contents of the Gaussian template file
+    :param com_fname: str, name of file to be created
+    :return:
+    """
+    coord_list = []
+    pdb_str_list = pdb_str.split("\n")
+    for line in pdb_str_list:
+        if line.startswith('ATOM') or line.startswith('HETATM'):
+            element = line[PDB_BEFORE_ELE_LAST_CHAR:PDB_ELE_LAST_CHAR].strip()
+            pdb_xyz = line[PDB_MOL_NUM_LAST_CHAR:PDB_Z_LAST_CHAR]
+            coord_list.append(["{:6}".format(element), pdb_xyz])
+        elif line.startswith('CONECT') or line.startswith('END'):
+            break
+    list_to_file(gau_tpl_content[SEC_HEAD] + coord_list + gau_tpl_content[SEC_TAIL], com_fname, print_message=False)

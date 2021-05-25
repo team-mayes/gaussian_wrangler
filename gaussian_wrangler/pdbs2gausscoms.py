@@ -21,7 +21,7 @@ from common_wrangler.common import (GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DAT
                                     PDB_BEFORE_ELE_LAST_CHAR, PDB_ELE_LAST_CHAR, PDB_ATOM_NUM_LAST_CHAR,
                                     PDB_ATOM_TYPE_LAST_CHAR, MAIN_SEC, SEC_HEAD, SEC_TAIL,
                                     InvalidDataError, warning, create_out_fname, list_to_file, process_cfg)
-from gaussian_wrangler.gw_common import (process_gausscom_file)
+from gaussian_wrangler.gw_common import (process_gausscom_file, create_com_from_pdb_str)
 from gaussian_wrangler import __version__
 
 __author__ = 'hmayes'
@@ -171,26 +171,6 @@ def parse_cmdline(argv):
 def add_atom_indices(mol):
     for i, a in enumerate(mol.GetAtoms()):
         a.SetAtomMapNum(i)
-
-
-def create_com_from_pdb_str(pdb_str, gau_tpl_content, com_fname):
-    """
-    Extracts one set of pdb coordinates from the "pdb_str" and combines with
-    :param pdb_str: str in pdb format
-    :param gau_tpl_content: dict with contents of the Gaussian template file
-    :param com_fname: str, name of file to be created
-    :return:
-    """
-    coord_list = []
-    pdb_str_list = pdb_str.split("\n")
-    for line in pdb_str_list:
-        if line.startswith('ATOM') or line.startswith('HETATM'):
-            element = line[PDB_BEFORE_ELE_LAST_CHAR:PDB_ELE_LAST_CHAR].strip()
-            pdb_xyz = line[PDB_MOL_NUM_LAST_CHAR:PDB_Z_LAST_CHAR]
-            coord_list.append(["{:6}".format(element), pdb_xyz])
-        elif line.startswith('CONECT') or line.startswith('END'):
-            break
-    list_to_file(gau_tpl_content[SEC_HEAD] + coord_list + gau_tpl_content[SEC_TAIL], com_fname, print_message=False)
 
 
 def rotate_dihes_pdb_files(cfg, gau_tpl_content, pdb_files):

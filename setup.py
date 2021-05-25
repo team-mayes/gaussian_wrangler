@@ -42,12 +42,13 @@ setup(
                                       'goodvibes_helper = gaussian_wrangler.goodvibes_helper:main',
                                       'goodvibes_hm = gaussian_wrangler.goodvibes_hm:main',
                                       'plot_steps = gaussian_wrangler.plot_steps:main',
+                                      'test_data.smi2gausscom = gaussian_wrangler.test_data.smi2gausscom:main'
                                       ],
                   },     package_dir={'gaussian_wrangler': 'gaussian_wrangler'},
 
     test_suite='tests',
     # to install jpype1, use conda: install -c conda-forge jpype1
-    install_requires=['numpy', 'matplotlib', 'scipy', 'common-wrangler>=0.3.6', 'jpype1'],
+    install_requires=['numpy', 'matplotlib', 'scipy', 'common-wrangler>=0.3.6', 'jpype1', 'pubchempy'],
 
     # install_requires=requirements,
     # Additional entries you may want simply uncomment the lines you want and fill in the data
