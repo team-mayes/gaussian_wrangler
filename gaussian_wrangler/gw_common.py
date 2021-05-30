@@ -7,8 +7,10 @@ import re
 import os
 import collections
 import numpy as np
-from common_wrangler.common import (InvalidDataError, SEC_HEAD, SEC_ATOMS, SEC_TAIL, BASE_NAME, get_fname_root,
-                                    ATOM_TYPE, ATOM_COORDS, DIHES, ATOM_NUM_DICT, warning)
+from common_wrangler.common import (InvalidDataError, SEC_HEAD, SEC_ATOMS, SEC_TAIL, BASE_NAME,
+                                    ATOM_TYPE, ATOM_COORDS, DIHES, ATOM_NUM_DICT, warning, get_fname_root,
+                                    PDB_BEFORE_ELE_LAST_CHAR, PDB_ELE_LAST_CHAR, PDB_MOL_NUM_LAST_CHAR, PDB_Z_LAST_CHAR,
+                                    list_to_file)
 
 
 GAU_HEADER_PAT = re.compile(r"#.*")
@@ -19,6 +21,7 @@ GAU_CHARGE_PAT = re.compile(r"Charge =.*")
 GAU_STOICH_PAT = re.compile(r"Stoichiometry.*")
 GAU_CONVERG_PAT = re.compile(r"Item {15}Value {5}Threshold {2}Converged?")
 GAU_DIH_PAT = re.compile(r"! D.*")
+GAU_DERIV_PAT = re.compile(r"! Name {2}Definition {14}Value {10}Derivative Info.*")
 GAU_H_PAT = re.compile(r"Sum of electronic and thermal Enthalpies.*")
 GAU_STEP_PAT = re.compile(r"Step number.*")
 HARM_FREQ_PAT = re.compile(r"Harmonic frequencies.*")
@@ -29,6 +32,7 @@ MULT = 'Mult'
 MULTIPLICITY = 'Multiplicity'
 ENERGY = 'Energy'
 CONVERG_STEP_DICT = 'converg_dict'
+SCAN_DICT = 'scan_dict'
 MAX_FORCE = 'Max Force'
 RMS_FORCE = 'RMS Force'
 MAX_DISPL = 'Max Displacement'
@@ -36,7 +40,9 @@ RMS_DISPL = 'RMS Displacement'
 CONVERG = 'Convergence'
 CONVERG_ERR = 'Convergence_Error'
 ENTHALPY = 'Enthalpy'
+GIBBS = 'Gibbs_Free_E'
 TS = 'Transition_State'
+SCAN_STR = "  Scan  "
 
 
 def process_gausscom_file(gausscom_file):
@@ -94,7 +100,7 @@ def process_gausscom_file(gausscom_file):
 
 
 def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, find_step_converg=False,
-                          last_step_to_read=None):
+                          last_step_to_read=None, collect_scan_steps=False):
     # Grabs and stores in gausslog_content as a dictionary with the keys:
     #    (fyi: unlike process_gausscom_file, no SEC_HEAD is collected)
     #    CHARGE: overall charge (only) as int
@@ -107,9 +113,14 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
     base_name = os.path.basename(gausslog_file)
     with open(gausslog_file) as d:
         gausslog_content = {SEC_ATOMS: {}, BASE_NAME: base_name, STOICH: None, TS: None,
-                            ENERGY: None, ENTHALPY: None, CONVERG_STEP_DICT: collections.OrderedDict()}
+                            ENERGY: np.nan, ENTHALPY: np.nan, GIBBS: np.nan,
+                            CONVERG_STEP_DICT: collections.OrderedDict(), SCAN_DICT: {}}
         section = SEC_HEAD
         atom_id = 1
+        scan_parameter = None
+        # using step convergence for collecting scan step energies, so set flag to true
+        if collect_scan_steps:
+            find_step_converg = True
 
         # add stop iteration catch because error can be thrown if EOF reached in one of the while loops
         try:
@@ -127,16 +138,42 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
 
                 elif section == SEC_TAIL:
                     # there is not always a dih section in every step
-                    while not (GAU_DIH_PAT.match(line) or GAU_COORD_PAT.match(line) or GAU_STOICH_PAT.match(line)):
+                    while not (GAU_DERIV_PAT.match(line) or GAU_COORD_PAT.match(line) or GAU_STOICH_PAT.match(line)):
                         line = next(d).strip()
                     # sometimes this will execute
-                    if find_dih and GAU_DIH_PAT.match(line):
-                        dih_dict = {}
-                        while GAU_DIH_PAT.match(line):
-                            line_split = line.split()
-                            dih_dict[line_split[2]] = float(line_split[3])
+                    if (find_dih or collect_scan_steps) and GAU_DERIV_PAT.match(line):
+                        if find_dih:
+                            while not GAU_DIH_PAT.match(line):
+                                line = next(d).strip()
+                            dih_dict = {}
+                            while GAU_DIH_PAT.match(line):
+                                line_split = line.split()
+                                dih_dict[line_split[2]] = float(line_split[3])
+                                line = next(d).strip()
+                            gausslog_content[DIHES] = dih_dict
+                        else:
+                            # the initial parameters indicate which parameter will be scanned, otherwise search for
+                            #     parameter pattern
+                            if scan_parameter:
+                                search_term = scan_parameter
+                            else:
+                                search_term = SCAN_STR
+                            # move past first separator
+                            next(d)
                             line = next(d).strip()
-                        gausslog_content[DIHES] = dih_dict
+                            while search_term not in line and not GAU_SEP_PAT.match(line):
+                                line = next(d).strip()
+                            if search_term in line:
+                                line_split = line.split()
+
+                                # Only if scan parameter already found will there be an energy collected to store
+                                if search_term == SCAN_STR:
+                                    scan_parameter = line_split[2]
+                                else:
+                                    gausslog_content[SCAN_DICT][line_split[3]] = gausslog_content[ENERGY]
+                            else:
+                                raise InvalidDataError(f"Did not find expected parameter scan info in file: "
+                                                       f"{os.path.relpath(gausslog_file)}")
                     # may gave stopped by matching dih pat, so may need to continue
                     #   for some jobs, stoich before coordinates
                     while not GAU_COORD_PAT.match(line) and not GAU_STOICH_PAT.match(line):
@@ -211,6 +248,8 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                     if GAU_H_PAT.match(line):
                         gausslog_content[ENTHALPY] = float(line.split('=')[1].strip())
                         line = next(d).strip()
+                        gausslog_content[GIBBS] = float(line.split('=')[1].strip())
+                        line = next(d).strip()
 
                     # Step num after SCF Done
                     if find_step_converg:
@@ -227,29 +266,31 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                         ind_converg = []
                         while not GAU_CONVERG_PAT.match(line):
                             line = next(d).strip()
+                        # in all cases, use the loop below to advance lines, but do not get values if not needed
                         for i in range(4):
                             line = next(d).strip()
-                            line_split = line.split()
-                            try:
-                                # sometimes the convergence is so bad that then Gaussian prints '********' instead of
-                                # a number (which won't fit). Let's catch that, and assign a large convergence penalty
-                                ind_converg.append(float(line_split[2]))
-                                current_converge = ind_converg[i] / float(line_split[3])
-                                if current_converge > 1.0:
-                                    converge_error = True
-                                converg += current_converge
-                            except ValueError as e:
-                                if '********' in e.args[0]:
-                                    ind_converg.append(9.999999)
-                                    converg += 2000.00
-                                    converge_error = True
-                                else:
-                                    raise InvalidDataError(e)
+                            if find_converg or find_step_converg:
+                                line_split = line.split()
+                                try:
+                                    # Catching case when convergence is so poor that Gaussian prints '********' instead
+                                    # of a number (that won't fit) and assign an arbitrarily large convergence penalty
+                                    ind_converg.append(float(line_split[2]))
+                                    current_converge = ind_converg[i] / float(line_split[3])
+                                    if current_converge > 1.0:
+                                        converge_error = True
+                                    converg += current_converge
+                                except ValueError as e:
+                                    if '********' in e.args[0]:
+                                        ind_converg.append(9.999999)
+                                        converg += 2000.00
+                                        converge_error = True
+                                    else:
+                                        raise InvalidDataError(e)
                         # sometimes, Gaussian ignores the convergence error with the line below. Look for it.
                         next(d)
                         line = next(d).strip()
                         if "Optimization completed on the basis of negligible forces." in line:
-                            converge_error = False
+                            converge_error = "False (negligible forces)"
                         if find_step_converg:
                             # the transformations with step_num_list may not be strictly necessary, but makes IDE happy
                             #    and (likely due to casting the list) removed an error that appeared on a unix cluster
@@ -277,16 +318,50 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                     section = SEC_TAIL
                     atom_id = 1
         except StopIteration:
-            # want to continue to error checking
+            # continue to error checking
             pass
 
     # Sometimes we want data that is not in the output file. Put placeholders.
     if find_dih and DIHES not in gausslog_content and len(gausslog_content[SEC_ATOMS]) > 3:
         warning("Requested dihedral data not found for file:", os.path.basename(gausslog_file))
         gausslog_content[DIHES] = None
-    if (find_converg or find_step_converg) and CONVERG_ERR not in gausslog_content:
-        warning("Did not find final convergence report for file:", os.path.basename(gausslog_file))
-        gausslog_content[CONVERG] = np.nan
-        gausslog_content[CONVERG_ERR] = None
+    if not collect_scan_steps:
+        if (find_converg or find_step_converg) and CONVERG_ERR not in gausslog_content:
+            warning("Did not find final convergence report for file:", os.path.basename(gausslog_file))
+            gausslog_content[CONVERG] = np.nan
+            gausslog_content[CONVERG_ERR] = None
 
     return gausslog_content
+
+
+def get_pdb_coord_list(pdb_str):
+    coord_list = []
+    pdb_str_list = pdb_str.split("\n")
+    for line in pdb_str_list:
+        if line.startswith('ATOM') or line.startswith('HETATM'):
+            element = line[PDB_BEFORE_ELE_LAST_CHAR:PDB_ELE_LAST_CHAR].strip()
+            pdb_xyz = line[PDB_MOL_NUM_LAST_CHAR:PDB_Z_LAST_CHAR]
+            coord_list.append(f"{element:6} {pdb_xyz}")
+        elif line.startswith('CONECT') or line.startswith('END'):
+            break
+    return coord_list
+
+
+def create_com_from_pdb_str(pdb_str, gau_tpl_content, com_fname):
+    """
+    Extracts one set of pdb coordinates from the "pdb_str" and combines with
+    :param pdb_str: str in pdb format
+    :param gau_tpl_content: dict with contents of the Gaussian template file
+    :param com_fname: str, name of file to be created
+    :return:
+    """
+    coord_list = []
+    pdb_str_list = pdb_str.split("\n")
+    for line in pdb_str_list:
+        if line.startswith('ATOM') or line.startswith('HETATM'):
+            element = line[PDB_BEFORE_ELE_LAST_CHAR:PDB_ELE_LAST_CHAR].strip()
+            pdb_xyz = line[PDB_MOL_NUM_LAST_CHAR:PDB_Z_LAST_CHAR]
+            coord_list.append(["{:6}".format(element), pdb_xyz])
+        elif line.startswith('CONECT') or line.startswith('END'):
+            break
+    list_to_file(gau_tpl_content[SEC_HEAD] + coord_list + gau_tpl_content[SEC_TAIL], com_fname, print_message=False)

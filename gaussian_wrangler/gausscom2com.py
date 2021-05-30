@@ -161,6 +161,8 @@ def process_gausscom_file(gausscom_file, tpl_com_content, read_new_charge, out_d
                     break
         except StopIteration:
             pass
+        except UnicodeDecodeError:
+            raise InvalidDataError(f"Error in reading file: {gausscom_file}\n           Exiting program.")
 
         # now loop is done; check atom number if atoms are in the tpl file
         check_num_atoms(atom_id, gausscom_file, tpl_atom_num)

@@ -66,7 +66,7 @@ class TestPdbs2GausscomsNoOut(unittest.TestCase):
             self.assertTrue("No such file" in output)
 
     def testAltIni(self):
-        test_input = ["-t", 'tests/test_data/pdbs2gausscoms/gau_2.tpl', '-p', 'pe_linear.pdb']
+        test_input = ["-t", 'tests/test_data/pdbs2gausscoms/gau_2.tpl', '-f', 'pe_linear.pdb']
         with capture_stderr(main, test_input) as output:
             self.assertTrue("pe_linear.pdb" in output)
 
@@ -138,7 +138,7 @@ class TestPdbs2Gausscoms(unittest.TestCase):
     def testAltIniCommandLine(self):
         # As ALT_INI, but command-line only
         test_input = ["-t", 'tests/test_data/pdbs2gausscoms/gau_2.tpl',
-                      '-p', 'tests/test_data/pdbs2gausscoms/pe_linear.pdb']
+                      '-f', 'tests/test_data/pdbs2gausscoms/pe_linear.pdb']
         try:
             main(test_input)
             self.assertFalse(diff_lines(ALT_OUT, GOOD_ALT_OUT))
@@ -153,7 +153,7 @@ class TestPdbs2Gausscoms(unittest.TestCase):
             silent_remove(fname)
 
         test_input = ["-t", 'tests/test_data/pdbs2gausscoms/gau.tpl',
-                      '-p', 'tests/test_data/pdbs2gausscoms/pet_mono_f1hs.pdb', "-r", "-a"]
+                      '-f', 'tests/test_data/pdbs2gausscoms/pet_mono_f1hs.pdb', "-r", "-n", "1"]
         try:
             main(test_input)
             self.assertFalse(diff_lines(REMOVE_H_OUT1, GOOD_REMOVE_H_OUT1))
@@ -161,4 +161,67 @@ class TestPdbs2Gausscoms(unittest.TestCase):
             self.assertFalse(os.path.isfile(REMOVE_H_OUT3))
         finally:
             silent_remove(REMOVE_H_OUT1, disable=DISABLE_REMOVE)
+            pass
+
+    def testSpecify2SetsCommandLine(self):
+        # As ALT_INI, but command-line only
+        # make sure old files are cleaned up before starting
+        for fname in [REMOVE_H_OUT1, REMOVE_H_OUT2, REMOVE_H_OUT3]:
+            silent_remove(fname)
+
+        test_input = ["-t", 'tests/test_data/pdbs2gausscoms/gau.tpl',
+                      '-f', 'tests/test_data/pdbs2gausscoms/pet_mono_f1hs.pdb', "-r", "-n", "2"]
+        try:
+            main(test_input)
+            self.assertFalse(diff_lines(REMOVE_H_OUT1, GOOD_REMOVE_H_OUT1))
+            self.assertFalse(diff_lines(REMOVE_H_OUT2, GOOD_REMOVE_H_OUT2))
+            self.assertFalse(os.path.isfile(REMOVE_H_OUT3))
+        finally:
+            silent_remove(REMOVE_H_OUT1, disable=DISABLE_REMOVE)
+            silent_remove(REMOVE_H_OUT2, disable=DISABLE_REMOVE)
+            pass
+
+    def testRotateDihedral(self):
+        ini_file = os.path.join(SUB_DATA_DIR, "pchl_eq_mono_rs_ends.ini")
+        test_input = ["-c", ini_file]
+        expected_output = []
+        for num in range(1, 37):
+            expected_output.append(os.path.join(SUB_DATA_DIR, f"pchl_eq_mono_rs_ends_{num}.com"))
+        try:
+            for fname in expected_output:
+                silent_remove(fname)
+            main(test_input)
+            for fname in expected_output:
+                self.assertTrue(os.path.isfile(fname))
+            for ext in [1, 5, 36]:
+                self.assertFalse(diff_lines(os.path.join(SUB_DATA_DIR, f"pchl_eq_mono_rs_ends_{ext}.com"),
+                                            os.path.join(SUB_DATA_DIR, f"pchl_eq_mono_rs_ends_{ext}_good.com")))
+        finally:
+            for fname in expected_output:
+                silent_remove(fname)
+            pass
+
+    def testRotateDihedralMaxConfs(self):
+        expected_output = []
+        for num in range(1, 16):
+            expected_output.append(os.path.join(SUB_DATA_DIR, f"pchl_eq_mono_rs_ends_{num}.com"))
+        unexpected_file = os.path.join(SUB_DATA_DIR, "pchl_eq_mono_rs_ends_16.com")
+        ini_file = os.path.join(SUB_DATA_DIR, "pchl_eq_mono_rs_ends_max_conf.ini")
+        test_input = ["-c", ini_file]
+        try:
+            for fname in expected_output:
+                silent_remove(fname)
+            silent_remove(unexpected_file)
+            main(test_input)
+            for fname in expected_output:
+                self.assertTrue(os.path.isfile(fname))
+            self.assertFalse(os.path.isfile(unexpected_file))
+            # nums are diff because above, kept original, and here do not
+            self.assertFalse(diff_lines(os.path.join(SUB_DATA_DIR, "pchl_eq_mono_rs_ends_2.com"),
+                                        os.path.join(SUB_DATA_DIR, "pchl_eq_mono_rs_ends_1_good.com")))
+            self.assertFalse(diff_lines(os.path.join(SUB_DATA_DIR, "pchl_eq_mono_rs_ends_6.com"),
+                                        os.path.join(SUB_DATA_DIR, "pchl_eq_mono_rs_ends_5_good.com")))
+        finally:
+            for fname in expected_output:
+                silent_remove(fname)
             pass

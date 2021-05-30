@@ -1,0 +1,6 @@
+C=C(C(=O)O)C(C)C(=O)O
+C=C(C)C1CNC(C(=O)O)C1CC(=O)O
+C=C(CC(=O)O)C(=O)O
+CC(C(=O)O)C(=O)/C=C\C(=O)O
+CC(C)/C(=C\C(=O)O)C(=O)O
+CC(/C=C\C(=O)C(=O)O)C(=O)O

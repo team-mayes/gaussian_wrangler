@@ -40,9 +40,10 @@ ROUTE_ONLY_TPL = os.path.join(SUB_DATA_DIR, 'route_only.tpl')
 ROUTE_NO_CHARGE_TPL = os.path.join(SUB_DATA_DIR, 'route_no_charge.tpl')
 GOOD_ROUTE_ONLY_COM_OUT = os.path.join(SUB_DATA_DIR, 'pet_mono_901_min_tpl_good.com')
 
-
 PINNED_ATOM_IN = os.path.join(SUB_DATA_DIR, 'acyl-min_ts_pinned.gjf')
 PINNED_ATOM_OUT = os.path.join(SUB_DATA_DIR, 'acyl-min_ts_pinned.com')
+
+CHK_FILE = os.path.join(SUB_DATA_DIR, 'small_g_mono_1.chk')
 
 
 class TestGausscom2comNoOut(unittest.TestCase):
@@ -104,6 +105,12 @@ class TestGausscom2comNoOut(unittest.TestCase):
         # main(test_input)
         with capture_stderr(main, test_input) as output:
             self.assertTrue("read charge and multiplicity" in output)
+
+    def testUnreadableFile(self):
+        test_input = ["-t", TPL_FILE, "-f", CHK_FILE]
+        main(test_input)
+        # with capture_stderr(main, test_input) as output:
+        #     self.assertTrue("read charge and multiplicity" in output)
 
 
 class TestGausscom2com(unittest.TestCase):

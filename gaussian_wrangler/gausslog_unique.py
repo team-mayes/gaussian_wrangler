@@ -6,10 +6,12 @@ if atoms are in the same order, checks for duplicate conformers
 import os
 import sys
 import argparse
+from numpy import isnan
 from configparser import MissingSectionHeaderError
 from common_wrangler.common import (InvalidDataError, warning,
-                                    GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, DIHES)
-from gaussian_wrangler.gw_common import (STOICH, CONVERG, ENERGY, ENTHALPY, CONVERG_ERR, process_gausslog_file)
+                                    GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, DIHES, EHPART_TO_KCAL_MOL, quote,
+                                    list_to_file)
+from gaussian_wrangler.gw_common import (STOICH, CONVERG, ENERGY, ENTHALPY, GIBBS, CONVERG_ERR, process_gausslog_file)
 from gaussian_wrangler import __version__
 
 __author__ = 'hmayes'
@@ -29,6 +31,7 @@ DIH_TOL = 'dihedral_tolerance'
 # Defaults
 DEF_LIST_FILE = 'list.txt'
 DEF_DIH_TOL = 5.0
+DEF_OUT_NAME = "within_cutoff.txt"
 
 
 # For file processing
@@ -50,21 +53,37 @@ def parse_cmdline(argv):
     parser = argparse.ArgumentParser(description='Given a list of Gaussian output files, returns a list with '
                                                  'unique conformers, defined by having dihedral angles within the '
                                                  'specified tolerance.')
+    parser.add_argument("-e", "--energy", help="Sort output by lowest electronic energy (not ZPE corrected)."
+                                               "The default is False. This flag is superseded by the '-n'/'--enthalpy'"
+                                               "and '-g'/'--gibbs' flags.",
+                        action='store_true')
+    parser.add_argument("-g", "--gibbs", help="Sort output by lowest Gibbs free energy. If not found, the script will "
+                                              "sort output by the lowest electronic energy. The default is False.",
+                        action='store_true')
     parser.add_argument("-l", "--list", help="The file location of the list of Gaussian output files. There should "
                                              "be one output file listed per line. The default file name is '{}', "
                                              "located in the base directory where the program as "
                                              "run. This program assumes that all the given files have the same atom "
                                              "order.".format(DEF_LIST_FILE),
                         default=DEF_LIST_FILE)
-    parser.add_argument("-t", "--tol", help="The tolerance, in degrees, for concluding that dihedral angles are "
-                                            "equivalent. The default value is {}.".format(DEF_DIH_TOL),
-                        default=DEF_DIH_TOL)
-    parser.add_argument("-e", "--energy", help="Sort output by lowest electronic energy (not ZPE corrected)."
-                                               "The default is False. This flag is superseded by the enthalpy flag.",
-                        action='store_true')
+    parser.add_argument("-m", "--max_diff", help="If a numerical value is provided with this option, the output list "
+                                                 "will be split between files within or not within this maximum "
+                                                 "difference, in kcal/mol), from the lowest energy or enthalpy. "
+                                                 "Additionally, the program will output a file with only the file "
+                                                 "names of conformations within the cutoff; see the '-o'/'--out_name' "
+                                                 "option to specify the name of this file.", default=None)
     parser.add_argument("-n", "--enthalpy", help="Sort output by lowest enthalpy. If no enthalpy is found, it will "
                                                  "sort by the lowest electronic energy. The default is False.",
                         action='store_true')
+    parser.add_argument("-o", "--out_fname", help=f"When using the '-m'/'--max_diff' option, a file will be created "
+                                                  f"with only the names of the files within the specified cutoff, one "
+                                                  f"per line. This option allows the user to specify the output "
+                                                  f"file name. By default, the name will be '{DEF_OUT_NAME}'.",
+                        default=DEF_OUT_NAME)
+
+    parser.add_argument("-t", "--tol", help="The tolerance, in degrees, for concluding that dihedral angles are "
+                                            "equivalent. The default value is {}.".format(DEF_DIH_TOL),
+                        default=DEF_DIH_TOL)
 
     args = None
     try:
@@ -99,13 +118,13 @@ def compare_gausslog_info(log_info, dih_tol):
                 for dih_name, dih_val in log_info[fname][DIHES].items():
                     try:
                         dih_diff = abs(dih_val - check_dihes[dih_name])
-                        if dih_diff > (360.0 - dih_tol):
+                        if dih_diff > (360.0 - dih_tol * 1.1):
                             dih_diff -= 360.0
                         if dih_diff > dih_tol:
                             add_to_current_group = False
                             break
                     except KeyError:
-                        # probably an isomer
+                        # may be a different molecule; possible not to reach but safer to leave
                         add_to_current_group = False
                         break
                 if add_to_current_group:
@@ -116,7 +135,8 @@ def compare_gausslog_info(log_info, dih_tol):
     return conf_groups
 
 
-def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy, print_winners=True):
+def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy, max_diff=None, print_winners=True,
+                  out_fname=DEF_OUT_NAME):
     winners = []
     warn_files_str = ''
     for conf_list in list_of_conf_lists:
@@ -129,14 +149,15 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
                 if log_info[log_file][CONVERG] < lowest_converg:
                     lowest_converg = log_info[log_file][CONVERG]
                     low_conv_log = log_file
-        winners.append((low_conv_log, log_info[low_conv_log][CONVERG],
-                        log_info[low_conv_log][ENERGY], log_info[low_conv_log][ENTHALPY]))
+        winners.append((low_conv_log, log_info[low_conv_log][CONVERG], log_info[low_conv_log][ENERGY],
+                        log_info[low_conv_log][ENTHALPY], log_info[low_conv_log][GIBBS]))
 
     # sorting, if requested
+    sort_error = False
     if sort_by_enthalpy:
         sort_by_energy = False
         for winner in winners:
-            if winner[3] is None:
+            if isnan(winner[3]):
                 sort_by_energy = True
                 sort_by_enthalpy = False
                 break
@@ -145,20 +166,57 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
     elif sort_by_energy:
         sort_key = 2
     else:
-        sort_key = 0
+        sort_key = 4
     winners.sort(key=lambda tup: tup[sort_key])
+    winner_str = quote('","'.join(['File', CONVERG, ENERGY, ENTHALPY, GIBBS]))
 
     # now gather results
-    winner_str = ','.join(['File', CONVERG, ENERGY, ENTHALPY]) + '\n'
-    for winner, converg, energy, enthalpy in winners:
-        try:
-            winner_str += '{},{:.4f},{:.6f},{:.6f}\n'.format(winner, converg, energy, enthalpy)
-        except TypeError:
-            winner_str += '{},{:.4f},{:.6f},{}\n'.format(winner, converg, energy, enthalpy)
+    cutoff_list = []
+    if max_diff:
+        winner_str += ',"Diff(kcal/mol)"\n'
+        lowest_val = winners[0][sort_key]
+        if sort_by_enthalpy:
+            sort_type = "enthalpy"
+        elif sort_by_energy:
+            sort_type = "SCF energy"
+        else:
+            sort_type = "Gibbs free energy"
+        winner_str += f'"Files within {sort_type} cutoff of {max_diff:.2f} kcal/mol"\n'
+        within_cutoff = True
+    else:
+        winner_str += '\n'
+        lowest_val = None  # to make IDE happy
+        within_cutoff = False
+    val_diff_str = ""
+    val_diff = 0.
+    for winner, converg, energy, enthalpy, gibbs, in winners:
+        if not sort_error:
+            if max_diff:
+                if sort_by_enthalpy:
+                    val_diff = (enthalpy - lowest_val) * EHPART_TO_KCAL_MOL
+                elif sort_by_energy:
+                    val_diff = (energy - lowest_val) * EHPART_TO_KCAL_MOL
+                else:
+                    val_diff = (gibbs - lowest_val) * EHPART_TO_KCAL_MOL
+                val_diff_str = f",{val_diff:.2f}"
+
+            if within_cutoff:
+                if val_diff > max_diff:
+                    winner_str += f'"Files outside of cutoff:"\n'
+                    within_cutoff = False
+                else:
+                    cutoff_list.append(winner)
+
+            winner_str += f'"{winner}",{converg:.4f},{energy:.6f},{enthalpy:.6f},{gibbs:.6f}{val_diff_str}\n'
         if log_info[winner][CONVERG_ERR]:
-            warn_files_str += '\n    {:}:  {:.2f}'.format(winner, converg, energy, enthalpy)
+            warn_files_str += '\n    {:}:  {:.2f}'.format(winner, converg)
+        elif log_info[winner][CONVERG_ERR] is None:
+            warn_files_str += '\n    {:}:  Not found'.format(winner)
     if print_winners:
         print(winner_str)
+
+    if cutoff_list:
+        list_to_file(cutoff_list, out_fname)
     return winner_str, warn_files_str
 
 
@@ -174,6 +232,12 @@ def main(argv=None):
         gausslog_files = []
         missing_files = []
         log_info = {}
+
+        # check input
+        if args.max_diff:
+            args.max_diff = float(args.max_diff)
+            if not args.energy and not args.gibbs:
+                args.enthalpy = True
 
         # check that we have files
         with open(args.list) as f:
@@ -200,15 +264,19 @@ def main(argv=None):
 
         # process data from files
         list_of_conf_lists = compare_gausslog_info(log_info, args.tol)
-        winner_str, warn_files_str = print_results(log_info, list_of_conf_lists, args.enthalpy, args.energy)
+        winner_str, warn_files_str = print_results(log_info, list_of_conf_lists, args.enthalpy, args.energy,
+                                                   args.max_diff, args.out_fname)
         if len(warn_files_str) > 0:
             warning("Check convergence of file(s):" + warn_files_str)
 
     except IOError as e:
         warning("Problems reading file:", e)
         return IO_ERROR
-    except InvalidDataError as e:
+    except (InvalidDataError, UnicodeDecodeError) as e:
         warning("Problems reading data:", e)
+        return INVALID_DATA
+    except ValueError as e:
+        warning(e.args[0])
         return INVALID_DATA
     return GOOD_RET  # success
 

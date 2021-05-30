@@ -9,9 +9,9 @@ import subprocess
 import re
 import os
 from configparser import ConfigParser, MissingSectionHeaderError
-from common_wrangler.common import (InvalidDataError, warning, process_cfg, create_out_fname, GOOD_RET, INPUT_ERROR,
-                                    IO_ERROR, INVALID_DATA, read_tpl, InvalidInputError, str_to_file,
-                                    get_fname_root, OUT_DIR, MAIN_SEC, list_to_file)
+from common_wrangler.common import (GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, OUT_DIR, MAIN_SEC,
+                                    InvalidInputError, InvalidDataError, warning,
+                                    create_out_fname, get_fname_root, list_to_file, process_cfg, read_tpl, str_to_file)
 from common_wrangler.fill_tpl import fill_save_tpl
 from gaussian_wrangler.gw_common import GAU_HEADER_PAT
 from gaussian_wrangler import __version__
@@ -78,7 +78,6 @@ DEF_JOB_LIST = None
 DEF_PARTITION = 'short'
 DEF_RUN_TIME = '4:00:00'
 DEF_ACCOUNT = 'bpms'
-DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 DEF_SBATCH_TPL = os.path.join(DATA_DIR, 'sbatch.tpl')
 DEF_FOLLOW_JOBS_LIST = None
 DEF_OLD_CHK_STR = 'echo "%OldChk={}.chk" >> ${{INFILE}}'
@@ -433,7 +432,7 @@ def run_job(job, job_name_perhaps_with_dir, tpl_dict, cfg, testing_mode):
     move_on = False
     while not move_on:
         try:
-            fill_save_tpl(cfg, tpl_str, tpl_dict, tpl_file, job_runner_fname)
+            fill_save_tpl(tpl_str, tpl_dict, tpl_file, job_runner_fname)
             move_on = True
         except KeyError as e:
             missing_key = e.args[0].split("\'")[1]
@@ -573,7 +572,7 @@ def setup_and_submit(cfg, current_job_list, tpl_dict, testing_mode, chk_warn):
     sbatch_dict = create_sbatch_dict(cfg, tpl_dict, os.path.relpath(new_ini_fname), current_job_list,
                                      start_from_job_name_chk=cfg[START_FROM_SAME_CHK], ignore_chk_warning=chk_warn)
     tpl_str = read_tpl(cfg[SBATCH_TPL])
-    fill_save_tpl(cfg, tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
+    fill_save_tpl(tpl_str, sbatch_dict, cfg[SBATCH_TPL], new_sbatch_fname)
 
     # read ini_tpl and check if it has fields for submitting spawned jobs, if needed
     create_ini_with_req_keys(current_job_list, cfg[TPL_DICT], cfg, new_ini_fname)
