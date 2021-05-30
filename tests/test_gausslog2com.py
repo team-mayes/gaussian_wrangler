@@ -44,6 +44,10 @@ FRAG_LOG_FILE = os.path.join(SUB_DATA_DIR, 'frag_example.log')
 FRAG_COM_OUT = os.path.join(SUB_DATA_DIR, 'frag_example_fresh_fb.com')
 GOOD_FRAG_COM_OUT = os.path.join(SUB_DATA_DIR, 'frag_example_good.com')
 
+SPEC_STEP_LOG = os.path.join(SUB_DATA_DIR, 'ti_eg5_mipa_tsa_ircr_opt_tsa_ts_ircf_opt_tsa_ts.log')
+SPEC_STEP_OUT = os.path.join(SUB_DATA_DIR, 'ti_eg5_mipa_tsa_ircr_opt_tsa_ts_ircf_opt_tsa_ts_route_only.com')
+GOOD_SPEC_STEP_OUT = os.path.join(SUB_DATA_DIR, 'ti_eg5_mipa_tsa_ircr_opt_tsa_ts_ircf_opt_tsa_ts_good.com')
+
 ALT_FRAG_LOG_FILE = os.path.join(SUB_DATA_DIR, 'a579.log')
 ALT_FRAG_COM_TPL = os.path.join(SUB_DATA_DIR, 'a579.com')
 ALT_FRAG_COM_OUT = os.path.join(SUB_DATA_DIR, 'a579_a579.com')
@@ -216,3 +220,15 @@ class TestGausslog2com(unittest.TestCase):
         finally:
             silent_remove(PINNED_ATOM_OUT, disable=DISABLE_REMOVE)
             pass
+
+    def testSpecifyStep(self):
+        # Check specifying a particular step's coordinates
+        test_input = ["-t", ROUTE_ONLY_TPL, "-f", SPEC_STEP_LOG, "-s", "25"]
+        try:
+            silent_remove(SPEC_STEP_OUT)
+            main(test_input)
+            self.assertFalse(diff_lines(SPEC_STEP_OUT, GOOD_SPEC_STEP_OUT))
+        finally:
+            silent_remove(SPEC_STEP_OUT, disable=DISABLE_REMOVE)
+            pass
+

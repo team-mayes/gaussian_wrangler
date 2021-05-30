@@ -983,6 +983,7 @@ def get_boltz(files, thermo_data, clustering, clusters, temperature, dup_list):
             bbe = thermo_data[file]
             if hasattr(bbe, "qh_gibbs_free_energy"):
                 if bbe.qh_gibbs_free_energy is not None:
+                    # noinspection PyTypeChecker
                     e_rel[file] = bbe.qh_gibbs_free_energy - e_min
                     boltz_facs[file] = np.exp(-e_rel[file] * AU_TO_J / GAS_CONSTANT / temperature)
                     if clustering:

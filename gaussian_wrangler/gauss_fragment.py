@@ -12,6 +12,7 @@ from common_wrangler.common import (InvalidDataError, warning, process_cfg, crea
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                     ATOM_TYPE, ATOM_COORDS, MAIN_SEC, calc_dist, SEC_ATOMS)
 from gaussian_wrangler.gw_common import process_gausscom_file, process_gausslog_file, CHARGE, MULT
+from gaussian_wrangler import __version__
 
 
 __author__ = 'hmayes'
@@ -104,6 +105,7 @@ def read_cfg(f_loc, cfg_proc=process_cfg):
     return main_proc
 
 
+# noinspection DuplicatedCode
 def parse_cmdline(argv):
     """
     Returns the parsed argument list and return code.
@@ -375,6 +377,8 @@ def print_com_files(atom_pair, atoms_content, gauss_in_fname, cfg, frag1, frag2,
 
 
 def main(argv=None):
+    print(f"Running GaussianWrangler script gauss_fragment version {__version__}")
+
     # Read input
     args, ret = parse_cmdline(argv)
     if ret != GOOD_RET or args is None:

@@ -48,6 +48,9 @@ DIOXOLAN_OUT = os.path.join(SUB_DATA_DIR, 'dioxolan4ol_ts4_ts_conv_steps.csv')
 GOOD_DIOXOLAN_OUT = os.path.join(SUB_DATA_DIR, 'dioxolan4ol_ts4_ts_conv_steps_good.csv')
 DIOXOLAN_PNG = os.path.join(SUB_DATA_DIR, 'dioxolan4ol_ts4_ts_conv_steps.png')
 
+IN_PROGRESS_OUT = os.path.join(SUB_DATA_DIR, 'ti_eg5_dime_tpa_tse_conv_steps.csv')
+IN_PROGRESS_PNG = os.path.join(SUB_DATA_DIR, 'ti_eg5_dime_tpa_tse_conv_steps.png')
+
 NOT_FROM_CHK_FILE = os.path.join(SUB_DATA_DIR, 'acyl-min_ts5.out')
 
 
@@ -150,7 +153,7 @@ class TestCheckGauss(unittest.TestCase):
             # copyfile(NORM_TERM_LOG, TEMP_NORM_TERM_LOG)
             # silent_remove(MOVED_FILE)
             with capture_stdout(main, test_input) as output:
-                self.assertTrue(output == GOOD_OUT)
+                self.assertTrue(GOOD_OUT in output)
             self.assertFalse(diff_lines(MOVED_FILE, NORM_TERM_LOG))
             with capture_stderr(main, test_input) as output:
                 self.assertTrue("not read" in output)
@@ -163,7 +166,7 @@ class TestCheckGauss(unittest.TestCase):
         good_out = 'File                                 Convergence Convergence_Error\n'\
                    'me2propprpnt_7.log                      111.4981 True\n'
         with capture_stdout(main, test_input) as output:
-            self.assertTrue(output == good_out)
+            self.assertTrue(good_out in output)
 
     def testListFinalConvergence(self):
         test_input = ["-l", LIST_FILE, "-z"]
@@ -172,7 +175,7 @@ class TestCheckGauss(unittest.TestCase):
                    'hexyl_acrylate_239.log                    1.1100 False\n' \
                    'hexyl_acrylate_419.log                    0.0706 False\n'
         with capture_stdout(main, test_input) as output:
-            self.assertTrue(output == good_out)
+            self.assertTrue(good_out in output)
 
     def testListEachStepConvergence(self):
         test_input = ["-l", LIST_FILE, "-s"]
@@ -204,6 +207,25 @@ class TestCheckGauss(unittest.TestCase):
                 silent_remove(f_name, disable=DISABLE_REMOVE)
             pass
 
+    def testStepConv(self):
+        # script reported "Requested convergence data data not found" for this file that is still running
+        # this test helped remove this warning
+        in_file = os.path.join(SUB_DATA_DIR, "ti_eg5_dime_tpa_tse.log")
+        test_input = ["-s", "-f", in_file]
+        expected_f_names = [IN_PROGRESS_OUT, IN_PROGRESS_PNG]
+        try:
+            for f_name in expected_f_names:
+                silent_remove(f_name)
+            # main(test_input)
+            with capture_stderr(main, test_input) as output:
+                self.assertTrue("final convergence report" in output)
+            for f_name in expected_f_names:
+                self.assertTrue(os.path.isfile(f_name))
+        finally:
+            for f_name in expected_f_names:
+                silent_remove(f_name, disable=DISABLE_REMOVE)
+            pass
+
     def testOneEachStopAtStep(self):
         # tests searching directory with checking convergence, plus using an alternate extension
         test_input = ["-t", "37", "-d", SUB_DATA_DIR, "-e", "ts.out"]
@@ -216,7 +238,7 @@ class TestCheckGauss(unittest.TestCase):
                       "         34    456.271\n"
         # main(test_input)
         with capture_stdout(main, test_input) as output:
-            self.assertTrue(output == good_output)
+            self.assertTrue(good_output in output)
 
     def testBest10Steps(self):
         # tests searching directory with checking convergence, plus using an alternate extension
@@ -235,7 +257,7 @@ class TestCheckGauss(unittest.TestCase):
                       "          1    342.935\n"
         # main(test_input)
         with capture_stdout(main, test_input) as output:
-            self.assertTrue(output == good_output)
+            self.assertTrue(good_output in output)
 
     def testBest10StepsList(self):
         test_input = ["-b", "-l", LIST_FILE]
@@ -252,7 +274,7 @@ class TestCheckGauss(unittest.TestCase):
 
         # main(test_input)
         with capture_stdout(main, test_input) as output:
-            self.assertTrue(output == good_output)
+            self.assertTrue(good_output in output)
             pass
 
     def testAllStepsStdOutList(self):
@@ -271,7 +293,7 @@ class TestCheckGauss(unittest.TestCase):
         main(test_input)
         with capture_stdout(main, test_input) as output:
             print(output)
-            self.assertTrue(output == good_output)
+            self.assertTrue(good_output in output)
             pass
 
     def testAllStepsNotFromChk(self):
@@ -284,26 +306,25 @@ class TestCheckGauss(unittest.TestCase):
                       "          3    310.534\n"
         # main(test_input)
         with capture_stdout(main, test_input) as output:
-            print(output)
-            self.assertTrue(output == good_output)
+            self.assertTrue(good_output in output)
             pass
 
     def testDirSubdirsLastStep(self):
         temp_files_list = make_fill_sub_dir()
         test_input = ["-ds", SUB_DATA_DIR, "-z"]
-        good_out = 'File                                 Convergence Convergence_Error\n' \
-                   'empty.log                                    nan None\n' \
-                   'me2propprpnt_7.log                      111.4981 True\n' \
-                   'pet_mono_671_tzvp.log                        nan None\n' \
-                   'pet_mono_674_tzvp.log                        nan None\n' \
-                   'pet_mono_819_tzvp.log                        nan None\n' \
-                   'pet_mono_872_tzvp.log                        nan None\n' \
-                   'a579.log                                  0.1175 False\n' \
-                   'ipvc_11_10_cp.log                            nan None\n'
+        good_output = 'File                                 Convergence Convergence_Error\n' \
+                      'empty.log                                    nan None\n' \
+                      'me2propprpnt_7.log                      111.4981 True\n' \
+                      'pet_mono_671_tzvp.log                        nan None\n' \
+                      'pet_mono_674_tzvp.log                        nan None\n' \
+                      'pet_mono_819_tzvp.log                        nan None\n' \
+                      'pet_mono_872_tzvp.log                        nan None\n' \
+                      'a579.log                                  0.1175 False\n' \
+                      'ipvc_11_10_cp.log                            nan None\n'
         try:
             # main(test_input)
             with capture_stdout(main, test_input) as output:
-                self.assertTrue(output == good_out)
+                self.assertTrue(good_output in output)
         finally:
             for temp_name in temp_files_list:
                 silent_remove(temp_name, disable=DISABLE_REMOVE)
@@ -313,26 +334,26 @@ class TestCheckGauss(unittest.TestCase):
     def testDirSubdirsBestSteps(self):
         temp_files_list = make_fill_sub_dir()
         test_input = ["-ds", SUB_DATA_DIR, "-b"]
-        good_out = "No convergence data found for file: empty.log\n" \
-                   "Best (up to 10) steps sorted by convergence for file: me2propprpnt_7.log\n" \
-                   "    StepNum  Convergence\n" \
-                   "          2     83.984\n" \
-                   "        110    111.498\n" \
-                   "          1    342.632\n" \
-                   "No convergence data found for file: pet_mono_671_tzvp.log\n" \
-                   "No convergence data found for file: pet_mono_674_tzvp.log\n" \
-                   "No convergence data found for file: pet_mono_819_tzvp.log\n" \
-                   "No convergence data found for file: pet_mono_872_tzvp.log\n" \
-                   "Best (up to 10) steps sorted by convergence for file: a579.log\n" \
-                   "    StepNum  Convergence\n" \
-                   "         72      0.117\n" \
-                   "          2      3.965\n" \
-                   "          1    173.021\n" \
-                   "No convergence data found for file: ipvc_11_10_cp.log\n"
+        good_output = "No convergence data found for file: empty.log\n" \
+                      "Best (up to 10) steps sorted by convergence for file: me2propprpnt_7.log\n" \
+                      "    StepNum  Convergence\n" \
+                      "          2     83.984\n" \
+                      "        110    111.498\n" \
+                      "          1    342.632\n" \
+                      "No convergence data found for file: pet_mono_671_tzvp.log\n" \
+                      "No convergence data found for file: pet_mono_674_tzvp.log\n" \
+                      "No convergence data found for file: pet_mono_819_tzvp.log\n" \
+                      "No convergence data found for file: pet_mono_872_tzvp.log\n" \
+                      "Best (up to 10) steps sorted by convergence for file: a579.log\n" \
+                      "    StepNum  Convergence\n" \
+                      "         72      0.117\n" \
+                      "          2      3.965\n" \
+                      "          1    173.021\n" \
+                      "No convergence data found for file: ipvc_11_10_cp.log\n"
         try:
             # main(test_input)
             with capture_stdout(main, test_input) as output:
-                self.assertTrue(output == good_out)
+                self.assertTrue(good_output in output)
         finally:
             for temp_name in temp_files_list:
                 silent_remove(temp_name, disable=DISABLE_REMOVE)

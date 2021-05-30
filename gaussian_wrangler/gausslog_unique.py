@@ -10,7 +10,7 @@ from configparser import MissingSectionHeaderError
 from common_wrangler.common import (InvalidDataError, warning,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA, DIHES)
 from gaussian_wrangler.gw_common import (STOICH, CONVERG, ENERGY, ENTHALPY, CONVERG_ERR, process_gausslog_file)
-
+from gaussian_wrangler import __version__
 
 __author__ = 'hmayes'
 
@@ -163,6 +163,7 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
 
 
 def main(argv=None):
+    print(f"Running GaussianWrangler script gausslog_unique version {__version__}")
     # Read input
     args, ret = parse_cmdline(argv)
     if ret != GOOD_RET or args is None:

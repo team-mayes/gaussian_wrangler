@@ -14,7 +14,7 @@ from common_wrangler.common import (InvalidDataError, warning, process_cfg, crea
                                     get_fname_root, OUT_DIR, MAIN_SEC, list_to_file)
 from common_wrangler.fill_tpl import fill_save_tpl
 from gaussian_wrangler.gw_common import GAU_HEADER_PAT
-
+from gaussian_wrangler import __version__
 
 __author__ = 'hmayes'
 
@@ -591,6 +591,7 @@ def setup_and_submit(cfg, current_job_list, tpl_dict, testing_mode, chk_warn):
 
 
 def main(argv=None):
+    print(f"Running GaussianWrangler script run_gauss version {__version__}")
     # Read input
     args, ret = parse_cmdline(argv)
     if ret != GOOD_RET or args is None:
