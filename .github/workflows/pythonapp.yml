@@ -17,8 +17,9 @@ jobs:
       uses: s-weigand/setup-conda@v1
       with:
         update-conda: true
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.7
         conda-channels: conda-forge
+
     - run: conda install rdkit
     - name: Install dependencies
       run: |
