@@ -2,6 +2,9 @@ gaussian_wrangler
 ==============================
 [//]: # (Badges)
 ![PythonCI](https://github.com/team-mayes/gaussian_wrangler/workflows/PythonCI/badge.svg)
+[![PyPI version](https://badge.fury.io/py/gaussian-wrangler.svg)](https://badge.fury.io/py/common-wrangler)
+[![codecov](https://codecov.io/gh/team-mayes/gaussian_wrangler/branch/master/graph/badge.svg)](https://codecov.io/gh/team-mayes/common_wrangler)
+
 
 A suite of scripts that have been helpful primarily with work flows involving Gaussian.
 
