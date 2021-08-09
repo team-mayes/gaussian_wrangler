@@ -18,6 +18,7 @@ __author__ = 'hmayes'
 
 # Constants #
 
+# todo: fix so template for smi2gausscom.py works here too (no extra space)
 
 # Config keys
 GAUSSLOG_FILES_FILE = 'gausslog_list_file'

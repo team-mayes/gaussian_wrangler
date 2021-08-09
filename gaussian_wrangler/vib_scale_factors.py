@@ -34,8 +34,8 @@ import os
 import sys
 import numpy as np
 from common_wrangler.common import (InvalidDataError,
-                                    SPEED_OF_LIGHT, GAS_CONSTANT, KB, H, AVOGADRO_CONST, AMU_TO_KG, AU_TO_J,
-                                    )
+                                    SPEED_OF_LIGHT, GAS_CONSTANT, KB, PLANCK_CONST_JS, AVOGADRO_CONST, AMU_TO_KG,
+                                    AU_TO_J)
 
 # # To make the output exactly match Gaussian's, use the values below instead importing them from common_wrangler.common
 # SPEED_OF_LIGHT = 2.99792458e10  # cm / s (same as in common)
@@ -739,10 +739,10 @@ def get_factors(fract_model_sys, freq_scale_factor, frequency_wn, temperature=1.
     if fract_model_sys:
         freq_scale_factor = [freq_scale_factor[0] * fract_model_sys[i] + freq_scale_factor[1] *
                              (1.0 - fract_model_sys[i]) for i in range(len(fract_model_sys))]
-        factor = [(H * frequency_wn[i] * SPEED_OF_LIGHT * freq_scale_factor[i]) /
+        factor = [(PLANCK_CONST_JS * frequency_wn[i] * SPEED_OF_LIGHT * freq_scale_factor[i]) /
                   (KB * temperature) for i in range(len(frequency_wn))]
     else:
-        factor = [(H * freq * SPEED_OF_LIGHT * freq_scale_factor) / (KB * temperature)
+        factor = [(PLANCK_CONST_JS * freq * SPEED_OF_LIGHT * freq_scale_factor) / (KB * temperature)
                   for freq in frequency_wn]
     return factor
 
@@ -1049,7 +1049,7 @@ def calc_translational_entropy(molecular_mass, conc, temperature, solv):
     Needs the molecular mass. Convert mass in amu to kg; conc in mol/l to number per m^3
     s_trans = R(Ln(2 pi mkT/h^2)^3/2(1/C)) + 1 + 3/2)
     """
-    e_lambda = ((2.0 * np.pi * molecular_mass * AMU_TO_KG * KB * temperature) ** 0.5) / H
+    e_lambda = ((2.0 * np.pi * molecular_mass * AMU_TO_KG * KB * temperature) ** 0.5) / PLANCK_CONST_JS
     freespace = get_free_space(solv)
     n_dens = conc * 1000 * AVOGADRO_CONST / (freespace / 1000.0)
     entropy = GAS_CONSTANT * (2.5 + np.log(e_lambda ** 3 / n_dens))
@@ -1123,7 +1123,7 @@ def calc_q_rrho_energy(frequency_wn, temperature, freq_scale_factor):
     vibrational modes described by a rigid-rotor harmonic approximation
     V_RRHO = 1/2(Nhv) + RT(hv/kT)e^(-hv/kT)/(1-e^(-hv/kT))
     """
-    factor = [H * freq * SPEED_OF_LIGHT * freq_scale_factor for freq in frequency_wn]
+    factor = [PLANCK_CONST_JS * freq * SPEED_OF_LIGHT * freq_scale_factor for freq in frequency_wn]
     energy = [0.5 * AVOGADRO_CONST * entry + GAS_CONSTANT * temperature * entry / KB
               / temperature * np.exp(-entry / KB / temperature) /
               (1 - np.exp(-entry / KB / temperature)) for entry in factor]
@@ -1143,12 +1143,12 @@ def calc_free_rot_entropy(frequency_wn, temperature, freq_scale_factor, fract_mo
     if fract_model_sys:
         freq_scale_factor = [freq_scale_factor[0] * fract_model_sys[i] + freq_scale_factor[1] *
                              (1.0 - fract_model_sys[i]) for i in range(len(fract_model_sys))]
-        mu = [H / (8 * np.pi ** 2 * frequency_wn[i] * SPEED_OF_LIGHT * freq_scale_factor[i]) for i in
+        mu = [PLANCK_CONST_JS / (8 * np.pi ** 2 * frequency_wn[i] * SPEED_OF_LIGHT * freq_scale_factor[i]) for i in
               range(len(frequency_wn))]
     else:
-        mu = [H / (8 * np.pi ** 2 * freq * SPEED_OF_LIGHT * freq_scale_factor) for freq in frequency_wn]
+        mu = [PLANCK_CONST_JS / (8 * np.pi ** 2 * freq * SPEED_OF_LIGHT * freq_scale_factor) for freq in frequency_wn]
     mu_primed = [entry * bav / (entry + bav) for entry in mu]
-    factor = [8 * np.pi ** 3 * entry * KB * temperature / H ** 2 for entry in mu_primed]
+    factor = [8 * np.pi ** 3 * entry * KB * temperature / PLANCK_CONST_JS ** 2 for entry in mu_primed]
     entropy = [(0.5 + np.log(entry ** 0.5)) * GAS_CONSTANT for entry in factor]
     return entropy
 

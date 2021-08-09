@@ -65,7 +65,7 @@ class TestMainNoOutput(unittest.TestCase):
 
     def testBadSmi(self):
         test_input = ["-s", "CCC0,CCCO", "-t", GAU_TPL, "-o", TEMP_DIR]
-        an_output = os.path.join(TEMP_DIR, "propan-1-ol_0.com")
+        an_output = os.path.join(TEMP_DIR, "cid_1031_0.com")
         try:
             silent_remove(TEMP_DIR, dir_with_files=True)
             # main(test_input)
@@ -87,11 +87,11 @@ class TestMain(unittest.TestCase):
             num_created_files = len(os.listdir(TEMP_DIR))
             self.assertEqual(7, num_created_files)
             for conf_id in range(3):
-                good_out_fname = os.path.join(SUB_DATA_DIR, f"propan-1-ol_{conf_id}_good.com")
-                out_fname = os.path.join(TEMP_DIR, f"propan-1-ol_{conf_id}.com")
+                good_out_fname = os.path.join(SUB_DATA_DIR, f"cid_1031_{conf_id}_good.com")
+                out_fname = os.path.join(TEMP_DIR, f"cid_1031_{conf_id}.com")
                 self.assertFalse(diff_lines(good_out_fname, out_fname))
         finally:
-            silent_remove(TEMP_DIR, dir_with_files=True)
+            # silent_remove(TEMP_DIR, dir_with_files=True)
             pass
 
     def testSmiWithSpecialCharacters(self):
@@ -103,9 +103,7 @@ class TestMain(unittest.TestCase):
             main(test_input)
             num_created_files = len(os.listdir(TEMP_DIR))
             self.assertEqual(24, num_created_files)
-            for base_name in ["4-methylidenecyclohexa-2c5-dien-1-one",
-                              "p2Rc3Rc4Sc5Sc6Rq-6-phydroxymethylqoxane-2c3c4c5-tetrol",
-                              "propan-2-ol", "C1eCCeCpC2COC3COCC32qCeC1"]:
+            for base_name in ["cid_136328", "cid_64689", "cid_3776", "C1eCCeCpC2COC3COCC32qCeC1"]:
                 self.assertTrue(os.path.isfile(os.path.join(TEMP_DIR, f"{base_name}_0.com")))
         finally:
             silent_remove(TEMP_DIR, dir_with_files=True)
@@ -132,7 +130,7 @@ class TestMain(unittest.TestCase):
             silent_remove(TEMP_DIR, dir_with_files=True)
             # main(test_input)
             with capture_stdout(main, test_input) as output:
-                self.assertEqual(output.count("2-methylidenebutanedioic_acid"), 1)
+                self.assertEqual(output.count("cid_811"), 1)
         finally:
             silent_remove(TEMP_DIR, dir_with_files=True)
             pass

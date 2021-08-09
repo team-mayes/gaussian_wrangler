@@ -15,7 +15,7 @@ import jpype
 import jpype.imports
 from pathlib import Path
 from collections import defaultdict
-from common_wrangler.common import (InvalidDataError, warning, RG, KB, H, EHPART_TO_KCAL_MOL,
+from common_wrangler.common import (InvalidDataError, warning, RG, KB, PLANCK_CONST_JS, EHPART_TO_KCAL_MOL,
                                     GOOD_RET, INPUT_ERROR, IO_ERROR, INVALID_DATA,
                                     write_csv, create_out_fname, make_fig, parse_stoich, capture_stdout, list_to_file,
                                     round_sig_figs)
@@ -499,7 +499,7 @@ def get_kt(temps, delta_gibbs_ts):
     :return: kt: np array of rate coefficients at each temp
     """
     # rate coefficient from Eyring equation
-    return KB / H * temps * np.exp(-delta_gibbs_ts / RG / temps)  # [1/s] if unimolecular
+    return KB / PLANCK_CONST_JS * temps * np.exp(-delta_gibbs_ts / RG / temps)  # [1/s] if unimolecular
 
 
 def fit_arrhenius(temps, kt):

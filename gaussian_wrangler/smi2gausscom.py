@@ -60,7 +60,7 @@ def parse_cmdline(argv):
 
     # initialize the parser object:
     parser = argparse.ArgumentParser(description='Creates Gaussian input files from SMILES strings, given a template '
-                                                 'input file.')
+                                                 'input file. The created files will be named based on their CID.')
     parser.add_argument("-t", "--" + GAU_TPL_FILE, help=f"Required: the location of the Gaussian input template file. "
                                                         f"This file must contain the string '{REQ_STR}' in the "
                                                         f"location where the atom type and coordinates should be "
@@ -127,23 +127,22 @@ def gen_conformers(mol, num_confs=DEF_MAX_CONFS, max_attempts=1000,
 
 def get_mol_name(smi):
     """
-    Create a name without special characters (other than '-' or '_') for a molecule
-    If an IUPAC name is found in pubchem, that will be the basis. Otherwise, it will be based on the SMILES string
+    Get the compound ID from pubchem if the molecule is in pubchem.
+    Otherwise, return a SMILES string with all special characters replaced.
     :param smi: str, a SMILES string
     :return: mol_name, a str without special characters
     """
     try:
         # cid instead?
         results = pcp.get_compounds(smi, namespace='smiles')
-        if results and results[0].iupac_name:
-            mol_name = results[0].iupac_name
+        if results and results[0].cid:
+            mol_name = f"cid_{results[0].cid}"
         else:
             raise pcp.BadRequestError
     except pcp.BadRequestError:
         mol_name = smi
-
-    for spec_char, char in SPECIAL_REPLACE.items():
-        mol_name = mol_name.replace(spec_char, char)
+        for spec_char, char in SPECIAL_REPLACE.items():
+            mol_name = mol_name.replace(spec_char, char)
 
     return mol_name
 
@@ -170,8 +169,8 @@ def process_smiles(gau_tpl_fname, smi_list, max_num_confs, out_dir):
         Chem.Kekulize(mol)
         mol = AddHs(mol)
         confs = gen_conformers(mol, num_confs=max_num_confs)
-        mol_name = get_mol_name(smi)
-        base_fname = create_out_fname(mol_name, ext='com', base_dir=out_dir, rel_path=True)
+        cid = get_mol_name(smi)
+        base_fname = create_out_fname(cid, ext='com', base_dir=out_dir, rel_path=True)
         conf_id = -1  # make IDE happy
         for conf_id in confs:
             com_fname = create_out_fname(base_fname, suffix=f'_{conf_id}')
@@ -182,7 +181,7 @@ def process_smiles(gau_tpl_fname, smi_list, max_num_confs, out_dir):
 
 
 def main(argv=None):
-    print(f"Running GaussianWrangler script test_data.smi2gausscom version {__version__}")
+    print(f"Running GaussianWrangler script smi2gausscom version {__version__}")
 
     # Read input
     args, ret = parse_cmdline(argv)
