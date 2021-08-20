@@ -170,6 +170,14 @@ def process_smiles(gau_tpl_fname, smi_list, max_num_confs, out_dir):
         mol = AddHs(mol)
         confs = gen_conformers(mol, num_confs=max_num_confs)
         cid = get_mol_name(smi)
+        # GetSubstructMatches((Mol)self, (Mol)query[, (bool)uniquify=True[, (bool)useChirality=False[,
+        # (bool)useQueryQueryMatches=False[, (int)maxMatches=1000]]]]) → object :
+        # Returns tuples of the indices of the molecule’s atoms that match a substructure query.
+        # GetSubstructMatch( (Mol)self, (Mol)query, (SubstructMatchParameters)params) -> object :
+        # Returns the indices of the molecule’s atoms that match a substructure query.
+        # HasSubstructMatch((Mol)self, (Mol)query[, (bool)recursionPossible=True[, (bool)useChirality=False[, (bool)useQueryQueryMatches=False]]]) → bool :
+        # Queries whether or not the molecule contains a particular substructure.
+
         base_fname = create_out_fname(cid, ext='com', base_dir=out_dir, rel_path=True)
         conf_id = -1  # make IDE happy
         for conf_id in confs:
