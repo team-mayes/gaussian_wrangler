@@ -208,7 +208,7 @@ def print_results(log_info, list_of_conf_lists, sort_by_enthalpy, sort_by_energy
                     cutoff_list.append(winner)
 
             winner_str += f'"{winner}",{converg:.4f},{energy:.6f},{enthalpy:.6f},{gibbs:.6f}{val_diff_str}\n'
-        if log_info[winner][CONVERG_ERR]:
+        if log_info[winner][CONVERG_ERR] is True:
             warn_files_str += '\n    {:}:  {:.2f}'.format(winner, converg)
         elif log_info[winner][CONVERG_ERR] is None:
             warn_files_str += '\n    {:}:  Not found'.format(winner)
