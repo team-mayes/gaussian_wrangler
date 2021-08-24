@@ -50,7 +50,7 @@ setup(
     # to install jpype1, use conda: install -c conda-forge jpype1
     # install_requires=requirements,
     # install_requires=[],   # Required packages, pulls from pip if needed; do not use for Conda deployment
-    install_requires=['numpy', 'matplotlib', 'scipy', 'common-wrangler>=0.3.7.2', 'jpype1', 'pubchempy'],
+    install_requires=['numpy', 'matplotlib', 'scipy', 'common-wrangler>=0.3.7.5', 'jpype1', 'pubchempy'],
     tests_require=['pytest'],
     # Additional entries you may want simply uncomment the lines you want and fill in the data
     # url='http://www.my_package.com',  # Website

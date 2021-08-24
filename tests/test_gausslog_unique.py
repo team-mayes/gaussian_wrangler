@@ -3,7 +3,8 @@ import os
 import numpy as np
 from common_wrangler.common import capture_stdout, capture_stderr, DIHES, silent_remove
 from gaussian_wrangler.gausslog_unique import main, compare_gausslog_info, print_results, DEF_OUT_NAME
-from gaussian_wrangler.gw_common import process_gausslog_file, CONVERG_ERR, TS, CONVERG
+from gaussian_wrangler.gw_common import process_gausslog_file, CONVERG_ERR, TS, CONVERG, QUADRUPOLE, DIPOLE, POLAR, \
+    NBO_PARTIAL_CHARGES
 import logging
 
 # logging.basicConfig(level=logging.DEBUG)
@@ -207,6 +208,18 @@ class TestGausslogUnique(unittest.TestCase):
 
 
 class TestGausslogUniqueFunctions(unittest.TestCase):
+    def testFileWithNBO(self):
+        # file has Iodine, which had not previously been the atom type dict
+        gausslog_loc = os.path.join(SUB_DATA_DIR, "cid_10987172_0.log")
+        gausslog_content = process_gausslog_file(gausslog_loc, find_dih=True, find_converg=True)
+        self.assertEqual(15, len(gausslog_content[NBO_PARTIAL_CHARGES]))
+        self.assertTrue(np.isclose(-0.46454, min(gausslog_content[NBO_PARTIAL_CHARGES])))
+        self.assertTrue(np.isclose(0.22434, max(gausslog_content[NBO_PARTIAL_CHARGES])))
+        self.assertTrue(np.isclose(2.5213, gausslog_content[DIPOLE]))
+        self.assertTrue(np.isclose(-63.1456, gausslog_content[QUADRUPOLE]))
+        self.assertTrue(np.isclose(120.617, gausslog_content[POLAR]))
+        self.assertFalse(gausslog_content[CONVERG_ERR])
+
     def testOneFileMissingDihedralInfo(self):
         # testing for some specific problem encountered: when there is a freq only job (no opt) there is no
         #     dihedral info (which caused trouble when tried to compare it) and also prevented finding the

@@ -26,6 +26,10 @@ GAU_H_PAT = re.compile(r"Sum of electronic and thermal Enthalpies.*")
 GAU_STEP_PAT = re.compile(r"Step number.*")
 HARM_FREQ_PAT = re.compile(r"Harmonic frequencies.*")
 FREQ_PAT = re.compile(r"Frequencies.*")
+DIPOLE_PAT = re.compile(r"Dipole moment.*")
+POLAR_PAT = re.compile(r"Exact polarizability:.*")
+NBO_SUMMARY_PAT = re.compile(r"Summary of Natural Population Analysis:.*")
+GAU_SEP_EQ_PAT = re.compile(r"=======================================================================.*")
 STOICH = 'Stoichiometry'
 CHARGE = 'Charge'
 MULT = 'Mult'
@@ -43,6 +47,10 @@ ENTHALPY = 'Enthalpy'
 GIBBS = 'Gibbs_Free_E'
 TS = 'Transition_State'
 SCAN_STR = "  Scan  "
+NBO_PARTIAL_CHARGES = "Natural Charges"
+DIPOLE = "Dipole (total, Debye)"
+QUADRUPOLE = "Quadrupole (avg. q_ii, Debye-Ang)"
+POLAR = "Polarizability (avg. a_ii, Bohr^3)"
 
 
 def process_gausscom_file(gausscom_file):
@@ -114,6 +122,7 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
     with open(gausslog_file) as d:
         gausslog_content = {SEC_ATOMS: {}, BASE_NAME: base_name, STOICH: None, TS: None,
                             ENERGY: np.nan, ENTHALPY: np.nan, GIBBS: np.nan,
+                            DIPOLE: np.nan, QUADRUPOLE: np.nan, POLAR: np.nan, NBO_SUMMARY_PAT: None,
                             CONVERG_STEP_DICT: collections.OrderedDict(), SCAN_DICT: {}}
         section = SEC_HEAD
         atom_id = 1
@@ -220,8 +229,40 @@ def process_gausslog_file(gausslog_file, find_dih=False, find_converg=False, fin
                     # Thus, Step always after SCF Done, but sometimes thermo in the middle
                     # In CalcAll job starting from coordinates:
                     #     first step: Charge, Dih, Stoich, **Coord**, SCF, Step, Converg
-                    while not (HARM_FREQ_PAT.match(line) or GAU_H_PAT.match(line) or GAU_STEP_PAT.match(line)):
+                    while not (HARM_FREQ_PAT.match(line) or GAU_H_PAT.match(line) or GAU_STEP_PAT.match(line) or
+                               DIPOLE_PAT.match(line)):
                         line = next(d).strip()
+                    if DIPOLE_PAT.match(line):
+                        line_split = next(d).strip().split()
+                        gausslog_content[DIPOLE] = float(line_split[-1])
+                        next(d)
+                        line_split = next(d).strip().split()
+                        gausslog_content[QUADRUPOLE] = \
+                            round((float(line_split[1]) + float(line_split[3]) + float(line_split[-1])) / 3.0, 4)
+                        line = next(d).strip()
+                        while not (POLAR_PAT.match(line) or NBO_SUMMARY_PAT.match(line) or HARM_FREQ_PAT.match(line)
+                                   or GAU_H_PAT.match(line) or GAU_STEP_PAT.match(line)):
+                            line = next(d).strip()
+                        if POLAR_PAT.match(line):
+                            line_split = line.split()
+                            gausslog_content[POLAR] = \
+                                round((float(line_split[2]) + float(line_split[4]) + float(line_split[-1])) / 3.0, 3)
+                            next(d)
+                            line = next(d).strip()
+                            while not (NBO_SUMMARY_PAT.match(line) or HARM_FREQ_PAT.match(line)
+                                       or GAU_H_PAT.match(line) or GAU_STEP_PAT.match(line)):
+                                line = next(d).strip()
+                        if NBO_SUMMARY_PAT.match(line):
+                            for _ in range(5):
+                                next(d)
+                            line_split = next(d).strip().split()
+                            gausslog_content[NBO_PARTIAL_CHARGES] = [float(line_split[2])]
+                            line = next(d).strip()
+                            while not GAU_SEP_EQ_PAT.match(line):
+                                gausslog_content[NBO_PARTIAL_CHARGES].append(float(line.split()[2]))
+                                line = next(d).strip()
+                            while not (HARM_FREQ_PAT.match(line) or GAU_H_PAT.match(line) or GAU_STEP_PAT.match(line)):
+                                line = next(d).strip()
                     if HARM_FREQ_PAT.match(line):
                         # checking to hit GAU_H_PAT because one atom jobs won't have a FREQ_PAT
                         while not FREQ_PAT.match(line) and not GAU_H_PAT.match(line):
